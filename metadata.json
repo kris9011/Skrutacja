@@ -1,0 +1,6 @@
+{
+  "name": "Skrutacja Pisma Świętego",
+  "description": "Przewodnik, interaktywny notatnik i asystent metody skrutacji Pisma Świętego (Scrutatio Scripturae) z łańcuchem odnośników biblijnych, komentarzami Ojców Kościoła w oryginale i po polsku oraz modlitwą.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
