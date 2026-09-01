@@ -16,6 +16,7 @@ import { PatristicView } from './components/PatristicView';
 import { ScrutationTreeView } from './components/ScrutationTreeView';
 import { JewishTraditionView } from './components/JewishTraditionView';
 import { CommunityWordSharingView } from './components/CommunityWordSharingView';
+import { IntroSplash } from './components/IntroSplash';
 import { ScrutationSession, BiblicalThemePreset } from './types';
 import { THEME_PRESETS } from './data/biblicalData';
 import { CheckCircle2, Flame, BookOpen, CalendarDays, Sparkles, BookmarkCheck, Network, Scroll, Users } from 'lucide-react';
@@ -24,6 +25,10 @@ const LOCAL_STORAGE_ACTIVE_SESSION = 'scrutatio_active_session_v1';
 const LOCAL_STORAGE_JOURNAL = 'scrutatio_journal_v1';
 
 export default function App() {
+  const [showIntro, setShowIntro] = useState<boolean>(() => {
+    // Only show intro splash once per browser session or on reload
+    return true;
+  });
   const [activeTab, setActiveTab] = useState<'simple' | 'daily' | 'workspace' | 'tree' | 'patristic' | 'jewish' | 'community' | 'journal' | 'guide' | 'themes' | 'books'>('daily');
   const [activeSession, setActiveSession] = useState<ScrutationSession | null>(null);
   const [journalSessions, setJournalSessions] = useState<ScrutationSession[]>([]);
@@ -202,11 +207,17 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-white text-slate-900 flex flex-col selection:bg-emerald-100 selection:text-emerald-900">
+      {/* Intro Splash Screen with Animated Holy Spirit Dove & Scripture */}
+      {showIntro && (
+        <IntroSplash onComplete={() => setShowIntro(false)} />
+      )}
+
       {/* Top Navigation */}
       <Header
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         hasActiveSession={Boolean(activeSession)}
+        onReplayIntro={() => setShowIntro(true)}
       />
 
       {/* Main View Router */}

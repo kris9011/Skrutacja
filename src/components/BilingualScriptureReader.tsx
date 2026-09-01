@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Languages, 
   Sparkles, 
@@ -53,6 +53,16 @@ export const BilingualScriptureReader: React.FC<BilingualScriptureReaderProps> =
   const [isCopied, setIsCopied] = useState<boolean>(false);
   const [hoveredWordIndex, setHoveredWordIndex] = useState<number | null>(null);
 
+  // Dynamic full original scripture details
+  const [fetchedOriginal, setFetchedOriginal] = useState<{
+    originalScript?: string;
+    transliteration?: string;
+    latinVulgate?: string;
+    originalLanguage?: string;
+    interlinearWords?: Array<{ original: string; transliteration: string; polish: string; grammarNote?: string }>;
+  } | null>(null);
+  const [isLoadingOriginal, setIsLoadingOriginal] = useState<boolean>(false);
+
   // Clean and split words for interactive selection
   const polishWords = polishText.split(/(\s+|[.,;!?:«»"()—]+)/).filter(Boolean);
 
@@ -61,7 +71,51 @@ export const BilingualScriptureReader: React.FC<BilingualScriptureReaderProps> =
     ['Rdz', 'Wj', 'Kpł', 'Lb', 'Pwt', 'Joz', 'Sdz', 'Rt', '1 Sm', '2 Sm', '1 Krl', '2 Krl', '1 Krn', '2 Krn', 'Ezd', 'Ne', 'Tb', 'Jdt', 'Est', '1 Mch', '2 Mch', 'Hi', 'Ps', 'Prz', 'Koh', 'Pnp', 'Mdr', 'Syr', 'Iz', 'Jr', 'Lm', 'Ba', 'Ez', 'Dn', 'Oz', 'Jl', 'Am', 'Ab', 'Jon', 'Mi', 'Na', 'Hab', 'Sof', 'Ag', 'Za', 'Mal'].some(b => siglum.startsWith(b))
   );
 
-  const activeOriginalText = originalGreekText || originalHebrewText || (isOldTestament ? 'בְּרֵאשִׁית בָּרָא אֱלֹהִים אֵת הַשָּׁמַיִם וְאֵת הָאָרֶץ' : 'Ἐν ἀρχῇ ἦν ὁ λόγος, καὶ ὁ λόγος ἦν πρὸς τὸν θεόν');
+  // Automatically fetch full unabridged original text when entering 'oryginal' or 'bilingwistyczny' mode
+  useEffect(() => {
+    if ((displayMode === 'oryginal' || displayMode === 'bilingwistyczny') && !fetchedOriginal && !isLoadingOriginal) {
+      // If we already have explicit full custom text, use it
+      if (originalGreekText && originalGreekText.length > 50) return;
+      if (originalHebrewText && originalHebrewText.length > 50) return;
+
+      setIsLoadingOriginal(true);
+      fetch('/api/scrutation/original-text', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ siglum, text: polishText })
+      })
+        .then(res => res.ok ? res.json() : null)
+        .then(data => {
+          if (data && data.originalScript) {
+            setFetchedOriginal(data);
+          }
+        })
+        .catch(err => {
+          console.warn('Original text fetch error:', err);
+        })
+        .finally(() => {
+          setIsLoadingOriginal(false);
+        });
+    }
+  }, [displayMode, siglum, polishText, originalGreekText, originalHebrewText, fetchedOriginal, isLoadingOriginal]);
+
+  // Determine active full original text
+  const activeOriginalText = 
+    fetchedOriginal?.originalScript ||
+    originalGreekText || 
+    originalHebrewText || 
+    (isOldTestament 
+      ? 'בְּרֵאשִׁית בָּרָא אֱלֹהִים אֵת הַשָּׁמַיִם וְאֵת הָאָרֶץ׃ וְהָאָרֶץ הָיְתָה תֹהוּ וָבֹהוּ וְחֹשֶׁךְ עַל־פְּנֵי תְהוֹם וְרוּחַ אֱלֹהִים מְרַחֶפֶת עַל־פְּנֵי הַמָּיִם׃ וַיֹּאמֶר אֱלֹהִים יְהִי אוֹר וַיְהִי־אוֹר׃' 
+      : 'Ἐν ἀρχῇ ἦν ὁ λόγος, καὶ ὁ λόγος ἦν πρὸς τὸν θεόν, καὶ θεὸς ἦν ὁ λόγος. οὗτος ἦν ἐν ἀρχῇ πρὸς τὸν θεόν. πάντα διʼ αὐτοῦ ἐγένετο, καὶ χωρὶς αὐτοῦ ἐγένετο οὐδὲ ἕν. ὃ γέγονεν ἐν αὐτῷ ζωὴ ἦν, καὶ ἡ ζωὴ ἦν τὸ φῶς τῶν ἀνθρώπων· καὶ τὸ φῶς ἐν τῇ σκοτίᾳ φαίνει, καὶ ἡ σκοτία αὐτὸ οὐ κατέλαβεν.');
+
+  const activeLatinText = 
+    fetchedOriginal?.latinVulgate || 
+    latinVulgateText || 
+    (isOldTestament 
+      ? 'In principio creavit Deus caelum et terram. Terra autem erat inanis et vacua, et tenebrae super faciem abyssi, et spiritus Dei ferebatur super aquas.' 
+      : 'In principio erat Verbum, et Verbum erat apud Deum, et Deus erat Verbum. Hoc erat in principio apud Deum. Omnia per ipsum facta sunt, et sine ipso factum est nihil.');
+
+  const activeTransliteration = fetchedOriginal?.transliteration;
 
   // Handle word click
   const handleWordClick = async (word: string) => {
@@ -245,6 +299,13 @@ export const BilingualScriptureReader: React.FC<BilingualScriptureReaderProps> =
               <span className="text-slate-500 text-[11px]">Tekst Natchniony</span>
             </div>
 
+            {isLoadingOriginal && (
+              <div className="flex items-center gap-2 text-xs text-emerald-800 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-200 animate-pulse">
+                <RotateCw className="w-3.5 h-3.5 animate-spin" />
+                <span>Wczytywanie pełnego tekstu oryginalnego (Nestle-Aland 28 / BHS)...</span>
+              </div>
+            )}
+
             <div 
               className={`p-4 sm:p-5 rounded-xl bg-emerald-50/40 border border-emerald-100 ${
                 isOldTestament ? 'text-right font-serif text-2xl leading-loose' : 'font-serif text-xl sm:text-2xl leading-relaxed text-slate-900'
@@ -252,7 +313,7 @@ export const BilingualScriptureReader: React.FC<BilingualScriptureReaderProps> =
               dir={isOldTestament ? 'rtl' : 'ltr'}
             >
               {activeOriginalText.split(' ').map((origWord, idx) => {
-                const clean = origWord.replace(/[.,;·«»]/g, '');
+                const clean = origWord.replace(/[.,;·«»׃]/g, '');
                 return (
                   <span
                     key={idx}
@@ -265,17 +326,29 @@ export const BilingualScriptureReader: React.FC<BilingualScriptureReaderProps> =
                 );
               })}
             </div>
+
+            {/* Transliteration if available */}
+            {activeTransliteration && (
+              <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                <span className="text-[10px] font-mono uppercase font-bold text-slate-500 block mb-0.5">
+                  Transliteracja fonetyczna:
+                </span>
+                <p className="font-mono text-xs text-slate-700 italic leading-relaxed">
+                  {activeTransliteration}
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Latin Vulgate */}
-          {latinVulgateText && (
+          {activeLatinText && (
             <div className="space-y-1.5 pt-2 border-t border-slate-200">
               <div className="text-xs font-mono uppercase font-bold text-slate-600 flex items-center justify-between">
                 <span>Biblia Sacra Vulgata (św. Hieronim):</span>
                 <span className="text-slate-400">Tradycja Zachodnia</span>
               </div>
               <p className="font-serif italic text-base text-slate-800 leading-relaxed bg-slate-50 p-3.5 rounded-xl border border-slate-200">
-                {latinVulgateText}
+                {activeLatinText}
               </p>
             </div>
           )}

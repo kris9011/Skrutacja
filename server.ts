@@ -766,6 +766,74 @@ Przygotuj głęboką analizę w świetle Tradycji Żydowskiej Pierwszego Przymie
   }
 });
 
+// API: Original Scripture Full Text Lookup (Nestle-Aland 28 Greek / BHS Hebrew / Vulgate)
+app.post('/api/scrutation/original-text', async (req, res) => {
+  const { siglum, text } = req.body;
+  if (!siglum) {
+    return res.status(400).json({ error: 'Siglum jest wymagane' });
+  }
+
+  const guaranteed = getGuaranteedPatristicData(siglum, text);
+
+  try {
+    const ai = getGeminiClient();
+    if (!ai) {
+      return res.json(guaranteed.originalScripture);
+    }
+
+    const isNT = ['Mt', 'Mk', 'Łk', 'J', 'Dz', 'Rz', '1 Kor', '2 Kor', 'Ga', 'Ef', 'Flp', 'Kol', '1 Tes', '2 Tes', '1 Tm', '2 Tm', 'Tt', 'Flm', 'Hbr', 'Jk', '1 P', '2 P', '1 J', '2 J', '3 J', 'Jud', 'Ap'].some(b => siglum.startsWith(b));
+
+    const prompt = `Jesteś wybitnym filologiem biblijnym i egzegetą.
+Użytkownik bada fragment Pisma Świętego: "${siglum}" ${text ? `o polskiej treści: "${text}"` : ''}.
+
+Twoim zadaniem jest podać KOMPLETNY, PEŁNY tekst oryginalny dla WSZYSTKICH wersetów objętych tym siglum (nie obcinaj tekstu, podaj pełny fragment):
+1. Dla Nowego Testamentu: PEŁNY tekst w Grece Koine według wydania Novum Testamentum Graece (Nestle-Aland 28).
+2. Dla Starego Testamentu: PEŁNY tekst w Hebrajskim biblijnym według Biblia Hebraica Stuttgartensia (BHS).
+3. Dokładną transliterację fonetyczną.
+4. Pełny przekład łaciński (Nova Vulgata / Vulgata Clementina).
+5. Podstawowy słownik interlinearny kluczowych słów wersetu.`;
+
+    const schema = {
+      type: Type.OBJECT,
+      properties: {
+        siglum: { type: Type.STRING },
+        polishText: { type: Type.STRING },
+        originalLanguage: { type: Type.STRING, enum: ['Greka (Koine)', 'Hebrajski', 'Aramejski'] },
+        originalScript: { type: Type.STRING, description: 'KOMPLETNY, pełny oryginalny tekst w alfabecie greckim lub hebrajskim dla całego fragmentu' },
+        transliteration: { type: Type.STRING, description: 'Pełna transliteracja' },
+        latinVulgate: { type: Type.STRING, description: 'Pełny tekst Wulgaty' },
+        interlinearWords: {
+          type: Type.ARRAY,
+          items: {
+            type: Type.OBJECT,
+            properties: {
+              original: { type: Type.STRING },
+              transliteration: { type: Type.STRING },
+              polish: { type: Type.STRING },
+              grammarNote: { type: Type.STRING }
+            },
+            required: ['original', 'transliteration', 'polish']
+          }
+        }
+      },
+      required: ['siglum', 'originalLanguage', 'originalScript', 'transliteration', 'latinVulgate']
+    };
+
+    const parsed = await generateContentWithFallback(ai, { prompt, schema });
+    if (!parsed || !parsed.originalScript) {
+      return res.json(guaranteed.originalScripture);
+    }
+
+    res.json({
+      ...parsed,
+      polishText: parsed.polishText || text || guaranteed.originalScripture.polishText
+    });
+  } catch (error) {
+    console.warn('Original text lookup fallback:', error);
+    res.json(guaranteed.originalScripture);
+  }
+});
+
 // Vite / Production handler
 async function startServer() {
   if (process.env.NODE_ENV !== 'production') {

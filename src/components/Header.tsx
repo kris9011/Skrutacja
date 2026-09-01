@@ -6,9 +6,10 @@ interface HeaderProps {
   activeTab: 'simple' | 'daily' | 'workspace' | 'tree' | 'patristic' | 'jewish' | 'community' | 'journal' | 'guide' | 'themes' | 'books';
   setActiveTab: (tab: 'simple' | 'daily' | 'workspace' | 'tree' | 'patristic' | 'jewish' | 'community' | 'journal' | 'guide' | 'themes' | 'books') => void;
   hasActiveSession: boolean;
+  onReplayIntro?: () => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab, hasActiveSession }) => {
+export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab, hasActiveSession, onReplayIntro }) => {
   const [installModalOpen, setInstallModalOpen] = useState<boolean>(false);
   const [installPlatform, setInstallPlatform] = useState<'ios' | 'android'>('ios');
 
@@ -36,6 +37,20 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab, hasActi
             <span className="text-[10px] text-emerald-900/80 font-bold uppercase tracking-wider hidden sm:inline mr-1">
               Aplikacja:
             </span>
+
+            {/* Replay Holy Spirit Intro Button */}
+            {onReplayIntro && (
+              <button
+                type="button"
+                id="replay-intro-btn"
+                onClick={onReplayIntro}
+                title="W świetle Ducha Świętego — otwórz intro"
+                className="h-7 px-2 rounded-lg bg-white hover:bg-amber-50 border border-amber-300/80 text-amber-900 font-sans font-bold text-[11px] flex items-center gap-1 shadow-xs transition-all cursor-pointer active:scale-95 group"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-amber-500 group-hover:text-amber-600 animate-pulse" />
+                <span className="hidden md:inline">Duch Święty</span>
+              </button>
+            )}
 
             {/* iOS Square Button */}
             <button
