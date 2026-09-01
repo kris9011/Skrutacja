@@ -35,7 +35,9 @@ import {
   RefreshCw,
   Compass,
   CheckCircle2,
-  MousePointerClick
+  MousePointerClick,
+  LayoutList,
+  LayoutGrid
 } from 'lucide-react';
 
 interface DailyReadingsAndPassageSelectorProps {
@@ -196,6 +198,7 @@ export const DailyReadingsAndPassageSelector: React.FC<DailyReadingsAndPassageSe
   const [copiedSiglum, setCopiedSiglum] = useState<string | null>(null);
   const [speakingSiglum, setSpeakingSiglum] = useState<string | null>(null);
   const [expandedReadingLang, setExpandedReadingLang] = useState<string | null>(null);
+  const [dailyViewMode, setDailyViewMode] = useState<'stream' | 'cards'>('stream');
   
   // Verse Picker Modal State
   const [readingToPickVerse, setReadingToPickVerse] = useState<DailyReadingItem | null>(null);
@@ -994,264 +997,577 @@ export const DailyReadingsAndPassageSelector: React.FC<DailyReadingsAndPassageSe
             </div>
           )}
 
-          {/* Readings Grid - Manuscript Card Design */}
+          {/* Readings Container: Scrollable Stream View (Default) or Card Grid */}
           {!isLoadingDaily && dailyData && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {dailyData.readings.map((reading) => {
-                const isGospel = reading.type === 'gospel';
-                const isPsalm = reading.type === 'psalm';
-                const isLangOpen = expandedReadingLang === reading.id;
-                const isSpeaking = speakingSiglum === reading.siglum;
-                const isCopied = copiedSiglum === reading.siglum;
-                const selectableVerses = getSelectableVersesForReading(reading);
+            <div className="space-y-6">
+              {/* Sticky Top Reading Index & View Switcher Bar */}
+              <div className="bg-white/95 backdrop-blur-md p-3 sm:p-4 rounded-2xl border border-slate-200 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sticky top-14 z-20">
+                <div className="flex items-center gap-2 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0 custom-scrollbar">
+                  <span className="text-xs font-sans uppercase font-bold text-emerald-900 flex items-center gap-1.5 shrink-0 mr-1">
+                    <Scroll className="w-3.5 h-3.5 text-emerald-600" />
+                    Spis czytań:
+                  </span>
+                  {dailyData.readings.map((r) => (
+                    <button
+                      key={r.id}
+                      type="button"
+                      onClick={() => {
+                        const el = document.getElementById(`reading-section-${r.id}`);
+                        if (el) {
+                          el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        }
+                      }}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-sans font-bold border transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 shrink-0 ${
+                        r.type === 'gospel'
+                          ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border-emerald-300 shadow-2xs'
+                          : r.type === 'psalm'
+                          ? 'bg-amber-50 hover:bg-amber-100 text-amber-900 border-amber-300'
+                          : 'bg-slate-50 hover:bg-slate-100 text-slate-800 border-slate-200'
+                      }`}
+                    >
+                      <span>{r.label}</span>
+                      <span className="font-mono text-[11px] opacity-75 font-normal">({r.siglum})</span>
+                    </button>
+                  ))}
+                </div>
 
-                return (
-                  <div
-                    key={reading.id}
-                    className={`relative rounded-2xl border transition-all duration-200 flex flex-col justify-between overflow-hidden group bg-white shadow-xs ${
-                      isGospel 
-                        ? 'border-emerald-300 ring-1 ring-emerald-200 shadow-md' 
-                        : 'border-slate-200 hover:border-emerald-300 hover:shadow-md'
+                {/* View Mode Toggle */}
+                <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200 shrink-0 self-end sm:self-auto">
+                  <button
+                    type="button"
+                    onClick={() => setDailyViewMode('stream')}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-sans font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+                      dailyViewMode === 'stream'
+                        ? 'bg-white text-emerald-900 shadow-xs'
+                        : 'text-slate-600 hover:text-slate-900'
                     }`}
+                    title="Ciągły, przewijany widok czytań (jak w Lekcjonarzu)"
                   >
-                    {/* Gospel Golden Top Ribbon */}
-                    {isGospel && (
-                      <div className="h-1.5 w-full bg-gradient-to-r from-emerald-600 via-amber-500 to-emerald-600" />
-                    )}
+                    <LayoutList className="w-3.5 h-3.5 text-emerald-600" />
+                    <span>Widok przewijany</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setDailyViewMode('cards')}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-sans font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+                      dailyViewMode === 'cards'
+                        ? 'bg-white text-emerald-900 shadow-xs'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                    title="Widok kafelkowy"
+                  >
+                    <LayoutGrid className="w-3.5 h-3.5 text-emerald-600" />
+                    <span>Karty</span>
+                  </button>
+                </div>
+              </div>
 
-                    <div className="p-6 sm:p-7 space-y-5">
-                      {/* Top Meta Header */}
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <div className="flex items-center gap-2 mb-1.5">
-                            <span className={`px-2.5 py-1 rounded text-xs font-sans uppercase font-bold tracking-wider ${
-                              isGospel 
-                                ? 'bg-emerald-700 text-white shadow-xs' 
-                                : isPsalm
-                                ? 'bg-amber-100 text-amber-900 border border-amber-200'
-                                : 'bg-slate-100 text-slate-800 border border-slate-200'
-                            }`}>
-                              {reading.label}
-                            </span>
-                            {isGospel && (
-                              <span className="flex items-center gap-1 text-[11px] font-sans text-emerald-800 font-bold">
-                                <Flame className="w-3.5 h-3.5 text-emerald-600" />
-                                Szczyt Liturgii Słowa
-                              </span>
-                            )}
-                          </div>
-                          
-                          <span className="font-mono text-sm font-bold text-slate-900 bg-slate-50 px-2.5 py-1 rounded border border-slate-200 inline-block">
-                            {reading.siglum}
-                          </span>
-                        </div>
+              {/* View Mode 1: Continuous Scrollable Stream (Recommended & Default) */}
+              {dailyViewMode === 'stream' ? (
+                <div className="max-w-4xl mx-auto space-y-8">
+                  {dailyData.readings.map((reading, rIdx) => {
+                    const isGospel = reading.type === 'gospel';
+                    const isPsalm = reading.type === 'psalm';
+                    const isLangOpen = expandedReadingLang === reading.id;
+                    const isSpeaking = speakingSiglum === reading.siglum;
+                    const isCopied = copiedSiglum === reading.siglum;
+                    const selectableVerses = getSelectableVersesForReading(reading);
 
-                        {/* Fast Utility Actions: Audio read, Copy, Languages */}
-                        <div className="flex items-center gap-1.5">
-                          <button
-                            onClick={() => handleSpeakText(reading.siglum, reading.text)}
-                            className={`p-2 rounded-lg border transition-colors cursor-pointer ${
-                              isSpeaking 
-                                ? 'bg-emerald-700 text-white border-emerald-700' 
-                                : 'bg-white text-slate-600 hover:text-emerald-700 border-slate-200 hover:bg-slate-50'
-                            }`}
-                            title="Odsłuchaj lektora (synteza mowy)"
-                          >
-                            <Volume2 className="w-3.5 h-3.5" />
-                          </button>
-
-                          <button
-                            onClick={() => handleCopyText(reading.siglum, reading.text)}
-                            className="p-2 rounded-lg bg-white text-slate-600 hover:text-emerald-700 border border-slate-200 hover:bg-slate-50 transition-colors cursor-pointer"
-                            title="Skopiuj werset do schowka"
-                          >
-                            {isCopied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
-                          </button>
-
-                          <button
-                            onClick={() => setExpandedReadingLang(isLangOpen ? null : reading.id)}
-                            className={`p-2 rounded-lg border transition-colors cursor-pointer ${
-                              isLangOpen 
-                                ? 'bg-emerald-50 text-emerald-800 border-emerald-300 font-bold' 
-                                : 'bg-white text-slate-600 hover:text-emerald-700 border-slate-200 hover:bg-slate-50'
-                            }`}
-                            title="Podgląd tekstu oryginalnego i Wulgaty"
-                          >
-                            <Languages className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Liturgical Introduction */}
-                      {reading.liturgicalIntroduction && (
-                        <p className="text-xs font-sans italic text-slate-500 border-l-2 border-emerald-600 pl-3 py-0.5">
-                          {reading.liturgicalIntroduction}
-                        </p>
-                      )}
-
-                      {/* Psalm Response Banner */}
-                      {reading.psalmResponse && (
-                        <div className="p-3.5 bg-amber-50/80 rounded-xl border border-amber-200 space-y-1">
-                          <span className="text-[10px] font-sans uppercase tracking-[0.2em] text-amber-900 font-bold block">
-                            Refren Psalmu:
-                          </span>
-                          <p className="font-scripture text-base font-semibold text-slate-900 italic">
-                            «{reading.psalmResponse}»
-                          </p>
-                        </div>
-                      )}
-
-                      {/* Scripture Body */}
-                      <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 max-h-56 overflow-y-auto pr-3 custom-scrollbar">
-                        <p className="font-scripture text-base text-slate-900 leading-relaxed whitespace-pre-line">
-                          «{reading.text}»
-                        </p>
-                      </div>
-
-                      {/* Parallel Original Language Preview Drawer */}
-                      {isLangOpen && (
-                        <div className="p-4 rounded-xl bg-slate-50 border border-emerald-200 space-y-3 animate-fade-in text-xs">
-                          <div className="flex items-center justify-between text-[11px] font-sans uppercase tracking-wider text-emerald-900 font-bold border-b border-slate-200 pb-2">
-                            <span>Teksty Źródłowe & Wulgata</span>
-                            <span className="text-slate-500">Originalia</span>
-                          </div>
-                          
-                          {reading.greekText && (
-                            <div className="space-y-1">
-                              <span className="text-[10px] font-mono text-slate-600 uppercase font-bold">Novum Testamentum Graece:</span>
-                              <p className="font-serif italic text-slate-800 leading-relaxed">
-                                {reading.greekText}
-                              </p>
-                            </div>
-                          )}
-
-                          {reading.hebrewText && (
-                            <div className="space-y-1">
-                              <span className="text-[10px] font-mono text-slate-600 uppercase font-bold">Biblia Hebraica Stuttgartensia:</span>
-                              <p className="font-serif italic text-slate-800 text-right leading-relaxed" dir="rtl">
-                                {reading.hebrewText}
-                              </p>
-                            </div>
-                          )}
-
-                          {reading.latinText && (
-                            <div className="space-y-1 pt-1 border-t border-slate-200">
-                              <span className="text-[10px] font-mono text-slate-600 uppercase font-bold">Biblia Sacra Vulgata (św. Hieronim):</span>
-                              <p className="font-serif italic text-slate-700 leading-relaxed">
-                                {reading.latinText}
-                              </p>
-                            </div>
-                          )}
-                        </div>
-                      )}
-
-                      {/* Selectable Verses & Key Fragments in this Reading */}
-                      <div className="pt-3 space-y-2 border-t border-slate-200">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[11px] font-sans uppercase tracking-wider text-emerald-800 font-bold flex items-center gap-1.5">
-                            <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
-                            {isPsalm ? 'Wybierz zwrotkę / werset:' : 'Wybierz fragment / werset:'}
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => setReadingToPickVerse(reading)}
-                            className="text-[11px] text-emerald-700 hover:text-emerald-900 hover:underline flex items-center gap-1 cursor-pointer font-bold"
-                          >
-                            <span>Wybierz konkretne zdanie</span>
-                            <ArrowRight className="w-3 h-3" />
-                          </button>
-                        </div>
-
-                        <div className="flex flex-wrap gap-1.5">
-                          <button
-                            type="button"
-                            onClick={() => startScrutationFromDailyReading(
-                              reading, 
-                              reading.siglum, 
-                              reading.text, 
-                              reading.theologicalTheme
-                            )}
-                            className="px-2.5 py-1.5 rounded-lg text-xs bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border border-emerald-200 transition-all flex items-center gap-1.5 cursor-pointer text-left shadow-xs font-medium"
-                            title="Skrutuj całą perykopę"
-                          >
-                            <BookOpen className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
-                            <span className="font-bold font-mono text-[11px]">Całość</span>
-                            <span className="text-[11px] text-emerald-800">({reading.siglum})</span>
-                          </button>
-
-                          {selectableVerses.slice(0, 4).map((kv, kIdx) => (
-                            <button
-                              key={kIdx}
-                              type="button"
-                              onClick={() => startScrutationFromDailyReading(
-                                reading, 
-                                kv.siglum, 
-                                kv.text, 
-                                kv.theme
-                              )}
-                              className="px-2.5 py-1.5 rounded-lg text-xs bg-slate-50 hover:bg-emerald-50 text-slate-800 border border-slate-200 hover:border-emerald-300 transition-all flex items-center gap-1.5 cursor-pointer text-left group"
-                              title={kv.text}
-                            >
-                              <span className="font-mono font-bold text-[11px] text-emerald-800 group-hover:text-emerald-900">
-                                {kv.siglum}
-                              </span>
-                              <span className="text-[11px] text-slate-600 group-hover:text-slate-900 truncate max-w-[150px] sm:max-w-[190px]">
-                                {kv.label}
-                              </span>
-                            </button>
-                          ))}
-
-                          <button
-                            type="button"
-                            onClick={() => setReadingToPickVerse(reading)}
-                            className="px-2 py-1.5 rounded-lg text-[11px] bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 transition-all flex items-center gap-1 cursor-pointer font-medium"
-                          >
-                            <span>+ Wszystkie wersety</span>
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Theological Theme Annotation */}
-                      {reading.theologicalTheme && (
-                        <div className="pt-2 text-xs text-slate-600 flex items-start gap-2">
-                          <span className="font-bold text-emerald-800 uppercase text-[10px] tracking-wider shrink-0 mt-0.5">
-                            Motyw:
-                          </span>
-                          <span className="font-serif text-slate-700">{reading.theologicalTheme}</span>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Footer Launch Buttons: Odnośniki & Ojcowie Kościoła */}
-                    <div className="p-4 sm:p-5 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row gap-2.5">
-                      <button
-                        id={`start-scrutation-${reading.id}-btn`}
-                        onClick={() => setReadingToPickVerse(reading)}
-                        className={`flex-1 py-3 px-4 rounded-xl text-xs font-sans uppercase tracking-wider font-bold flex items-center justify-center gap-2 transition-all duration-200 cursor-pointer shadow-xs ${
+                    return (
+                      <article
+                        key={reading.id}
+                        id={`reading-section-${reading.id}`}
+                        className={`relative rounded-3xl border transition-all duration-300 bg-white overflow-hidden scroll-mt-28 shadow-xs hover:shadow-md ${
                           isGospel
-                            ? 'bg-emerald-700 text-white hover:bg-emerald-800'
-                            : 'bg-emerald-700 text-white hover:bg-emerald-800'
+                            ? 'border-emerald-300 ring-2 ring-emerald-100'
+                            : isPsalm
+                            ? 'border-amber-200'
+                            : 'border-slate-200'
                         }`}
                       >
-                        <BookOpen className="w-4 h-4 shrink-0" />
-                        <span>Skrutuj (Wybierz werset / Odnośniki)</span>
-                        <ArrowRight className="w-4 h-4 shrink-0" />
-                      </button>
+                        {/* Gospel Golden Top Ribbon */}
+                        {isGospel && (
+                          <div className="h-2 w-full bg-gradient-to-r from-emerald-600 via-amber-400 to-emerald-600" />
+                        )}
 
-                      {onOpenPatristicForVerse && (
-                        <button
-                          id={`patristic-reading-${reading.id}-btn`}
-                          onClick={() => onOpenPatristicForVerse(reading.siglum)}
-                          className="py-3 px-4 rounded-xl text-xs font-sans uppercase tracking-wider font-semibold flex items-center justify-center gap-2 bg-white hover:bg-slate-100 text-slate-800 border border-slate-300 transition-all cursor-pointer shadow-xs"
-                        >
-                          <Scroll className="w-4 h-4 text-emerald-700 shrink-0" />
-                          <span>Ojcowie Kościoła</span>
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
+                        <div className="p-6 sm:p-9 space-y-6">
+                          {/* Top Meta & Action Bar */}
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100">
+                            <div className="flex items-center gap-2.5 flex-wrap">
+                              <span
+                                className={`px-3 py-1 rounded-xl text-xs font-sans uppercase font-bold tracking-wider ${
+                                  isGospel
+                                    ? 'bg-emerald-700 text-white shadow-xs'
+                                    : isPsalm
+                                    ? 'bg-amber-100 text-amber-900 border border-amber-300'
+                                    : 'bg-slate-100 text-slate-800 border border-slate-200'
+                                }`}
+                              >
+                                {reading.label}
+                              </span>
+
+                              <span className="font-mono text-sm font-bold text-slate-900 bg-slate-50 px-3 py-1 rounded-xl border border-slate-200">
+                                {reading.siglum}
+                              </span>
+
+                              {isGospel && (
+                                <span className="inline-flex items-center gap-1.5 text-xs font-sans text-emerald-800 font-bold px-2.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-200">
+                                  <Flame className="w-3.5 h-3.5 text-emerald-600" />
+                                  Szczyt Liturgii Słowa
+                                </span>
+                              )}
+                            </div>
+
+                            {/* Utility Actions */}
+                            <div className="flex items-center gap-2 self-end sm:self-auto">
+                              <button
+                                type="button"
+                                onClick={() => handleSpeakText(reading.siglum, reading.text)}
+                                className={`px-3 py-1.5 rounded-xl text-xs font-sans font-semibold border transition-colors cursor-pointer flex items-center gap-1.5 ${
+                                  isSpeaking
+                                    ? 'bg-emerald-700 text-white border-emerald-700'
+                                    : 'bg-white text-slate-700 hover:text-emerald-800 border-slate-200 hover:bg-slate-50'
+                                }`}
+                                title="Odsłuchaj lektora (synteza mowy)"
+                              >
+                                <Volume2 className="w-3.5 h-3.5" />
+                                <span className="hidden sm:inline">{isSpeaking ? 'Zatrzymaj' : 'Odsłuchaj'}</span>
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => handleCopyText(reading.siglum, reading.text)}
+                                className="px-3 py-1.5 rounded-xl text-xs font-sans font-semibold bg-white text-slate-700 hover:text-emerald-800 border border-slate-200 hover:bg-slate-50 transition-colors cursor-pointer flex items-center gap-1.5"
+                                title="Skopiuj werset do schowka"
+                              >
+                                {isCopied ? (
+                                  <>
+                                    <Check className="w-3.5 h-3.5 text-emerald-600" />
+                                    <span>Skopiowano</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Copy className="w-3.5 h-3.5" />
+                                    <span className="hidden sm:inline">Kopiuj</span>
+                                  </>
+                                )}
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => setExpandedReadingLang(isLangOpen ? null : reading.id)}
+                                className={`px-3 py-1.5 rounded-xl text-xs font-sans font-semibold border transition-colors cursor-pointer flex items-center gap-1.5 ${
+                                  isLangOpen
+                                    ? 'bg-emerald-50 text-emerald-900 border-emerald-300 font-bold'
+                                    : 'bg-white text-slate-700 hover:text-emerald-800 border-slate-200 hover:bg-slate-50'
+                                }`}
+                                title="Podgląd tekstu oryginalnego i Wulgaty"
+                              >
+                                <Languages className="w-3.5 h-3.5" />
+                                <span className="hidden sm:inline">Źródła</span>
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Liturgical Introduction */}
+                          {reading.liturgicalIntroduction && (
+                            <div className="border-l-3 border-emerald-600 pl-4 py-1">
+                              <p className="text-sm font-sans italic text-slate-600">
+                                {reading.liturgicalIntroduction}
+                              </p>
+                            </div>
+                          )}
+
+                          {/* Psalm Response Banner */}
+                          {reading.psalmResponse && (
+                            <div className="p-4 sm:p-5 bg-amber-50/90 rounded-2xl border border-amber-200 space-y-1.5">
+                              <span className="text-[11px] font-sans uppercase tracking-[0.2em] text-amber-900 font-bold flex items-center gap-2">
+                                <span className="w-2 h-2 rounded-full bg-amber-500" />
+                                Refren Psalmu Responsoryjnego:
+                              </span>
+                              <p className="font-scripture text-lg sm:text-xl font-bold text-slate-900 italic">
+                                «{reading.psalmResponse}»
+                              </p>
+                            </div>
+                          )}
+
+                          {/* Full Scripture Body - Fluid & Readable */}
+                          <div className="p-6 sm:p-8 rounded-2xl bg-slate-50/70 border border-slate-200 shadow-2xs">
+                            <p className="font-scripture text-lg sm:text-xl text-slate-900 leading-relaxed sm:leading-loose whitespace-pre-line select-text">
+                              «{reading.text}»
+                            </p>
+                          </div>
+
+                          {/* Parallel Original Language Preview Drawer */}
+                          {isLangOpen && (
+                            <div className="p-5 rounded-2xl bg-emerald-50/30 border border-emerald-200 space-y-4 animate-fade-in text-xs">
+                              <div className="flex items-center justify-between text-xs font-sans uppercase tracking-wider text-emerald-950 font-bold border-b border-emerald-200 pb-2">
+                                <span>Teksty Źródłowe & Wulgata</span>
+                                <span className="text-slate-500">Aparat tekstualny</span>
+                              </div>
+
+                              {reading.greekText && (
+                                <div className="space-y-1.5">
+                                  <span className="text-[11px] font-mono text-emerald-900 uppercase font-bold">
+                                    Novum Testamentum Graece:
+                                  </span>
+                                  <p className="font-serif text-sm italic text-slate-800 leading-relaxed bg-white p-3 rounded-xl border border-emerald-100">
+                                    {reading.greekText}
+                                  </p>
+                                </div>
+                              )}
+
+                              {reading.hebrewText && (
+                                <div className="space-y-1.5">
+                                  <span className="text-[11px] font-mono text-emerald-900 uppercase font-bold">
+                                    Biblia Hebraica Stuttgartensia:
+                                  </span>
+                                  <p className="font-serif text-sm italic text-slate-800 text-right leading-relaxed bg-white p-3 rounded-xl border border-emerald-100" dir="rtl">
+                                    {reading.hebrewText}
+                                  </p>
+                                </div>
+                              )}
+
+                              {reading.latinText && (
+                                <div className="space-y-1.5">
+                                  <span className="text-[11px] font-mono text-emerald-900 uppercase font-bold">
+                                    Biblia Sacra Vulgata (św. Hieronim):
+                                  </span>
+                                  <p className="font-serif text-sm italic text-slate-700 leading-relaxed bg-white p-3 rounded-xl border border-emerald-100">
+                                    {reading.latinText}
+                                  </p>
+                                </div>
+                              )}
+                            </div>
+                          )}
+
+                          {/* Selectable Verses & Key Fragments */}
+                          <div className="space-y-3 pt-2">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                              <span className="text-xs font-sans uppercase tracking-wider text-emerald-900 font-bold flex items-center gap-1.5">
+                                <Sparkles className="w-4 h-4 text-emerald-600" />
+                                {isPsalm ? 'Wybierz zwrotkę / werset do skrutacji:' : 'Wybierz fragment lub werset do skrutacji:'}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => setReadingToPickVerse(reading)}
+                                className="text-xs text-emerald-700 hover:text-emerald-900 font-bold hover:underline flex items-center gap-1 cursor-pointer self-start sm:self-auto"
+                              >
+                                <span>Wybierz konkretne zdanie z tekstu</span>
+                                <ArrowRight className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+
+                            <div className="flex flex-wrap gap-2">
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  startScrutationFromDailyReading(
+                                    reading,
+                                    reading.siglum,
+                                    reading.text,
+                                    reading.theologicalTheme
+                                  )
+                                }
+                                className="px-3.5 py-2 rounded-xl text-xs bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border border-emerald-200 transition-all flex items-center gap-2 cursor-pointer text-left shadow-2xs font-semibold"
+                                title="Skrutuj całą perykopę"
+                              >
+                                <BookOpen className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
+                                <span className="font-bold font-mono text-xs">Całość</span>
+                                <span className="text-xs text-emerald-800">({reading.siglum})</span>
+                              </button>
+
+                              {selectableVerses.slice(0, 5).map((kv, kIdx) => (
+                                <button
+                                  key={kIdx}
+                                  type="button"
+                                  onClick={() =>
+                                    startScrutationFromDailyReading(
+                                      reading,
+                                      kv.siglum,
+                                      kv.text,
+                                      kv.theme
+                                    )
+                                  }
+                                  className="px-3 py-2 rounded-xl text-xs bg-slate-50 hover:bg-emerald-50 text-slate-800 hover:text-emerald-950 border border-slate-200 hover:border-emerald-300 transition-all flex items-center gap-2 cursor-pointer text-left group"
+                                  title={kv.text}
+                                >
+                                  <span className="font-mono font-bold text-xs text-emerald-800 group-hover:text-emerald-900">
+                                    {kv.siglum}
+                                  </span>
+                                  <span className="text-xs text-slate-600 group-hover:text-slate-900 truncate max-w-[180px] sm:max-w-[240px]">
+                                    {kv.label}
+                                  </span>
+                                </button>
+                              ))}
+
+                              <button
+                                type="button"
+                                onClick={() => setReadingToPickVerse(reading)}
+                                className="px-3 py-2 rounded-xl text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 transition-all flex items-center gap-1.5 cursor-pointer font-medium"
+                              >
+                                <span>+ Wszystkie wersety</span>
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Theological Theme */}
+                          {reading.theologicalTheme && (
+                            <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200 text-xs text-slate-700 flex items-start gap-2.5">
+                              <span className="font-bold text-emerald-900 uppercase text-[10px] tracking-wider shrink-0 mt-0.5 px-2 py-0.5 rounded bg-emerald-100">
+                                Motyw teologiczny:
+                              </span>
+                              <span className="font-serif text-slate-800 leading-relaxed text-sm">
+                                {reading.theologicalTheme}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Reading Action Footer */}
+                        <div className="p-4 sm:p-6 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row gap-3">
+                          <button
+                            id={`start-scrutation-${reading.id}-btn`}
+                            onClick={() => setReadingToPickVerse(reading)}
+                            className="flex-1 py-3.5 px-5 rounded-xl text-xs font-sans uppercase tracking-wider font-bold flex items-center justify-center gap-2 bg-emerald-700 text-white hover:bg-emerald-800 transition-all duration-200 cursor-pointer shadow-sm"
+                          >
+                            <BookOpen className="w-4 h-4 shrink-0" />
+                            <span>Rozpocznij Skrutację (Wybierz werset / Odnośniki)</span>
+                            <ArrowRight className="w-4 h-4 shrink-0" />
+                          </button>
+
+                          {onOpenPatristicForVerse && (
+                            <button
+                              id={`patristic-reading-${reading.id}-btn`}
+                              onClick={() => onOpenPatristicForVerse(reading.siglum)}
+                              className="py-3.5 px-5 rounded-xl text-xs font-sans uppercase tracking-wider font-semibold flex items-center justify-center gap-2 bg-white hover:bg-slate-100 text-slate-800 border border-slate-300 transition-all cursor-pointer shadow-xs"
+                            >
+                              <Scroll className="w-4 h-4 text-emerald-700 shrink-0" />
+                              <span>Ojcowie Kościoła</span>
+                            </button>
+                          )}
+                        </div>
+                      </article>
+                    );
+                  })}
+                </div>
+              ) : (
+                /* View Mode 2: Multi-Column Cards Layout */
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {dailyData.readings.map((reading) => {
+                    const isGospel = reading.type === 'gospel';
+                    const isPsalm = reading.type === 'psalm';
+                    const isLangOpen = expandedReadingLang === reading.id;
+                    const isSpeaking = speakingSiglum === reading.siglum;
+                    const isCopied = copiedSiglum === reading.siglum;
+                    const selectableVerses = getSelectableVersesForReading(reading);
+
+                    return (
+                      <div
+                        key={reading.id}
+                        className={`relative rounded-2xl border transition-all duration-200 flex flex-col justify-between overflow-hidden group bg-white shadow-xs ${
+                          isGospel
+                            ? 'border-emerald-300 ring-1 ring-emerald-200 shadow-md'
+                            : 'border-slate-200 hover:border-emerald-300 hover:shadow-md'
+                        }`}
+                      >
+                        {isGospel && (
+                          <div className="h-1.5 w-full bg-gradient-to-r from-emerald-600 via-amber-500 to-emerald-600" />
+                        )}
+
+                        <div className="p-6 sm:p-7 space-y-5">
+                          <div className="flex items-start justify-between gap-3">
+                            <div>
+                              <div className="flex items-center gap-2 mb-1.5">
+                                <span
+                                  className={`px-2.5 py-1 rounded text-xs font-sans uppercase font-bold tracking-wider ${
+                                    isGospel
+                                      ? 'bg-emerald-700 text-white shadow-xs'
+                                      : isPsalm
+                                      ? 'bg-amber-100 text-amber-900 border border-amber-200'
+                                      : 'bg-slate-100 text-slate-800 border border-slate-200'
+                                  }`}
+                                >
+                                  {reading.label}
+                                </span>
+                                {isGospel && (
+                                  <span className="flex items-center gap-1 text-[11px] font-sans text-emerald-800 font-bold">
+                                    <Flame className="w-3.5 h-3.5 text-emerald-600" />
+                                    Szczyt Liturgii Słowa
+                                  </span>
+                                )}
+                              </div>
+
+                              <span className="font-mono text-sm font-bold text-slate-900 bg-slate-50 px-2.5 py-1 rounded border border-slate-200 inline-block">
+                                {reading.siglum}
+                              </span>
+                            </div>
+
+                            <div className="flex items-center gap-1.5">
+                              <button
+                                onClick={() => handleSpeakText(reading.siglum, reading.text)}
+                                className={`p-2 rounded-lg border transition-colors cursor-pointer ${
+                                  isSpeaking
+                                    ? 'bg-emerald-700 text-white border-emerald-700'
+                                    : 'bg-white text-slate-600 hover:text-emerald-700 border-slate-200 hover:bg-slate-50'
+                                }`}
+                                title="Odsłuchaj lektora (synteza mowy)"
+                              >
+                                <Volume2 className="w-3.5 h-3.5" />
+                              </button>
+
+                              <button
+                                onClick={() => handleCopyText(reading.siglum, reading.text)}
+                                className="p-2 rounded-lg bg-white text-slate-600 hover:text-emerald-700 border border-slate-200 hover:bg-slate-50 transition-colors cursor-pointer"
+                                title="Skopiuj werset do schowka"
+                              >
+                                {isCopied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                              </button>
+
+                              <button
+                                onClick={() => setExpandedReadingLang(isLangOpen ? null : reading.id)}
+                                className={`p-2 rounded-lg border transition-colors cursor-pointer ${
+                                  isLangOpen
+                                    ? 'bg-emerald-50 text-emerald-800 border-emerald-300 font-bold'
+                                    : 'bg-white text-slate-600 hover:text-emerald-700 border-slate-200 hover:bg-slate-50'
+                                }`}
+                                title="Podgląd tekstu oryginalnego i Wulgaty"
+                              >
+                                <Languages className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </div>
+
+                          {reading.liturgicalIntroduction && (
+                            <p className="text-xs font-sans italic text-slate-500 border-l-2 border-emerald-600 pl-3 py-0.5">
+                              {reading.liturgicalIntroduction}
+                            </p>
+                          )}
+
+                          {reading.psalmResponse && (
+                            <div className="p-3.5 bg-amber-50/80 rounded-xl border border-amber-200 space-y-1">
+                              <span className="text-[10px] font-sans uppercase tracking-[0.2em] text-amber-900 font-bold block">
+                                Refren Psalmu:
+                              </span>
+                              <p className="font-scripture text-base font-semibold text-slate-900 italic">
+                                «{reading.psalmResponse}»
+                              </p>
+                            </div>
+                          )}
+
+                          <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 max-h-80 overflow-y-auto pr-3 custom-scrollbar">
+                            <p className="font-scripture text-base text-slate-900 leading-relaxed whitespace-pre-line">
+                              «{reading.text}»
+                            </p>
+                          </div>
+
+                          {/* Selectable Verses */}
+                          <div className="pt-3 space-y-2 border-t border-slate-200">
+                            <div className="flex items-center justify-between">
+                              <span className="text-[11px] font-sans uppercase tracking-wider text-emerald-800 font-bold flex items-center gap-1.5">
+                                <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
+                                {isPsalm ? 'Wybierz zwrotkę / werset:' : 'Wybierz fragment / werset:'}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => setReadingToPickVerse(reading)}
+                                className="text-[11px] text-emerald-700 hover:text-emerald-900 hover:underline flex items-center gap-1 cursor-pointer font-bold"
+                              >
+                                <span>Wybierz konkretne zdanie</span>
+                                <ArrowRight className="w-3 h-3" />
+                              </button>
+                            </div>
+
+                            <div className="flex flex-wrap gap-1.5">
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  startScrutationFromDailyReading(
+                                    reading,
+                                    reading.siglum,
+                                    reading.text,
+                                    reading.theologicalTheme
+                                  )
+                                }
+                                className="px-2.5 py-1.5 rounded-lg text-xs bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border border-emerald-200 transition-all flex items-center gap-1.5 cursor-pointer text-left shadow-xs font-medium"
+                                title="Skrutuj całą perykopę"
+                              >
+                                <BookOpen className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
+                                <span className="font-bold font-mono text-[11px]">Całość</span>
+                                <span className="text-[11px] text-emerald-800">({reading.siglum})</span>
+                              </button>
+
+                              {selectableVerses.slice(0, 4).map((kv, kIdx) => (
+                                <button
+                                  key={kIdx}
+                                  type="button"
+                                  onClick={() =>
+                                    startScrutationFromDailyReading(
+                                      reading,
+                                      kv.siglum,
+                                      kv.text,
+                                      kv.theme
+                                    )
+                                  }
+                                  className="px-2.5 py-1.5 rounded-lg text-xs bg-slate-50 hover:bg-emerald-50 text-slate-800 border border-slate-200 hover:border-emerald-300 transition-all flex items-center gap-1.5 cursor-pointer text-left group"
+                                  title={kv.text}
+                                >
+                                  <span className="font-mono font-bold text-[11px] text-emerald-800 group-hover:text-emerald-900">
+                                    {kv.siglum}
+                                  </span>
+                                  <span className="text-[11px] text-slate-600 group-hover:text-slate-900 truncate max-w-[150px] sm:max-w-[190px]">
+                                    {kv.label}
+                                  </span>
+                                </button>
+                              ))}
+
+                              <button
+                                type="button"
+                                onClick={() => setReadingToPickVerse(reading)}
+                                className="px-2 py-1.5 rounded-lg text-[11px] bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 transition-all flex items-center gap-1 cursor-pointer font-medium"
+                              >
+                                <span>+ Wszystkie wersety</span>
+                              </button>
+                            </div>
+                          </div>
+
+                          {reading.theologicalTheme && (
+                            <div className="pt-2 text-xs text-slate-600 flex items-start gap-2">
+                              <span className="font-bold text-emerald-800 uppercase text-[10px] tracking-wider shrink-0 mt-0.5">
+                                Motyw:
+                              </span>
+                              <span className="font-serif text-slate-700">{reading.theologicalTheme}</span>
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="p-4 sm:p-5 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row gap-2.5">
+                          <button
+                            id={`start-scrutation-${reading.id}-btn`}
+                            onClick={() => setReadingToPickVerse(reading)}
+                            className="flex-1 py-3 px-4 rounded-xl text-xs font-sans uppercase tracking-wider font-bold flex items-center justify-center gap-2 bg-emerald-700 text-white hover:bg-emerald-800 transition-all duration-200 cursor-pointer shadow-xs"
+                          >
+                            <BookOpen className="w-4 h-4 shrink-0" />
+                            <span>Skrutuj (Wybierz werset / Odnośniki)</span>
+                            <ArrowRight className="w-4 h-4 shrink-0" />
+                          </button>
+
+                          {onOpenPatristicForVerse && (
+                            <button
+                              id={`patristic-reading-${reading.id}-btn`}
+                              onClick={() => onOpenPatristicForVerse(reading.siglum)}
+                              className="py-3 px-4 rounded-xl text-xs font-sans uppercase tracking-wider font-semibold flex items-center justify-center gap-2 bg-white hover:bg-slate-100 text-slate-800 border border-slate-300 transition-all cursor-pointer shadow-xs"
+                            >
+                              <Scroll className="w-4 h-4 text-emerald-700 shrink-0" />
+                              <span>Ojcowie Kościoła</span>
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           )}
         </div>
