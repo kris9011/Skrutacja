@@ -17,9 +17,10 @@ import { ScrutationTreeView } from './components/ScrutationTreeView';
 import { JewishTraditionView } from './components/JewishTraditionView';
 import { CommunityWordSharingView } from './components/CommunityWordSharingView';
 import { IntroSplash } from './components/IntroSplash';
+import { ResetAppModal } from './components/ResetAppModal';
 import { ScrutationSession, BiblicalThemePreset } from './types';
 import { THEME_PRESETS } from './data/biblicalData';
-import { CheckCircle2, Flame, BookOpen, CalendarDays, Sparkles, BookmarkCheck, Network, Scroll, Users } from 'lucide-react';
+import { CheckCircle2, Flame, BookOpen, CalendarDays, Sparkles, BookmarkCheck, Network, Scroll, Users, RotateCcw } from 'lucide-react';
 
 const LOCAL_STORAGE_ACTIVE_SESSION = 'scrutatio_active_session_v1';
 const LOCAL_STORAGE_JOURNAL = 'scrutatio_journal_v1';
@@ -35,6 +36,7 @@ export default function App() {
   const [patristicSiglum, setPatristicSiglum] = useState<string>('Mk 7, 1-8');
   const [jewishSiglum, setJewishSiglum] = useState<string>('Rdz 22, 1-18');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [resetModalOpen, setResetModalOpen] = useState<boolean>(false);
 
   // Load from localStorage on mount
   useEffect(() => {
@@ -205,6 +207,28 @@ export default function App() {
     showToast(`Utworzono sesję skrutacji dla księgi: ${siglum}`);
   };
 
+  // Reset only the active scrutation tree / workspace
+  const handleResetActiveTree = () => {
+    setActiveSession(null);
+    localStorage.removeItem(LOCAL_STORAGE_ACTIVE_SESSION);
+    setActiveTab('daily');
+    showToast('Wyzerowano bieżące drzewko skrutacji.');
+  };
+
+  // Full app data reset
+  const handleResetAllData = () => {
+    setActiveSession(null);
+    setJournalSessions([]);
+    try {
+      localStorage.removeItem(LOCAL_STORAGE_ACTIVE_SESSION);
+      localStorage.removeItem(LOCAL_STORAGE_JOURNAL);
+      setActiveTab('daily');
+      showToast('Wyczyszczono wszystkie dane aplikacji.');
+    } catch (e) {
+      console.warn('Reset error:', e);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-white text-slate-900 flex flex-col selection:bg-emerald-100 selection:text-emerald-900">
       {/* Intro Splash Screen with Animated Holy Spirit Dove & Scripture */}
@@ -218,6 +242,7 @@ export default function App() {
         setActiveTab={setActiveTab}
         hasActiveSession={Boolean(activeSession)}
         onReplayIntro={() => setShowIntro(true)}
+        onOpenResetModal={() => setResetModalOpen(true)}
       />
 
       {/* Main View Router */}
@@ -340,6 +365,7 @@ export default function App() {
                 setJewishSiglum(sig);
                 setActiveTab('jewish');
               }}
+              onResetTree={() => setResetModalOpen(true)}
             />
           </div>
         )}
@@ -521,6 +547,16 @@ export default function App() {
           <BookmarkCheck className="w-4 h-4 mb-0.5" />
           <span className="text-[9px] uppercase">Dziennik</span>
         </button>
+
+        <button
+          id="mobile-nav-reset"
+          onClick={() => setResetModalOpen(true)}
+          className="flex flex-col items-center justify-center min-h-[44px] px-2 rounded-lg transition-colors cursor-pointer text-rose-600 hover:text-rose-700 active:scale-95"
+          title="Wyzeruj drzewko lub aplikację"
+        >
+          <RotateCcw className="w-4 h-4 mb-0.5" />
+          <span className="text-[9px] uppercase font-bold">Wyzeruj</span>
+        </button>
       </div>
 
       {/* Toast Notification */}
@@ -530,6 +566,16 @@ export default function App() {
           <span>{toastMessage}</span>
         </div>
       )}
+
+      {/* Reset Modal */}
+      <ResetAppModal
+        isOpen={resetModalOpen}
+        onClose={() => setResetModalOpen(false)}
+        onResetTreeOnly={handleResetActiveTree}
+        onResetAllData={handleResetAllData}
+        hasActiveSession={Boolean(activeSession)}
+        journalCount={journalSessions.length}
+      />
 
       {/* Footer */}
       <footer className="border-t border-slate-200 bg-white py-8 text-center text-xs text-slate-500 font-sans">

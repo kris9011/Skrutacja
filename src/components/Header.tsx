@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { BookOpen, Compass, BookmarkCheck, Library, Flame, Sparkles, CalendarDays, Droplets, Leaf, Network, Scroll, Users, Smartphone, Download } from 'lucide-react';
+import { BookOpen, Compass, BookmarkCheck, Library, Flame, Sparkles, CalendarDays, Droplets, Leaf, Network, Scroll, Users, Smartphone, Download, RotateCcw } from 'lucide-react';
 import { InstallAppModal } from './InstallAppModal';
 
 interface HeaderProps {
@@ -7,9 +7,16 @@ interface HeaderProps {
   setActiveTab: (tab: 'simple' | 'daily' | 'workspace' | 'tree' | 'patristic' | 'jewish' | 'community' | 'journal' | 'guide' | 'themes' | 'books') => void;
   hasActiveSession: boolean;
   onReplayIntro?: () => void;
+  onOpenResetModal?: () => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab, hasActiveSession, onReplayIntro }) => {
+export const Header: React.FC<HeaderProps> = ({ 
+  activeTab, 
+  setActiveTab, 
+  hasActiveSession, 
+  onReplayIntro,
+  onOpenResetModal 
+}) => {
   const [installModalOpen, setInstallModalOpen] = useState<boolean>(false);
   const [installPlatform, setInstallPlatform] = useState<'ios' | 'android'>('ios');
 
@@ -23,20 +30,28 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab, hasActi
       {/* Top Scripture Edition Notice & Mobile App Shortcuts Strip */}
       <div className="bg-emerald-50/80 border-b border-emerald-200/60 text-[11px] font-sans text-emerald-950 py-1.5 px-3 sm:px-6">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-2">
-          <div className="flex items-center gap-1.5 font-medium truncate">
+          <div className="flex items-center gap-1.5 font-medium truncate text-[10px] sm:text-[11px]">
             <BookOpen className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
-            <span>Tekst: <strong className="text-emerald-950 font-semibold">Biblia Tysiąclecia (Wyd. V)</strong></span>
+            <span>Tekst: <strong className="text-emerald-950 font-semibold">Biblia Tysiąclecia</strong></span>
             <span className="text-emerald-400 hidden md:inline">•</span>
-            <span className="hidden md:inline">Aparat odnośników: <strong className="text-emerald-950 font-semibold">Biblia Jerozolimska</strong></span>
-            <span className="text-emerald-400 hidden lg:inline">•</span>
-            <span className="hidden lg:inline">Lekcjonarz Episkopatu Polski</span>
+            <span className="hidden md:inline">Aparat: <strong className="text-emerald-950 font-semibold">Biblia Jerozolimska</strong></span>
           </div>
 
-          {/* Quick Install Square Buttons (iOS & Android) */}
+          {/* Action Buttons: Reset, Intro, iOS & Android */}
           <div className="flex items-center gap-1.5 shrink-0">
-            <span className="text-[10px] text-emerald-900/80 font-bold uppercase tracking-wider hidden sm:inline mr-1">
-              Aplikacja:
-            </span>
+            {/* Prominent Reset Button */}
+            {onOpenResetModal && (
+              <button
+                type="button"
+                id="header-reset-btn"
+                onClick={onOpenResetModal}
+                title="Wyzeruj drzewko lub całą aplikację"
+                className="h-7 px-2.5 rounded-lg bg-rose-50 hover:bg-rose-100 border border-rose-300 text-rose-800 font-sans font-bold text-[11px] flex items-center gap-1 shadow-xs transition-all cursor-pointer active:scale-95"
+              >
+                <RotateCcw className="w-3.5 h-3.5 text-rose-600 shrink-0" />
+                <span>Wyzeruj</span>
+              </button>
+            )}
 
             {/* Replay Holy Spirit Intro Button */}
             {onReplayIntro && (
