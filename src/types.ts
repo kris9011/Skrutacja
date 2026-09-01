@@ -173,3 +173,53 @@ export interface RandomScriptureQuote {
   }[];
 }
 
+export interface JewishTraditionCommentary {
+  id: string;
+  siglum: string;
+  hebrewText: string;
+  hebrewTransliteration?: string;
+  targumArameicText?: string;
+  targumPolish?: string;
+  sourceName: string; // np. "Targum Onkelos", "Targum Jonatana", "Midrasz Bereszit Rabba", "Rashi", "Talmud (Sanhedryn)"
+  era: string; // np. "Tannaim (I-II w.)", "Amoraim (III-V w.)", "Średniowiecze (Rashi, XI w.)"
+  rabbinicInterpretation: string;
+  christianTypology: string; // Jak to pojęcie wypełnia się w Jezusie Chrystusie i Nowym Testamencie
+  theologicalConcept: string; // np. "Akedah (Związanie Izaaka)", "Kippur (Przebłaganie)", "Szechina (Obecność)", "Memra (Słowo Boga)"
+  scrutationQuestion: string; // Pytanie do modlitwy i skrutacji
+}
+
+export interface CommunityEcho {
+  id: string;
+  authorName: string;
+  text: string;
+  favoriteSiglum?: string;
+  timestamp: string;
+}
+
+export interface CommunityIntention {
+  id: string;
+  authorName: string;
+  text: string;
+  timestamp: string;
+}
+
+export interface CommunitySharedSession {
+  id: string;
+  roomCode: string;
+  sessionTitle: string;
+  mainSiglum: string;
+  mainVerseText: string;
+  createdByName: string;
+  createdAt: string;
+  theme?: string;
+  nodes: {
+    siglum: string;
+    text: string;
+    testament: 'ST' | 'NT';
+    relation?: string;
+  }[];
+  echoes: CommunityEcho[];
+  intentions: CommunityIntention[];
+}
+
+

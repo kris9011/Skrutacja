@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" width="192" height="192">
+  <defs>
+    <linearGradient id="bgGrad192" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#047857" />
+      <stop offset="100%" stop-color="#064e3b" />
+    </linearGradient>
+    <linearGradient id="goldGrad192" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fbbf24" />
+      <stop offset="100%" stop-color="#d97706" />
+    </linearGradient>
+  </defs>
+  <rect width="192" height="192" rx="42" fill="url(#bgGrad192)" />
+  <!-- Open Bible Symbol -->
+  <path d="M 45 60 Q 96 70 96 135 Q 96 70 147 60 L 147 138 Q 96 148 96 155 Q 96 148 45 138 Z" fill="#ffffff" opacity="0.95" />
+  <path d="M 96 70 L 96 155" stroke="#047857" stroke-width="2.5" stroke-linecap="round" />
+  <!-- Holy Spirit Flame -->
+  <path d="M 96 34 C 103 47 111 54 107 65 C 104 73 98 77 96 77 C 94 77 88 73 85 65 C 81 54 89 47 96 34 Z" fill="url(#goldGrad192)" />
+</svg>

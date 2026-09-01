@@ -9,6 +9,7 @@ import { getGuaranteedPatristicData } from './src/data/patristicDatabase';
 import { getGuaranteedCrossReferences } from './src/data/crossReferenceDatabase';
 import { getRandomScriptureQuote } from './src/data/randomScriptureQuotes';
 import { findBiblicalLexiconEntry } from './src/data/biblicalLexiconDatabase';
+import { getGuaranteedJewishTradition } from './src/data/jewishTraditionDatabase';
 
 dotenv.config();
 
@@ -35,9 +36,13 @@ function getGeminiClient(): GoogleGenAI | null {
   return aiClient;
 }
 
+// Simple in-memory cache for API responses
+const dailyReadingsCache = new Map<string, any>();
+const crossRefCache = new Map<string, any>();
+
 // Resilient Gemini generator with fallback to valid Gemini models
 async function generateContentWithFallback(ai: GoogleGenAI, config: { prompt: string; schema?: any }): Promise<any> {
-  const modelsToTry = ['gemini-3.7-flash', 'gemini-3.1-flash-lite', 'gemini-flash-latest'];
+  const modelsToTry = ['gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemini-3.1-flash-lite', 'gemini-flash-latest', 'gemini-3.7-flash'];
   let lastError = null;
 
   for (const model of modelsToTry) {
@@ -55,9 +60,16 @@ async function generateContentWithFallback(ai: GoogleGenAI, config: { prompt: st
       }
     } catch (err: any) {
       lastError = err;
-      console.warn(`Model ${model} unavailable (${err?.status || err?.message}), trying fallback model...`);
+      const isQuotaError = err?.status === 429 || err?.message?.includes('Quota') || err?.message?.includes('429');
+      if (isQuotaError) {
+        // Quota exceeded for this model, try next lightweight model
+        continue;
+      }
     }
   }
+
+  // If all models hit quota or failed, notify concisely and throw to trigger guaranteed fallback
+  console.info('[Gemini AI] Quota/Model fallback: korzystanie z lokalnej bazy liturgiczno-biblijnej.');
   throw lastError || new Error('All AI models unavailable');
 }
 
@@ -91,6 +103,11 @@ app.post('/api/scrutation/cross-references', async (req, res) => {
   const { siglum, text, contextTheme } = req.body;
   if (!siglum) {
     return res.status(400).json({ error: 'Siglum jest wymagane' });
+  }
+
+  const cacheKey = `${siglum}_${contextTheme || ''}`;
+  if (crossRefCache.has(cacheKey)) {
+    return res.json(crossRefCache.get(cacheKey));
   }
 
   const guaranteed = getGuaranteedCrossReferences(siglum, text);
@@ -151,22 +168,25 @@ Podaj:
       });
     }
 
-    res.json({
+    const result = {
       source: 'gemini',
       siglum: parsed.siglum || siglum,
       text: parsed.fullText || text || guaranteed.fullText,
       theologicalContext: parsed.theologicalContext || guaranteed.theologicalContext,
       crossReferences: parsed.crossReferences || guaranteed.crossReferences
-    });
+    };
+    crossRefCache.set(cacheKey, result);
+    res.json(result);
   } catch (error) {
-    console.warn('Gemini cross-references fallback:', error);
-    res.json({
+    const fallback = {
       source: 'biblical-library',
       siglum: guaranteed.siglum,
       text: guaranteed.fullText,
       theologicalContext: guaranteed.theologicalContext,
       crossReferences: guaranteed.crossReferences
-    });
+    };
+    crossRefCache.set(cacheKey, fallback);
+    res.json(fallback);
   }
 });
 
@@ -356,6 +376,10 @@ app.post('/api/scrutation/daily-readings', async (req, res) => {
   const { date } = req.body; // YYYY-MM-DD format
   const targetDate = date ? new Date(date) : new Date();
   const dateStr = targetDate.toISOString().slice(0, 10);
+
+  if (dailyReadingsCache.has(dateStr)) {
+    return res.json(dailyReadingsCache.get(dateStr));
+  }
   
   // Polish date formatting helper
   const formattedDate = targetDate.toLocaleDateString('pl-PL', {
@@ -369,7 +393,9 @@ app.post('/api/scrutation/daily-readings', async (req, res) => {
     const ai = getGeminiClient();
     if (!ai) {
       // High-quality offline fallback readings for Catholic liturgy
-      return res.json(getGuaranteedDailyReadings(targetDate));
+      const fallback = getGuaranteedDailyReadings(targetDate);
+      dailyReadingsCache.set(dateStr, fallback);
+      return res.json(fallback);
     }
 
     const prompt = `Jesteś katolickim biblistą i znawcą Lekcjonarza Mszalnego Kościoła Rzymskokatolickiego (wersja polska: Biblia Tysiąclecia / Lekcjonarz Episkopatu Polski).
@@ -420,21 +446,26 @@ Upewnij się, że teksty są autentyczne, pełne i wierne polskiemu lekcjonarzow
 
     const parsed = await generateContentWithFallback(ai, { prompt, schema });
     if (!parsed || !parsed.readings || parsed.readings.length === 0) {
-      return res.json(getGuaranteedDailyReadings(targetDate));
+      const fallback = getGuaranteedDailyReadings(targetDate);
+      dailyReadingsCache.set(dateStr, fallback);
+      return res.json(fallback);
     }
 
-    res.json({
+    const result = {
       date: parsed.date || dateStr,
       formattedDate: parsed.formattedDate || formattedDate,
       liturgicalCelebration: parsed.liturgicalCelebration || 'Liturgia Słowa',
       liturgicalColor: parsed.liturgicalColor || 'green',
       liturgicalCycle: parsed.liturgicalCycle || 'Cykl czytań mszalnych',
       readings: parsed.readings || []
-    });
+    };
+    dailyReadingsCache.set(dateStr, result);
+    res.json(result);
   } catch (error) {
-    console.warn('Gemini daily readings unavailable, using guaranteed liturgical calendar fallback:', error);
     // Seamless fallback so the user never sees an error state
-    res.json(getGuaranteedDailyReadings(targetDate));
+    const fallback = getGuaranteedDailyReadings(targetDate);
+    dailyReadingsCache.set(dateStr, fallback);
+    res.json(fallback);
   }
 });
 
@@ -669,6 +700,68 @@ Przygotuj pełną analizę leksykalną i konkordancyjną tego słowa:
     });
   } catch (error) {
     console.warn('Gemini word-lookup fallback to database:', error);
+    res.json(guaranteed);
+  }
+});
+
+// API: Jewish Rabbinic Tradition, Targums & Typology Lookup
+app.post('/api/scrutation/jewish-lookup', async (req, res) => {
+  const { siglum } = req.body;
+  if (!siglum || typeof siglum !== 'string') {
+    return res.status(400).json({ error: 'Siglum jest wymagane' });
+  }
+
+  const cleanSiglum = siglum.trim();
+  const guaranteed = getGuaranteedJewishTradition(cleanSiglum);
+
+  try {
+    const ai = getGeminiClient();
+    if (!ai) {
+      return res.json(guaranteed);
+    }
+
+    const prompt = `Jesteś wybitnym biblistą, znawcą judaizmu okresu Drugiej Świątyni, aramejskich Targumów (Onkelos, Jonatan, Pseudo-Jonatan, Neofiti), Midraszy (Bereszit Rabba, Tanchuma) oraz Talmudu i typologii chrześcijańskiej.
+Użytkownik bada werset: "${cleanSiglum}".
+
+Przygotuj głęboką analizę w świetle Tradycji Żydowskiej Pierwszego Przymierza:
+1. Tekst oryginalny w alfabecie hebrajskim i transliteracja fonetyczna.
+2. Parafraza w aramejskim Targumie (jeśli dotyczy ST) oraz przekład polski.
+3. Źródło rabiniczne (np. Targum Onkelos, Midrasz Rabba, Miszna, Rashi).
+4. Nazwa kluczowego pojęcia teologicznego w judaizmie (np. Akedah, Pesach, Kippur, Szechina, Memra Jahwe, Berit Chadashah).
+5. Interpretacja rabiniczna: jak starożytny Izrael i mędrcy rozumieli ten tekst w synagodze.
+6. Typologia chrześcijańska: jak to pojęcie i obietnica wypełniają się w Jezusie Chrystusie i Nowym Testamencie.
+7. Jedno głębokie pytanie do osobistej medytacji i skrutacji biblijnej.`;
+
+    const schema = {
+      type: Type.OBJECT,
+      properties: {
+        id: { type: Type.STRING },
+        siglum: { type: Type.STRING },
+        hebrewText: { type: Type.STRING, description: 'Tekst hebrajski w alfabecie hebrajskim' },
+        hebrewTransliteration: { type: Type.STRING },
+        targumArameicText: { type: Type.STRING, description: 'Tekst w alfabecie aramejskim/hebrajskim' },
+        targumPolish: { type: Type.STRING },
+        sourceName: { type: Type.STRING },
+        era: { type: Type.STRING },
+        theologicalConcept: { type: Type.STRING },
+        rabbinicInterpretation: { type: Type.STRING },
+        christianTypology: { type: Type.STRING },
+        scrutationQuestion: { type: Type.STRING }
+      },
+      required: ['siglum', 'hebrewText', 'sourceName', 'theologicalConcept', 'rabbinicInterpretation', 'christianTypology', 'scrutationQuestion']
+    };
+
+    const parsed = await generateContentWithFallback(ai, { prompt, schema });
+    if (!parsed || !parsed.hebrewText || !parsed.theologicalConcept) {
+      return res.json(guaranteed);
+    }
+
+    res.json({
+      ...parsed,
+      id: parsed.id || `jewish_${Date.now()}`
+    });
+  } catch (error) {
+    console.warn('Gemini jewish-lookup fallback to database:', error);
     res.json(guaranteed);
   }
 });

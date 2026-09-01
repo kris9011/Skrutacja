@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Header } from './components/Header';
 import { SimpleLightScrutationView } from './components/SimpleLightScrutationView';
 import { ScrutationGuideView } from './components/ScrutationGuideView';
@@ -13,18 +13,22 @@ import { JournalView } from './components/JournalView';
 import { BibleBooksView } from './components/BibleBooksView';
 import { DailyReadingsAndPassageSelector } from './components/DailyReadingsAndPassageSelector';
 import { PatristicView } from './components/PatristicView';
+import { ScrutationTreeView } from './components/ScrutationTreeView';
+import { JewishTraditionView } from './components/JewishTraditionView';
+import { CommunityWordSharingView } from './components/CommunityWordSharingView';
 import { ScrutationSession, BiblicalThemePreset } from './types';
 import { THEME_PRESETS } from './data/biblicalData';
-import { CheckCircle2, Flame, BookOpen, CalendarDays, Sparkles, BookmarkCheck } from 'lucide-react';
+import { CheckCircle2, Flame, BookOpen, CalendarDays, Sparkles, BookmarkCheck, Network, Scroll, Users } from 'lucide-react';
 
 const LOCAL_STORAGE_ACTIVE_SESSION = 'scrutatio_active_session_v1';
 const LOCAL_STORAGE_JOURNAL = 'scrutatio_journal_v1';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<'simple' | 'daily' | 'workspace' | 'patristic' | 'journal' | 'guide' | 'themes' | 'books'>('daily');
+  const [activeTab, setActiveTab] = useState<'simple' | 'daily' | 'workspace' | 'tree' | 'patristic' | 'jewish' | 'community' | 'journal' | 'guide' | 'themes' | 'books'>('daily');
   const [activeSession, setActiveSession] = useState<ScrutationSession | null>(null);
   const [journalSessions, setJournalSessions] = useState<ScrutationSession[]>([]);
   const [patristicSiglum, setPatristicSiglum] = useState<string>('Mk 7, 1-8');
+  const [jewishSiglum, setJewishSiglum] = useState<string>('Rdz 22, 1-18');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   // Load from localStorage on mount
@@ -120,7 +124,7 @@ export default function App() {
           crossReferenceReason: c.relation,
           order: i + 1,
           isExpanded: true,
-          createdAt: Date.now() + i * 1000
+          createdAt: Date.now() + (i + 1) * 1000
         }))
       ],
       activeStep: 0,
@@ -141,7 +145,7 @@ export default function App() {
     };
 
     handleUpdateSession(newSession);
-    setActiveTab('workspace');
+    setActiveTab('tree');
     showToast(`Rozpoczęto nową skrutację: "${preset.title}"`);
   };
 
@@ -192,7 +196,7 @@ export default function App() {
       updatedAt: new Date().toISOString()
     };
     handleUpdateSession(newSession);
-    setActiveTab('workspace');
+    setActiveTab('tree');
     showToast(`Utworzono sesję skrutacji dla księgi: ${siglum}`);
   };
 
@@ -212,8 +216,8 @@ export default function App() {
             <SimpleLightScrutationView
               onStartFullScrutation={(session) => {
                 handleUpdateSession(session);
-                setActiveTab('workspace');
-                showToast(`Przeniesiono do pełnego pulpitu skrutacji: "${session.title}"`);
+                setActiveTab('tree');
+                showToast(`Przeniesiono do drzewka skrutacji: "${session.title}"`);
               }}
               onOpenPatristicView={(sig) => {
                 setPatristicSiglum(sig);
@@ -235,7 +239,7 @@ export default function App() {
           <DailyReadingsAndPassageSelector
             onStartScrutationWithPassage={(newSession) => {
               handleUpdateSession(newSession);
-              setActiveTab('workspace');
+              setActiveTab('tree');
               showToast(`Rozpoczęto nową skrutację ze Słowa Bożego: "${newSession.title}"`);
             }}
             onOpenPatristicForVerse={(sig) => {
@@ -243,6 +247,90 @@ export default function App() {
               setActiveTab('patristic');
             }}
           />
+        )}
+
+        {activeTab === 'tree' && (
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+            <ScrutationTreeView
+              session={activeSession || {
+                id: 'session_default_tree',
+                title: 'Pascha Chrystusa i Sługa Jahwe',
+                theme: 'Typologia paschalna',
+                initialSiglum: 'Łk 24, 13-35',
+                initialText: 'Czy serce nasze nie pałało w nas, kiedy rozmawiał z nami w drodze i Pisma nam wyjaśniał?',
+                nodes: [
+                  {
+                    id: 'node_root',
+                    parentId: null,
+                    siglum: 'Łk 24, 13-35',
+                    text: 'Czy serce nasze nie pałało w nas, kiedy rozmawiał z nami w drodze i Pisma nam wyjaśniał?',
+                    testament: 'NT',
+                    crossReferenceReason: 'Uczniowie z Emaus — otwarcie oczu',
+                    order: 0,
+                    isExpanded: true,
+                    createdAt: Date.now()
+                  },
+                  {
+                    id: 'node_st_1',
+                    parentId: 'node_root',
+                    siglum: 'Rdz 22, 1-18',
+                    text: 'Abraham rzekł: Bóg upatrzy sobie baranka na całopalenie, synu mój.',
+                    testament: 'ST',
+                    crossReferenceReason: 'Akedah — Związanie Izaaka na Górze Moria',
+                    order: 1,
+                    isExpanded: true,
+                    createdAt: Date.now() + 1000
+                  },
+                  {
+                    id: 'node_st_2',
+                    parentId: 'node_root',
+                    siglum: 'Iz 53, 7',
+                    text: 'Dręczono Go, lecz sam się dał gnębić, nawet nie otworzył ust swoich. Jak baranek na rzeź prowadzony...',
+                    testament: 'ST',
+                    crossReferenceReason: 'Cierpiący Sługa Jahwe i Baranek Ofiarny',
+                    order: 2,
+                    isExpanded: true,
+                    createdAt: Date.now() + 2000
+                  },
+                  {
+                    id: 'node_nt_1',
+                    parentId: 'node_st_2',
+                    siglum: '1 Kor 5, 7',
+                    text: 'Chrystus bowiem został złożony w ofierze jako nasza Pascha.',
+                    testament: 'NT',
+                    crossReferenceReason: 'Spełnienie Paschy w Krzyżu i Zmartwychwstaniu',
+                    order: 3,
+                    isExpanded: true,
+                    createdAt: Date.now() + 3000
+                  }
+                ],
+                activeStep: 0,
+                prayerNotes: {
+                  statio: '',
+                  invocatio: '',
+                  lectio: '',
+                  meditatio: '',
+                  oratio: '',
+                  contemplatio: '',
+                  actio: '',
+                  wordOfLife: ''
+                },
+                durationSeconds: 0,
+                isCompleted: false,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+              }}
+              onUpdateSession={handleUpdateSession}
+              onOpenPatristicsForSiglum={(sig) => {
+                setPatristicSiglum(sig);
+                setActiveTab('patristic');
+              }}
+              onOpenJewishTraditionForSiglum={(sig) => {
+                setJewishSiglum(sig);
+                setActiveTab('jewish');
+              }}
+            />
+          </div>
         )}
 
         {activeTab === 'workspace' && (
@@ -254,6 +342,70 @@ export default function App() {
             onOpenBooksModal={() => setActiveTab('books')}
             onOpenDailyTab={() => setActiveTab('daily')}
           />
+        )}
+
+        {activeTab === 'jewish' && (
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+            <JewishTraditionView
+              initialSiglum={jewishSiglum || activeSession?.initialSiglum || 'Rdz 22, 1-18'}
+              onStartScrutationWithVerse={(sig, txt) => {
+                const newSession: ScrutationSession = {
+                  id: 'session_' + Date.now(),
+                  title: `Tradycja Żydowska: ${sig}`,
+                  theme: 'Korzenie Pierwszego Przymierza',
+                  initialSiglum: sig,
+                  initialText: txt,
+                  nodes: [
+                    {
+                      id: 'node_root',
+                      parentId: null,
+                      siglum: sig,
+                      text: txt,
+                      testament: sig.startsWith('Mt') || sig.startsWith('J') || sig.startsWith('Łk') ? 'NT' : 'ST',
+                      crossReferenceReason: 'Werset wyjściowy z Tradycji Żydowskiej',
+                      order: 0,
+                      isExpanded: true,
+                      createdAt: Date.now()
+                    }
+                  ],
+                  activeStep: 0,
+                  prayerNotes: {
+                    statio: '',
+                    invocatio: '',
+                    lectio: '',
+                    meditatio: '',
+                    oratio: '',
+                    contemplatio: '',
+                    actio: '',
+                    wordOfLife: ''
+                  },
+                  durationSeconds: 0,
+                  isCompleted: false,
+                  createdAt: new Date().toISOString(),
+                  updatedAt: new Date().toISOString()
+                };
+                handleUpdateSession(newSession);
+                setActiveTab('tree');
+                showToast(`Rozpoczęto skrutację z tradycji żydowskiej: ${sig}`);
+              }}
+              onOpenPatristicsForSiglum={(sig) => {
+                setPatristicSiglum(sig);
+                setActiveTab('patristic');
+              }}
+            />
+          </div>
+        )}
+
+        {activeTab === 'community' && (
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+            <CommunityWordSharingView
+              currentSession={activeSession}
+              onLoadSessionToWorkspace={(sess) => {
+                handleUpdateSession(sess);
+                setActiveTab('tree');
+              }}
+            />
+          </div>
         )}
 
         {activeTab === 'patristic' && (
@@ -276,12 +428,12 @@ export default function App() {
             sessions={journalSessions}
             onOpenSession={(s) => {
               handleUpdateSession(s);
-              setActiveTab('workspace');
+              setActiveTab('tree');
             }}
             onDeleteSession={handleDeleteFromJournal}
             onStartNewScrutation={() => {
               setActiveSession(null);
-              setActiveTab('workspace');
+              setActiveTab('daily');
             }}
           />
         )}
@@ -291,70 +443,78 @@ export default function App() {
         )}
       </main>
 
-      {/* Mobile Sticky Bottom Navigation (Thumb-friendly 48px targets) */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200 px-2 py-1.5 flex items-center justify-around shadow-lg">
+      {/* Mobile Sticky Bottom Navigation */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-white/95 backdrop-blur-md border-t border-slate-200 px-2 py-1 flex items-center justify-around shadow-lg">
         <button
           id="mobile-nav-daily"
           onClick={() => setActiveTab('daily')}
-          className={`flex flex-col items-center justify-center min-h-[48px] px-3 rounded-lg transition-colors cursor-pointer ${
+          className={`flex flex-col items-center justify-center min-h-[44px] px-2 rounded-lg transition-colors cursor-pointer ${
             activeTab === 'daily' ? 'text-emerald-700 font-bold' : 'text-slate-500'
           }`}
         >
-          <CalendarDays className="w-5 h-5 mb-0.5" />
-          <span className="text-[10px] tracking-wider uppercase">Czytania</span>
+          <CalendarDays className="w-4 h-4 mb-0.5" />
+          <span className="text-[9px] uppercase">Czytania</span>
         </button>
 
         <button
-          id="mobile-nav-workspace"
-          onClick={() => setActiveTab('workspace')}
-          className={`flex flex-col items-center justify-center min-h-[48px] px-3 rounded-lg transition-colors cursor-pointer relative ${
-            activeTab === 'workspace' ? 'text-emerald-700 font-bold' : 'text-slate-500'
+          id="mobile-nav-tree"
+          onClick={() => setActiveTab('tree')}
+          className={`flex flex-col items-center justify-center min-h-[44px] px-2 rounded-lg transition-colors cursor-pointer relative ${
+            activeTab === 'tree' ? 'text-emerald-700 font-bold' : 'text-slate-500'
           }`}
         >
-          <BookOpen className="w-5 h-5 mb-0.5" />
-          <span className="text-[10px] tracking-wider uppercase">Odnośniki</span>
-          {Boolean(activeSession) && (
-            <span className="w-2 h-2 rounded-full bg-emerald-600 absolute top-1 right-2 animate-pulse" />
-          )}
+          <Network className="w-4 h-4 mb-0.5" />
+          <span className="text-[9px] uppercase">Drzewko</span>
         </button>
 
         <button
-          id="mobile-nav-simple"
-          onClick={() => setActiveTab('simple')}
-          className={`flex flex-col items-center justify-center min-h-[48px] px-3 rounded-lg transition-colors cursor-pointer ${
-            activeTab === 'simple' ? 'text-emerald-700 font-bold' : 'text-slate-500'
+          id="mobile-nav-jewish"
+          onClick={() => setActiveTab('jewish')}
+          className={`flex flex-col items-center justify-center min-h-[44px] px-2 rounded-lg transition-colors cursor-pointer ${
+            activeTab === 'jewish' ? 'text-amber-800 font-bold' : 'text-slate-500'
           }`}
         >
-          <Sparkles className="w-5 h-5 mb-0.5 text-emerald-600" />
-          <span className="text-[10px] tracking-wider uppercase">Skrutuj</span>
+          <Scroll className="w-4 h-4 mb-0.5" />
+          <span className="text-[9px] uppercase">Tora/Targum</span>
+        </button>
+
+        <button
+          id="mobile-nav-community"
+          onClick={() => setActiveTab('community')}
+          className={`flex flex-col items-center justify-center min-h-[44px] px-2 rounded-lg transition-colors cursor-pointer ${
+            activeTab === 'community' ? 'text-emerald-700 font-bold' : 'text-slate-500'
+          }`}
+        >
+          <Users className="w-4 h-4 mb-0.5" />
+          <span className="text-[9px] uppercase">Wspólnota</span>
         </button>
 
         <button
           id="mobile-nav-patristic"
           onClick={() => setActiveTab('patristic')}
-          className={`flex flex-col items-center justify-center min-h-[48px] px-3 rounded-lg transition-colors cursor-pointer ${
+          className={`flex flex-col items-center justify-center min-h-[44px] px-2 rounded-lg transition-colors cursor-pointer ${
             activeTab === 'patristic' ? 'text-sky-700 font-bold' : 'text-slate-500'
           }`}
         >
-          <Sparkles className="w-5 h-5 mb-0.5 text-sky-600" />
-          <span className="text-[10px] tracking-wider uppercase">Ojcowie</span>
+          <BookOpen className="w-4 h-4 mb-0.5" />
+          <span className="text-[9px] uppercase">Ojcowie</span>
         </button>
 
         <button
           id="mobile-nav-journal"
           onClick={() => setActiveTab('journal')}
-          className={`flex flex-col items-center justify-center min-h-[48px] px-3 rounded-lg transition-colors cursor-pointer ${
+          className={`flex flex-col items-center justify-center min-h-[44px] px-2 rounded-lg transition-colors cursor-pointer ${
             activeTab === 'journal' ? 'text-emerald-700 font-bold' : 'text-slate-500'
           }`}
         >
-          <BookmarkCheck className="w-5 h-5 mb-0.5" />
-          <span className="text-[10px] tracking-wider uppercase">Dziennik</span>
+          <BookmarkCheck className="w-4 h-4 mb-0.5" />
+          <span className="text-[9px] uppercase">Dziennik</span>
         </button>
       </div>
 
       {/* Toast Notification */}
       {toastMessage && (
-        <div className="fixed bottom-6 right-6 z-50 animate-bounce-in bg-white text-slate-800 px-4 py-3 border border-emerald-300 rounded-2xl shadow-xl flex items-center gap-2.5 text-xs sm:text-sm font-medium">
+        <div className="fixed bottom-20 right-6 z-50 animate-bounce-in bg-white text-slate-800 px-4 py-3 border border-emerald-300 rounded-2xl shadow-xl flex items-center gap-2.5 text-xs sm:text-sm font-medium">
           <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
           <span>{toastMessage}</span>
         </div>
@@ -368,7 +528,7 @@ export default function App() {
             <span>Scrutatio Scripturae — «Badajcie Pisma» (J 5, 39)</span>
           </div>
           <p className="text-slate-500 text-xs font-sans">
-            Aparat odnośników biblijnych, tradycja Biblii Jerozolimskiej i modlitwa Słowem Bożym.
+            Aparat odnośników biblijnych, tradycja Biblii Jerozolimskiej, Targumy aramejskie i modlitwa Słowem Bożym.
           </p>
         </div>
       </footer>
