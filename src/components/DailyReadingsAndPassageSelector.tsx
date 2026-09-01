@@ -39,6 +39,7 @@ import {
   LayoutList,
   LayoutGrid
 } from 'lucide-react';
+import { BilingualScriptureReader } from './BilingualScriptureReader';
 
 interface DailyReadingsAndPassageSelectorProps {
   onStartScrutationWithPassage: (session: ScrutationSession) => void;
@@ -1191,55 +1192,31 @@ export const DailyReadingsAndPassageSelector: React.FC<DailyReadingsAndPassageSe
                             </div>
                           )}
 
-                          {/* Full Scripture Body - Fluid & Readable */}
-                          <div className="p-6 sm:p-8 rounded-2xl bg-slate-50/70 border border-slate-200 shadow-2xs">
-                            <p className="font-scripture text-lg sm:text-xl text-slate-900 leading-relaxed sm:leading-loose whitespace-pre-line select-text">
-                              «{reading.text}»
-                            </p>
-                          </div>
-
-                          {/* Parallel Original Language Preview Drawer */}
-                          {isLangOpen && (
-                            <div className="p-5 rounded-2xl bg-emerald-50/30 border border-emerald-200 space-y-4 animate-fade-in text-xs">
-                              <div className="flex items-center justify-between text-xs font-sans uppercase tracking-wider text-emerald-950 font-bold border-b border-emerald-200 pb-2">
-                                <span>Teksty Źródłowe & Wulgata</span>
-                                <span className="text-slate-500">Aparat tekstualny</span>
-                              </div>
-
-                              {reading.greekText && (
-                                <div className="space-y-1.5">
-                                  <span className="text-[11px] font-mono text-emerald-900 uppercase font-bold">
-                                    Novum Testamentum Graece:
-                                  </span>
-                                  <p className="font-serif text-sm italic text-slate-800 leading-relaxed bg-white p-3 rounded-xl border border-emerald-100">
-                                    {reading.greekText}
-                                  </p>
-                                </div>
-                              )}
-
-                              {reading.hebrewText && (
-                                <div className="space-y-1.5">
-                                  <span className="text-[11px] font-mono text-emerald-900 uppercase font-bold">
-                                    Biblia Hebraica Stuttgartensia:
-                                  </span>
-                                  <p className="font-serif text-sm italic text-slate-800 text-right leading-relaxed bg-white p-3 rounded-xl border border-emerald-100" dir="rtl">
-                                    {reading.hebrewText}
-                                  </p>
-                                </div>
-                              )}
-
-                              {reading.latinText && (
-                                <div className="space-y-1.5">
-                                  <span className="text-[11px] font-mono text-emerald-900 uppercase font-bold">
-                                    Biblia Sacra Vulgata (św. Hieronim):
-                                  </span>
-                                  <p className="font-serif text-sm italic text-slate-700 leading-relaxed bg-white p-3 rounded-xl border border-emerald-100">
-                                    {reading.latinText}
-                                  </p>
-                                </div>
-                              )}
-                            </div>
-                          )}
+                          {/* Interactive Scripture Reader (Polski, Oryginał, Bilingwistyczny) */}
+                          <BilingualScriptureReader
+                            siglum={reading.siglum}
+                            polishText={reading.text}
+                            originalGreekText={reading.greekText}
+                            originalHebrewText={reading.hebrewText}
+                            latinVulgateText={reading.latinText}
+                            theologicalTheme={reading.theologicalTheme}
+                            onSelectWordForScrutation={(occSiglum, occText, word) => {
+                              startScrutationFromDailyReading(
+                                reading,
+                                occSiglum,
+                                occText,
+                                `Skrutacja pojęcia «${word}» z ${reading.siglum}`
+                              );
+                            }}
+                            onOpenFullScrutation={(sig, txt) => {
+                              startScrutationFromDailyReading(
+                                reading,
+                                sig,
+                                txt,
+                                reading.theologicalTheme
+                              );
+                            }}
+                          />
 
                           {/* Selectable Verses & Key Fragments */}
                           <div className="space-y-3 pt-2">
@@ -1455,11 +1432,31 @@ export const DailyReadingsAndPassageSelector: React.FC<DailyReadingsAndPassageSe
                             </div>
                           )}
 
-                          <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 max-h-80 overflow-y-auto pr-3 custom-scrollbar">
-                            <p className="font-scripture text-base text-slate-900 leading-relaxed whitespace-pre-line">
-                              «{reading.text}»
-                            </p>
-                          </div>
+                          {/* Interactive Scripture Reader */}
+                          <BilingualScriptureReader
+                            siglum={reading.siglum}
+                            polishText={reading.text}
+                            originalGreekText={reading.greekText}
+                            originalHebrewText={reading.hebrewText}
+                            latinVulgateText={reading.latinText}
+                            theologicalTheme={reading.theologicalTheme}
+                            onSelectWordForScrutation={(occSiglum, occText, word) => {
+                              startScrutationFromDailyReading(
+                                reading,
+                                occSiglum,
+                                occText,
+                                `Skrutacja pojęcia «${word}» z ${reading.siglum}`
+                              );
+                            }}
+                            onOpenFullScrutation={(sig, txt) => {
+                              startScrutationFromDailyReading(
+                                reading,
+                                sig,
+                                txt,
+                                reading.theologicalTheme
+                              );
+                            }}
+                          />
 
                           {/* Selectable Verses */}
                           <div className="pt-3 space-y-2 border-t border-slate-200">
@@ -1754,35 +1751,30 @@ export const DailyReadingsAndPassageSelector: React.FC<DailyReadingsAndPassageSe
                 </button>
               </div>
 
-              {/* Full Text */}
-              <div className="p-6 bg-slate-50 rounded-2xl border border-slate-200 shadow-xs space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-sans uppercase tracking-[0.2em] text-emerald-800 font-bold flex items-center gap-1.5">
-                    <Quote className="w-3.5 h-3.5 text-emerald-600" />
-                    Tekst Pisma Świętego (Biblia Tysiąclecia / Jerozolimska)
-                  </span>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => handleSpeakText(passageLookupResult.siglum, passageLookupResult.text)}
-                      className="text-xs text-slate-600 hover:text-emerald-700 flex items-center gap-1 cursor-pointer font-medium"
-                    >
-                      <Volume2 className="w-3.5 h-3.5" />
-                      <span>Czytaj</span>
-                    </button>
-                    <button
-                      onClick={() => handleCopyText(passageLookupResult.siglum, passageLookupResult.text)}
-                      className="text-xs text-slate-600 hover:text-emerald-700 flex items-center gap-1 cursor-pointer font-medium"
-                    >
-                      <Copy className="w-3.5 h-3.5" />
-                      <span>Kopiuj</span>
-                    </button>
-                  </div>
-                </div>
-
-                <p className="font-scripture text-base sm:text-lg text-slate-900 leading-relaxed whitespace-pre-line italic font-medium">
-                  «{passageLookupResult.text}»
-                </p>
-              </div>
+              {/* Interactive Scripture Reader (Polski / Oryginał / Bilingwistyczny) */}
+              <BilingualScriptureReader
+                siglum={passageLookupResult.siglum}
+                polishText={passageLookupResult.text}
+                originalGreekText={passageLookupResult.greekText}
+                originalHebrewText={passageLookupResult.hebrewText}
+                latinVulgateText={passageLookupResult.latinText}
+                theologicalTheme={passageLookupResult.theologicalContext}
+                onSelectWordForScrutation={(occSiglum, occText, word) => {
+                  startScrutationFromLookup({
+                    ...passageLookupResult,
+                    siglum: occSiglum,
+                    text: occText,
+                    pericopeTitle: `Skrutacja: ${word} (${occSiglum})`
+                  });
+                }}
+                onOpenFullScrutation={(sig, txt) => {
+                  startScrutationFromLookup({
+                    ...passageLookupResult,
+                    siglum: sig,
+                    text: txt
+                  });
+                }}
+              />
 
               {/* Theological theme, suggested paths and keywords */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 text-xs text-slate-600">

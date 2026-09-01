@@ -8,6 +8,7 @@ import { getGuaranteedDailyReadings } from './src/data/liturgicalCalendarFallbac
 import { getGuaranteedPatristicData } from './src/data/patristicDatabase';
 import { getGuaranteedCrossReferences } from './src/data/crossReferenceDatabase';
 import { getRandomScriptureQuote } from './src/data/randomScriptureQuotes';
+import { findBiblicalLexiconEntry } from './src/data/biblicalLexiconDatabase';
 
 dotenv.config();
 
@@ -587,6 +588,87 @@ Podaj:
     });
   } catch (err) {
     console.warn('Fallback for random quote due to AI error:', err);
+    res.json(guaranteed);
+  }
+});
+
+// API: Biblical Word Lexicon, Strong Concordance & Occurrences across Scripture
+app.post('/api/scrutation/word-lookup', async (req, res) => {
+  const { word, verseSiglum, verseText } = req.body;
+  if (!word || typeof word !== 'string') {
+    return res.status(400).json({ error: 'Słowo do analizy jest wymagane' });
+  }
+
+  const cleanWord = word.trim();
+  const guaranteed = findBiblicalLexiconEntry(cleanWord, verseSiglum);
+
+  try {
+    const ai = getGeminiClient();
+    if (!ai) {
+      return res.json(guaranteed);
+    }
+
+    const prompt = `Jesteś wybitnym filologiem biblijnym (znawcą hebrajszczyzny biblijnej, aramejskiego, greki Koine oraz łaciny Wulgaty) i przewodnikiem po Skrutacji Pisma Świętego.
+Użytkownik kliknął w wyraz: "${cleanWord}" w kontekście wersetu ${verseSiglum ? `"${verseSiglum}"` : ''} ${verseText ? `o treści: "${verseText}"` : ''}.
+
+Przygotuj pełną analizę leksykalną i konkordancyjną tego słowa:
+1. Słowo oryginalne w alfabecie greckim lub hebrajskim (zależnie czy werset to ST czy NT).
+2. Transliteracja fonetyczna i wymowa.
+3. Numer Stronga (np. G26, G3056, H7307, H2617, H7965 itp.).
+4. Część mowy i forma gramatyczna w kontekście wersetu.
+5. Dokładne znaczenie rdzenia słowa i definicja w teologii biblijnej.
+6. Znaczenie teologiczne i duchowe (jak to pojęcie buduje historię zbawienia i przymierze).
+7. Przybliżona częstotliwość występowania w Piśmie Świętym.
+8. Lista od 3 do 5 kluczowych wersetów z CAŁEGO Pisma Świętego (zarówno Stary jak i Nowy Testament), gdzie to samo pojęcie/słowo lub jego hebrajski/grecki odpowiednik występuje w sposób kluczowy, aby użytkownik mógł kontynuować skrutację biblijną.`;
+
+    const schema = {
+      type: Type.OBJECT,
+      properties: {
+        id: { type: Type.STRING },
+        wordPolish: { type: Type.STRING },
+        originalWord: { type: Type.STRING, description: 'Słowo w alfabecie greckim lub hebrajskim' },
+        originalLanguage: { type: Type.STRING, enum: ['Greka (Koine)', 'Hebrajski', 'Aramejski'] },
+        transliteration: { type: Type.STRING, description: 'Wymowa fonetyczna' },
+        strongNumber: { type: Type.STRING, description: 'Numer Stronga, np. G26 lub H7307' },
+        partOfSpeech: { type: Type.STRING },
+        rootMeaning: { type: Type.STRING },
+        detailedDefinition: { type: Type.STRING },
+        theologicalSignificance: { type: Type.STRING },
+        biblicalFrequency: { type: Type.STRING },
+        relatedWords: {
+          type: Type.ARRAY,
+          items: { type: Type.STRING }
+        },
+        occurrences: {
+          type: Type.ARRAY,
+          items: {
+            type: Type.OBJECT,
+            properties: {
+              siglum: { type: Type.STRING },
+              bookName: { type: Type.STRING },
+              testament: { type: Type.STRING, enum: ['ST', 'NT'] },
+              text: { type: Type.STRING },
+              highlightWord: { type: Type.STRING },
+              contextNote: { type: Type.STRING }
+            },
+            required: ['siglum', 'bookName', 'testament', 'text', 'highlightWord']
+          }
+        }
+      },
+      required: ['wordPolish', 'originalWord', 'originalLanguage', 'transliteration', 'strongNumber', 'rootMeaning', 'detailedDefinition', 'theologicalSignificance', 'occurrences']
+    };
+
+    const parsed = await generateContentWithFallback(ai, { prompt, schema });
+    if (!parsed || !parsed.originalWord || !parsed.occurrences || parsed.occurrences.length === 0) {
+      return res.json(guaranteed);
+    }
+
+    res.json({
+      ...parsed,
+      id: parsed.id || `lex_${Date.now()}`
+    });
+  } catch (error) {
+    console.warn('Gemini word-lookup fallback to database:', error);
     res.json(guaranteed);
   }
 });
