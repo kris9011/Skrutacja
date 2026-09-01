@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Scrutatio Scripturae — Skrutacja Pisma Świętego (Wersja Samodzielna HTML)</title>
+  <title>Skrutacja Pisma Świętego — Scrutatio Scripturae (Wersja Samodzielna Offline)</title>
   
-  <!-- Fonts -->
+  <!-- Google Fonts: Plus Jakarta Sans, Newsreader, Cinzel -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Cardo:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;800&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,500&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -21,23 +21,20 @@
       theme: {
         extend: {
           fontFamily: {
-            serif: ['Cardo', 'Georgia', 'serif'],
-            display: ['Cinzel', 'serif'],
-            sans: ['Plus Jakarta Sans', 'sans-serif'],
+            sans: ['Plus Jakarta Sans', 'system-ui', 'sans-serif'],
+            serif: ['Newsreader', 'Georgia', 'serif'],
+            display: ['Cinzel', 'Georgia', 'serif'],
           },
           colors: {
             sacred: {
-              bg: '#0F0F12',
-              card: '#141417',
-              paper: '#FAF8F5',
-              gold: '#C5A059',
-              goldDark: '#8F7034',
-              goldLight: '#E5C98B',
-              crimson: '#8B2635',
-              sand: '#EBE7DF',
-              sandDark: '#DDD7CA',
-              ink: '#2A241C',
-              border: '#3D3524'
+              50: '#FBFBFA',
+              100: '#F4F3EE',
+              200: '#E6E4DC',
+              300: '#D5D1C3',
+              500: '#A39C85',
+              700: '#686250',
+              800: '#464236',
+              900: '#2A2720',
             }
           }
         }
@@ -47,495 +44,644 @@
 
   <style>
     body {
-      background-color: #0F0F12;
-      color: #E0E0D6;
+      background-color: #F8FAFC;
+      color: #0F172A;
       font-family: 'Plus Jakarta Sans', sans-serif;
-    }
-    .font-display {
-      font-family: 'Cinzel', serif;
+      -webkit-font-smoothing: antialiased;
     }
     .font-scripture {
-      font-family: 'Cardo', Georgia, serif;
+      font-family: 'Newsreader', Georgia, serif;
     }
-    /* Custom scrollbar */
+    .font-display {
+      font-family: 'Cinzel', Georgia, serif;
+    }
+    /* Smooth custom scrollbars */
     ::-webkit-scrollbar {
       width: 8px;
       height: 8px;
     }
     ::-webkit-scrollbar-track {
-      background: #0F0F12;
+      background: #F1F5F9;
     }
     ::-webkit-scrollbar-thumb {
-      background: #3D3524;
-      border-radius: 4px;
+      background: #CBD5E1;
+      border-radius: 9999px;
     }
     ::-webkit-scrollbar-thumb:hover {
-      background: #C5A059;
+      background: #94A3B8;
+    }
+    .selectable-sentence {
+      cursor: pointer;
+      border-radius: 4px;
+      padding: 1px 3px;
+      transition: all 0.15s ease-in-out;
+    }
+    .selectable-sentence:hover {
+      background-color: #DCFCE7;
+      color: #065F46;
+      text-decoration: underline;
+      text-underline-offset: 3px;
     }
   </style>
 </head>
-<body class="min-h-screen flex flex-col selection:bg-[#C5A059] selection:text-black">
+<body class="min-h-screen flex flex-col bg-slate-50 text-slate-900 selection:bg-emerald-200 selection:text-emerald-900">
 
-  <!-- TOP BAR -->
-  <header class="sticky top-0 z-50 bg-[#0F0F12]/95 backdrop-blur border-b border-[#3D3524] px-4 sm:px-8 py-3.5">
-    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-4">
-      <div class="flex items-center gap-3 cursor-pointer" onclick="switchTab('daily')">
-        <div class="w-10 h-10 rounded-lg bg-[#141417] border border-[#3D3524] flex items-center justify-center text-[#C5A059] shadow-inner">
-          <i data-lucide="flame" class="w-5 h-5"></i>
-        </div>
-        <div>
-          <div class="flex items-baseline gap-2">
-            <span class="font-display text-lg sm:text-xl font-bold tracking-widest text-[#C5A059]">SKRUTACJA</span>
-            <span class="text-[10px] uppercase tracking-[0.25em] text-[#8C8270]">Scripturae (HTML)</span>
+  <!-- TOP HEADER -->
+  <header class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-xs">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16 sm:h-20">
+        
+        <!-- Logo -->
+        <div onclick="switchTab('daily')" class="flex items-center gap-3 cursor-pointer select-none group" id="main-logo-btn">
+          <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 border border-emerald-400 flex items-center justify-center text-white shadow-xs group-hover:scale-105 transition-transform">
+            <i data-lucide="flame" class="w-5 h-5 text-emerald-100"></i>
           </div>
-          <p class="text-[11px] text-[#8C8270] hidden sm:block">«Badajcie Pisma, bo w nich jest życie wieczne» (J 5,39)</p>
+          <div>
+            <div class="flex items-baseline gap-2">
+              <span class="font-serif text-xl sm:text-2xl font-bold tracking-tight text-slate-900 group-hover:text-emerald-800 transition-colors">
+                SKRUTACJA
+              </span>
+              <span class="text-[10px] sm:text-[11px] uppercase tracking-[0.2em] font-semibold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 hidden sm:inline-block">
+                Offline HTML
+              </span>
+            </div>
+            <p class="text-[11px] text-slate-500 hidden md:block">
+              Liturgia Dnia • Biblia Jerozolimska • Ojcowie Kościoła
+            </p>
+          </div>
         </div>
-      </div>
 
-      <!-- Navigation Tabs -->
-      <nav class="flex items-center gap-1 sm:gap-3 text-xs tracking-wider uppercase font-medium">
-        <button onclick="switchTab('daily')" id="tab-btn-daily" class="px-3 py-2 rounded-md transition text-[#C5A059] bg-[#1F1E24] border border-[#3D3524] flex items-center gap-1.5">
-          <i data-lucide="calendar" class="w-4 h-4"></i>
-          <span>Czytania</span>
-        </button>
-        <button onclick="switchTab('workspace')" id="tab-btn-workspace" class="px-3 py-2 rounded-md transition text-[#8C8270] hover:text-[#E0E0D6] flex items-center gap-1.5">
-          <i data-lucide="book-open" class="w-4 h-4"></i>
-          <span>Warsztat</span>
-        </button>
-        <button onclick="switchTab('patristic')" id="tab-btn-patristic" class="px-3 py-2 rounded-md transition text-[#8C8270] hover:text-[#E0E0D6] flex items-center gap-1.5">
-          <i data-lucide="scroll" class="w-4 h-4"></i>
-          <span>Ojcowie Kościoła</span>
-        </button>
-        <button onclick="switchTab('journal')" id="tab-btn-journal" class="px-3 py-2 rounded-md transition text-[#8C8270] hover:text-[#E0E0D6] flex items-center gap-1.5">
-          <i data-lucide="bookmark-check" class="w-4 h-4"></i>
-          <span>Dziennik</span>
-        </button>
-        <button onclick="downloadSelf()" class="ml-2 px-3 py-2 rounded-md bg-[#C5A059] text-black font-semibold hover:bg-[#E5C98B] transition flex items-center gap-1.5 shadow" title="Zapisz ten plik HTML na dysku">
-          <i data-lucide="download" class="w-4 h-4"></i>
-          <span class="hidden md:inline">Zapisz .HTML</span>
-        </button>
-      </nav>
+        <!-- Navigation Tabs -->
+        <nav class="flex items-center gap-1 sm:gap-2 text-xs font-medium">
+          <button onclick="switchTab('daily')" id="nav-btn-daily" class="px-3 py-2 rounded-xl transition flex items-center gap-1.5 font-semibold text-emerald-900 bg-emerald-100/90 border border-emerald-300 shadow-xs">
+            <i data-lucide="calendar" class="w-4 h-4 text-emerald-600"></i>
+            <span class="hidden sm:inline">Czytania z dnia</span>
+            <span class="sm:hidden">Czytania</span>
+          </button>
+
+          <button onclick="switchTab('selector')" id="nav-btn-selector" class="px-3 py-2 rounded-xl transition text-slate-600 hover:text-slate-900 hover:bg-slate-100 flex items-center gap-1.5">
+            <i data-lucide="compass" class="w-4 h-4 text-emerald-600"></i>
+            <span class="hidden sm:inline">Kanon & Fragmenty</span>
+            <span class="sm:hidden">Kanon</span>
+          </button>
+
+          <button onclick="switchTab('workspace')" id="nav-btn-workspace" class="px-3 py-2 rounded-xl transition text-slate-600 hover:text-slate-900 hover:bg-slate-100 flex items-center gap-1.5">
+            <i data-lucide="git-branch" class="w-4 h-4 text-sky-600"></i>
+            <span class="hidden sm:inline">Warsztat Skrutacji</span>
+            <span class="sm:hidden">Warsztat</span>
+          </button>
+
+          <button onclick="switchTab('patristic')" id="nav-btn-patristic" class="px-3 py-2 rounded-xl transition text-slate-600 hover:text-slate-900 hover:bg-slate-100 flex items-center gap-1.5">
+            <i data-lucide="scroll" class="w-4 h-4 text-sky-600"></i>
+            <span class="hidden md:inline">Ojcowie Kościoła</span>
+            <span class="md:hidden">Ojcowie</span>
+          </button>
+
+          <button onclick="switchTab('journal')" id="nav-btn-journal" class="px-3 py-2 rounded-xl transition text-slate-600 hover:text-slate-900 hover:bg-slate-100 flex items-center gap-1.5">
+            <i data-lucide="bookmark-check" class="w-4 h-4 text-emerald-600"></i>
+            <span>Dziennik</span>
+          </button>
+
+          <!-- Download Single-File Self Button -->
+          <button onclick="downloadSelfHtml()" class="ml-1 sm:ml-2 px-3 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-semibold flex items-center gap-1.5 shadow-xs transition cursor-pointer" title="Zapisz ten kompletny plik HTML na dysku, aby używać 100% offline w dowolnej przeglądarce">
+            <i data-lucide="download" class="w-4 h-4"></i>
+            <span class="hidden lg:inline">Zapisz .HTML</span>
+          </button>
+        </nav>
+      </div>
     </div>
   </header>
 
-  <!-- MAIN CONTAINER -->
-  <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 md:p-8">
-    
-    <!-- SECTION 1: CZYTANIA Z DNIA -->
+  <!-- MAIN WRAPPER -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+
+    <!-- ========================================== -->
+    <!-- VIEW 1: CZYTANIA Z LITURGII DNIA          -->
+    <!-- ========================================== -->
     <section id="view-daily" class="space-y-6">
-      <div class="bg-[#141417] border border-[#3D3524] rounded-xl p-6 shadow-xl relative overflow-hidden">
-        <div class="absolute -right-12 -top-12 w-48 h-48 bg-[#C5A059]/5 rounded-full blur-3xl pointer-events-none"></div>
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#3D3524] pb-4">
-          <div>
-            <span class="text-xs uppercase tracking-widest text-[#C5A059] font-medium flex items-center gap-1.5">
-              <i data-lucide="sun" class="w-3.5 h-3.5"></i> Oficjalny Lekcjonarz Rzymskokatolicki
-            </span>
-            <h1 id="liturgy-title" class="font-display text-xl sm:text-2xl text-[#E0E0D6] mt-1 font-semibold">
-              Czytania Mszalne na Dziś
-            </h1>
-            <p id="liturgy-date" class="text-xs text-[#8C8270] mt-0.5"></p>
+      
+      <!-- Date Navigator Header -->
+      <div class="bg-white rounded-2xl border border-slate-200 p-5 sm:p-6 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-50 text-emerald-800 text-xs font-semibold uppercase tracking-wider mb-1.5 border border-emerald-200">
+            <i data-lucide="sun" class="w-3.5 h-3.5 text-emerald-600"></i>
+            Oficjalny Lekcjonarz Kościoła Katolickiego
           </div>
-          <div class="flex items-center gap-2">
-            <button onclick="readAloudCurrentReading()" class="px-3 py-2 rounded bg-[#1F1E24] hover:bg-[#2A2930] text-[#C5A059] border border-[#3D3524] text-xs flex items-center gap-1.5 transition">
-              <i data-lucide="volume-2" class="w-4 h-4"></i>
-              <span id="read-aloud-btn-text">Odsłuchaj lektorem</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- Readings Selector Tabs -->
-        <div class="flex flex-wrap gap-2 pt-4" id="readings-tabs-container">
-          <!-- Populated by JS -->
-        </div>
-
-        <!-- Reading Content Box -->
-        <div class="mt-6 bg-[#FAF8F5] text-[#2A241C] p-6 sm:p-8 rounded-lg border border-[#DDD7CA] shadow-inner">
-          <div class="flex items-start justify-between gap-4 border-b border-[#EBE7DF] pb-3 mb-4">
-            <div>
-              <span id="reading-badge" class="px-2.5 py-1 rounded bg-[#EBE7DF] text-[#8F7034] text-[11px] font-bold uppercase tracking-wider">
-                Ewangelia
-              </span>
-              <h2 id="reading-siglum" class="font-display text-xl sm:text-2xl text-[#141417] font-bold mt-1.5">
-                Mk 7, 1-8. 14-15. 21-23
-              </h2>
-            </div>
-            <button onclick="startScrutationFromDaily()" class="px-4 py-2 rounded bg-[#8F7034] hover:bg-[#C5A059] text-white text-xs font-semibold uppercase tracking-wider flex items-center gap-2 transition shadow">
-              <i data-lucide="git-branch" class="w-4 h-4"></i>
-              <span>Rozpocznij Skrutację</span>
-            </button>
-          </div>
-
-          <div id="reading-theme-box" class="bg-[#F4F1EA] p-3 rounded text-xs text-[#8F7034] font-medium mb-4 italic"></div>
-
-          <div id="reading-body-text" class="font-scripture text-lg leading-relaxed text-[#2A241C] whitespace-pre-line"></div>
-        </div>
-      </div>
-    </section>
-
-    <!-- SECTION 2: WARSZTAT SKRUTACJI -->
-    <section id="view-workspace" class="space-y-6 hidden">
-      <div class="bg-[#141417] border border-[#3D3524] rounded-xl p-6 shadow-xl">
-        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#3D3524] pb-4">
-          <div>
-            <span class="text-xs uppercase tracking-widest text-[#C5A059] font-medium flex items-center gap-1.5">
-              <i data-lucide="git-branch" class="w-3.5 h-3.5"></i> Aktywne Drzewo Skrutacji (Scrutatio Scripturae)
-            </span>
-            <h2 class="font-display text-xl text-[#E0E0D6] mt-1 font-semibold" id="workspace-session-title">
-              Badanie Słowa Bożego
-            </h2>
-          </div>
-          <div class="flex items-center gap-2">
-            <button onclick="saveCurrentSessionToJournal()" class="px-3.5 py-2 rounded bg-[#C5A059] text-black font-semibold text-xs flex items-center gap-1.5 hover:bg-[#E5C98B] transition">
-              <i data-lucide="save" class="w-4 h-4"></i>
-              <span>Zapisz w Dzienniku</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- Add passage form -->
-        <div class="mt-6 p-4 bg-[#1A1A20] rounded-lg border border-[#3D3524] flex flex-col sm:flex-row gap-3">
-          <input type="text" id="quick-siglum-input" placeholder="Wpisz siglum (np. J 1, 29 lub Iz 61, 1)" class="flex-1 px-4 py-2.5 rounded bg-[#141417] border border-[#3D3524] text-sm text-[#E0E0D6] focus:outline-none focus:border-[#C5A059]" />
-          <button onclick="addNewNodeBySiglum()" class="px-5 py-2.5 rounded bg-[#C5A059] text-black font-semibold text-xs uppercase tracking-wider hover:bg-[#E5C98B] transition flex items-center justify-center gap-2">
-            <i data-lucide="plus" class="w-4 h-4"></i>
-            <span>Dodaj Werset</span>
-          </button>
-        </div>
-
-        <!-- Tree Nodes List -->
-        <div class="mt-6 space-y-4" id="scrutation-tree-container">
-          <!-- Populated by JS -->
-        </div>
-      </div>
-    </section>
-
-    <!-- SECTION 3: OJCOWIE KOŚCIOŁA -->
-    <section id="view-patristic" class="space-y-6 hidden">
-      <div class="bg-[#141417] border border-[#3D3524] rounded-xl p-6 shadow-xl">
-        <div class="border-b border-[#3D3524] pb-4">
-          <span class="text-xs uppercase tracking-widest text-[#C5A059] font-medium flex items-center gap-1.5">
-            <i data-lucide="scroll" class="w-3.5 h-3.5"></i> Catena Aurea & Patrystyka
-          </span>
-          <h2 class="font-display text-xl text-[#E0E0D6] mt-1 font-semibold">
-            Komentarze Ojców Kościoła i Języki Oryginalne
-          </h2>
-          <p class="text-xs text-[#8C8270] mt-1">
-            Głębia interpretacji chrześcijańskiego Wschodu i Zachodu oraz oryginalna greka/hebrajski z łacińską Wulgatą.
+          <h1 class="text-xl sm:text-2xl font-serif font-bold text-slate-900" id="liturgy-heading">
+            Czytania z Liturgii Słowa
+          </h1>
+          <p class="text-xs sm:text-sm text-slate-500 mt-0.5" id="liturgy-subheading">
+            Okres Wielkiego Postu • Biblia Tysiąclecia
           </p>
         </div>
 
-        <div class="mt-6 flex flex-wrap gap-2">
-          <button onclick="loadPatristicFor('J 1, 29')" class="px-3 py-1.5 rounded bg-[#1F1E24] hover:bg-[#2A2930] text-xs text-[#C5A059] border border-[#3D3524]">J 1, 29 (Baranek Boży)</button>
-          <button onclick="loadPatristicFor('Iz 61, 1')" class="px-3 py-1.5 rounded bg-[#1F1E24] hover:bg-[#2A2930] text-xs text-[#C5A059] border border-[#3D3524]">Iz 61, 1 (Duch Pana nade mną)</button>
-          <button onclick="loadPatristicFor('Ps 23, 1')" class="px-3 py-1.5 rounded bg-[#1F1E24] hover:bg-[#2A2930] text-xs text-[#C5A059] border border-[#3D3524]">Ps 23, 1 (Pan jest pasterzem)</button>
-          <button onclick="loadPatristicFor('Mk 7, 1')" class="px-3 py-1.5 rounded bg-[#1F1E24] hover:bg-[#2A2930] text-xs text-[#C5A059] border border-[#3D3524]">Mk 7, 1 (Czystość serca)</button>
+        <!-- Date Controls -->
+        <div class="flex flex-wrap items-center gap-2">
+          <button onclick="changeDateOffset(-1)" class="px-3 py-1.5 rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 text-xs font-medium text-slate-700 flex items-center gap-1 transition">
+            <i data-lucide="chevron-left" class="w-3.5 h-3.5"></i>
+            <span>Wczoraj</span>
+          </button>
+          <button onclick="changeDateOffset(0)" class="px-3 py-1.5 rounded-lg border border-emerald-300 bg-emerald-50 hover:bg-emerald-100 text-xs font-semibold text-emerald-900 flex items-center gap-1 transition">
+            <i data-lucide="calendar" class="w-3.5 h-3.5 text-emerald-600"></i>
+            <span>Dzisiaj</span>
+          </button>
+          <button onclick="changeDateOffset(1)" class="px-3 py-1.5 rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 text-xs font-medium text-slate-700 flex items-center gap-1 transition">
+            <span>Jutro</span>
+            <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+          </button>
+          <input type="date" id="daily-date-picker" onchange="onManualDatePick(this.value)" class="px-2.5 py-1 rounded-lg border border-slate-200 text-xs text-slate-700 bg-white focus:outline-none focus:border-emerald-500" />
+        </div>
+      </div>
+
+      <!-- Readings Tabs Selector -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5" id="readings-buttons-grid">
+        <!-- Rendered by JS -->
+      </div>
+
+      <!-- Active Reading Detail Box -->
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 sm:p-8 space-y-6">
+        
+        <!-- Pericope Header -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-slate-100">
+          <div>
+            <div class="flex items-center gap-2">
+              <span id="active-reading-badge" class="px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider bg-emerald-100 text-emerald-900 border border-emerald-200">
+                Ewangelia
+              </span>
+              <span id="active-reading-cycle" class="text-xs text-slate-500 font-medium">Rok C</span>
+            </div>
+            <h2 id="active-reading-siglum" class="text-2xl sm:text-3xl font-serif font-bold text-slate-900 mt-2">
+              Mk 7, 1-8. 14-15. 21-23
+            </h2>
+            <p id="active-reading-theme" class="text-xs sm:text-sm text-emerald-800 font-medium mt-1 italic">
+              Motyw: Czystość serca i moc Bożego przykazania
+            </p>
+          </div>
+
+          <!-- Actions Toolbar -->
+          <div class="flex flex-wrap items-center gap-2">
+            <button onclick="readAloudText()" id="audio-speak-btn" class="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium flex items-center gap-1.5 transition">
+              <i data-lucide="volume-2" class="w-4 h-4 text-emerald-600"></i>
+              <span id="audio-speak-label">Odsłuchaj lektorem</span>
+            </button>
+
+            <button onclick="copyCurrentReadingText()" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium flex items-center gap-1.5 transition">
+              <i data-lucide="copy" class="w-4 h-4 text-slate-600"></i>
+              <span>Kopiuj</span>
+            </button>
+
+            <button onclick="startScrutationFromCurrentReading()" class="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white text-xs font-semibold uppercase tracking-wider flex items-center gap-2 shadow-xs transition">
+              <i data-lucide="git-branch" class="w-4 h-4"></i>
+              <span>Skrutuj całą perykopę</span>
+            </button>
+          </div>
         </div>
 
-        <div id="patristic-details-container" class="mt-6 space-y-6">
-          <!-- Populated by JS -->
+        <!-- Hint Banner for Clicking Sentences / Psalm Stanzas -->
+        <div class="bg-emerald-50/70 border border-emerald-200/80 rounded-xl p-3.5 flex items-start gap-2.5 text-xs text-emerald-950">
+          <i data-lucide="mouse-pointer-click" class="w-4 h-4 text-emerald-700 shrink-0 mt-0.5"></i>
+          <div>
+            <strong>Wskazówka:</strong> Kliknij dowolne pojedyncze zdanie w tekście poniżej (lub zwrotkę Psalmu), aby natychmiast rozpocząć skrutację od wybranego konkretnego wersetu!
+          </div>
         </div>
+
+        <!-- Psalm Specific Selection View (if Psalm is active) -->
+        <div id="psalm-special-container" class="hidden space-y-4">
+          <div class="p-4 rounded-xl bg-amber-50/80 border border-amber-200">
+            <span class="text-[11px] font-bold text-amber-800 uppercase tracking-wider">Refren Psalmu:</span>
+            <p id="psalm-response-text" class="text-base font-serif italic font-semibold text-amber-950 mt-1"></p>
+            <button onclick="selectSpecificVerseForScrutation(document.getElementById('psalm-response-text').innerText, 'Refren Psalmu')" class="mt-2 text-xs font-bold text-amber-900 hover:underline flex items-center gap-1">
+              <span>Wybierz sam Refren do Skrutacji</span>
+              <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+            </button>
+          </div>
+
+          <div class="space-y-2.5">
+            <span class="text-xs font-semibold text-slate-700 uppercase tracking-wider">Wybierz konkretną zwrotkę Psalmu:</span>
+            <div id="psalm-stanzas-list" class="space-y-2">
+              <!-- Rendered by JS -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Full Text Body (with interactive sentence slicing) -->
+        <div id="standard-reading-body" class="bg-slate-50/80 border border-slate-200 rounded-xl p-6 sm:p-8">
+          <div id="active-reading-sentences" class="font-scripture text-lg sm:text-xl text-slate-800 leading-relaxed whitespace-pre-line space-y-2">
+            <!-- Sentences with span onclick -->
+          </div>
+        </div>
+
+        <!-- Original Languages & Vulgate Accordion -->
+        <div class="border border-slate-200 rounded-xl p-4 bg-white space-y-3">
+          <div class="flex items-center justify-between cursor-pointer" onclick="toggleOriginalLanguages()">
+            <div class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-700">
+              <i data-lucide="languages" class="w-4 h-4 text-sky-600"></i>
+              <span>Języki Oryginalne & Łacińska Wulgata</span>
+            </div>
+            <span id="orig-lang-toggle-indicator" class="text-xs text-slate-500 font-semibold">Rozwiń ▼</span>
+          </div>
+
+          <div id="orig-lang-content" class="hidden pt-3 border-t border-slate-100 grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+            <div class="p-3.5 rounded-lg bg-slate-50 border border-slate-200">
+              <span class="font-bold text-slate-600 uppercase text-[10px] tracking-wider block mb-1">Oryginał (Greka / Hebrajski):</span>
+              <p id="reading-original-script" class="font-serif text-sm text-slate-900 leading-relaxed italic"></p>
+            </div>
+            <div class="p-3.5 rounded-lg bg-slate-50 border border-slate-200">
+              <span class="font-bold text-slate-600 uppercase text-[10px] tracking-wider block mb-1">Łacińska Wulgata (Vulgata Clementina):</span>
+              <p id="reading-latin-vulgate" class="font-serif text-sm text-slate-800 leading-relaxed italic"></p>
+            </div>
+          </div>
+        </div>
+
       </div>
     </section>
 
-    <!-- SECTION 4: DZIENNIK DUCHOWY -->
-    <section id="view-journal" class="space-y-6 hidden">
-      <div class="bg-[#141417] border border-[#3D3524] rounded-xl p-6 shadow-xl">
-        <div class="flex items-center justify-between border-b border-[#3D3524] pb-4">
-          <div>
-            <span class="text-xs uppercase tracking-widest text-[#C5A059] font-medium flex items-center gap-1.5">
-              <i data-lucide="bookmark-check" class="w-3.5 h-3.5"></i> Osobiste Owoce i Medytacja
-            </span>
-            <h2 class="font-display text-xl text-[#E0E0D6] mt-1 font-semibold">
-              Dziennik Skrutacji (Zapisy)
-            </h2>
+    <!-- ========================================== -->
+    <!-- VIEW 2: KANON BIBLII & WYBÓR FRAGMENTU    -->
+    <!-- ========================================== -->
+    <section id="view-selector" class="space-y-6 hidden">
+      
+      <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-xs">
+        <h2 class="text-xl sm:text-2xl font-serif font-bold text-slate-900">
+          Wybór Wersetu & Biblijna Biblioteka Perykop
+        </h2>
+        <p class="text-xs sm:text-sm text-slate-500 mt-1">
+          Wpisz dowolne siglum, wybierz z 73 ksiąg Pisma Świętego lub wylosuj Słowo Boże do modlitwy w ciszy.
+        </p>
+
+        <!-- Search Bar -->
+        <div class="mt-5 flex flex-col sm:flex-row gap-3">
+          <div class="relative flex-1">
+            <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5"></i>
+            <input type="text" id="custom-siglum-search" placeholder="Wpisz siglum (np. J 1, 29 lub Iz 53, 5 lub Ps 23, 1)" class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-900 bg-slate-50 focus:outline-none focus:border-emerald-500 focus:bg-white transition" />
           </div>
-          <button onclick="exportJournalText()" class="px-3 py-1.5 rounded bg-[#1F1E24] text-xs text-[#C5A059] border border-[#3D3524] hover:bg-[#2A2930]">
-            Eksportuj notatki
+          <button onclick="onSearchCustomSiglum()" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold uppercase tracking-wider transition flex items-center justify-center gap-2">
+            <i data-lucide="play" class="w-3.5 h-3.5"></i>
+            <span>Rozpocznij Skrutację</span>
           </button>
         </div>
+      </div>
 
-        <div id="journal-entries-container" class="mt-6 space-y-4">
+      <!-- Sors Biblica (Random Draw) -->
+      <div class="bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 rounded-2xl p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div class="space-y-1">
+          <div class="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-emerald-800">
+            <i data-lucide="shuffle" class="w-3.5 h-3.5"></i>
+            <span>Sors Biblica • Losowanie Słowa do Modlitwy</span>
+          </div>
+          <h3 class="text-lg font-serif font-bold text-slate-900">
+            Szukasz Słowa na dzisiejszą modlitwę w ciszy?
+          </h3>
+          <p class="text-xs text-slate-600">
+            Wylosuj natchniony werset ze Starego lub Nowego Testamentu z gotowymi odnośnikami.
+          </p>
+        </div>
+        <button onclick="drawRandomScriptureQuote()" class="px-5 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold uppercase tracking-wider flex items-center gap-2 shadow-xs transition shrink-0">
+          <i data-lucide="dice-5" class="w-4 h-4"></i>
+          <span>Losuj Werset</span>
+        </button>
+      </div>
+
+      <!-- Random Quote Popup Banner if drawn -->
+      <div id="random-quote-display-box" class="hidden bg-white border-2 border-emerald-300 rounded-2xl p-6 shadow-md space-y-4">
+        <div class="flex items-start justify-between">
+          <div>
+            <span id="rq-siglum" class="px-2.5 py-1 rounded-md bg-emerald-100 text-emerald-900 text-xs font-bold"></span>
+            <h4 id="rq-title" class="text-xl font-serif font-bold text-slate-900 mt-2"></h4>
+          </div>
+          <button onclick="document.getElementById('random-quote-display-box').classList.add('hidden')" class="text-slate-400 hover:text-slate-600 p-1">✕</button>
+        </div>
+        <p id="rq-text" class="font-scripture text-lg text-slate-800 italic bg-slate-50 p-4 rounded-xl border border-slate-200"></p>
+        <p id="rq-theology" class="text-xs text-slate-600"></p>
+        <div class="flex justify-end gap-2 pt-2">
+          <button onclick="startScrutationFromRandomQuote()" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold uppercase tracking-wider flex items-center gap-2">
+            <span>Otwórz w Warsztacie</span>
+            <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Catalog of Famous Pericopes -->
+      <div class="space-y-3">
+        <h3 class="text-sm font-bold uppercase tracking-wider text-slate-700">
+          Kluczowe Perykopy Biblijne (Katolicki Kanon Skrutacji)
+        </h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5" id="famous-pericopes-grid">
           <!-- Populated by JS -->
         </div>
       </div>
+
+    </section>
+
+    <!-- ========================================== -->
+    <!-- VIEW 3: WARSZTAT SKRUTACJI & LECTIO DIVINA -->
+    <!-- ========================================== -->
+    <section id="view-workspace" class="space-y-6 hidden">
+      
+      <!-- Workspace Top Toolbar -->
+      <div class="bg-white rounded-2xl border border-slate-200 p-5 sm:p-6 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <span class="text-xs uppercase tracking-widest text-emerald-800 font-bold flex items-center gap-1.5">
+            <i data-lucide="git-branch" class="w-4 h-4 text-emerald-600"></i> Aktywne Drzewo Odnośników (Scrutatio Scripturae)
+          </span>
+          <h2 class="text-xl sm:text-2xl font-serif font-bold text-slate-900 mt-1" id="workspace-main-title">
+            Badanie Słowa Bożego
+          </h2>
+          <p class="text-xs text-slate-500">
+            Reguła Biblii Jerozolimskiej: Pismo Święte wyjaśnia się samo poprzez typologię i paralelne wersety.
+          </p>
+        </div>
+
+        <!-- Prayer Timer & Save Button -->
+        <div class="flex flex-wrap items-center gap-2">
+          <!-- Timer pill -->
+          <div class="px-3.5 py-1.5 rounded-xl bg-slate-100 border border-slate-200 flex items-center gap-2 text-xs font-mono font-bold text-slate-700">
+            <i data-lucide="clock" class="w-3.5 h-3.5 text-emerald-600"></i>
+            <span id="prayer-timer-display">00:00</span>
+            <button onclick="togglePrayerTimer()" id="timer-toggle-btn" class="ml-1 text-[11px] font-sans font-semibold text-emerald-700 hover:underline">Start</button>
+          </div>
+
+          <button onclick="saveCurrentScrutationSession()" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs uppercase tracking-wider flex items-center gap-1.5 shadow-xs transition">
+            <i data-lucide="save" class="w-3.5 h-3.5"></i>
+            <span>Zapisz w Dzienniku</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Root Verse Banner -->
+      <div class="bg-gradient-to-r from-emerald-50/90 to-teal-50/90 border-2 border-emerald-300/80 rounded-2xl p-6 shadow-xs space-y-3">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="px-2.5 py-0.5 rounded-md bg-emerald-700 text-white text-xs font-mono font-bold" id="root-node-siglum">
+              J 1, 29
+            </span>
+            <span class="text-xs font-semibold uppercase tracking-wider text-emerald-900">
+              Werset Wyjściowy
+            </span>
+          </div>
+          <button onclick="switchTab('daily')" class="text-xs text-emerald-800 hover:underline flex items-center gap-1">
+            <span>Zmień werset</span>
+            <i data-lucide="refresh-cw" class="w-3 h-3"></i>
+          </button>
+        </div>
+        <p id="root-node-text" class="font-scripture text-lg sm:text-xl text-slate-900 leading-relaxed italic">
+          «Oto Baranek Boży, który gładzi grzech świata.»
+        </p>
+        <div id="root-theology-box" class="text-xs text-slate-700 bg-white/80 p-3 rounded-lg border border-emerald-200/60"></div>
+      </div>
+
+      <!-- Quick Add verse by siglum inside workspace -->
+      <div class="bg-white rounded-xl border border-slate-200 p-4 flex flex-col sm:flex-row gap-3">
+        <input type="text" id="ws-quick-add-siglum" placeholder="Dodaj kolejny werset z aparatu (np. Iz 53, 7 lub Wj 12, 1-14)" class="flex-1 px-4 py-2 rounded-lg border border-slate-200 text-xs text-slate-900 bg-slate-50 focus:outline-none focus:border-emerald-500 focus:bg-white" />
+        <button onclick="addManualVerseToTree()" class="px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold uppercase tracking-wider flex items-center justify-center gap-1.5">
+          <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+          <span>Dodaj Werset</span>
+        </button>
+      </div>
+
+      <!-- Chain of Discovered Verses -->
+      <div class="space-y-4">
+        <div class="flex items-center justify-between">
+          <h3 class="text-sm font-bold uppercase tracking-wider text-slate-700 flex items-center gap-2">
+            <i data-lucide="layers" class="w-4 h-4 text-emerald-600"></i>
+            <span>Łańcuch Odnośników Biblijnych (<span id="chain-count-badge">1</span>)</span>
+          </h3>
+          <button onclick="discoverNextAutomaticCrossReference()" class="px-3.5 py-1.5 rounded-lg bg-emerald-100 hover:bg-emerald-200 text-emerald-900 text-xs font-semibold flex items-center gap-1.5 transition">
+            <i data-lucide="sparkles" class="w-3.5 h-3.5 text-emerald-700"></i>
+            <span>Odkryj kolejny werset z aparatu</span>
+          </button>
+        </div>
+
+        <div id="workspace-verses-container" class="space-y-3.5">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+
+      <!-- 7 Steps of Lectio Divina / Spiritual Notes Section -->
+      <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-xs space-y-5">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+          <h3 class="text-base font-serif font-bold text-slate-900 flex items-center gap-2">
+            <i data-lucide="book-marked" class="w-4 h-4 text-emerald-600"></i>
+            <span>Notatnik Medytacji & Owoców Modlitwy (Lectio Divina)</span>
+          </h3>
+          <span class="text-xs text-slate-500 font-medium">Zapisuje się automatycznie</span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="space-y-1.5">
+            <label class="text-xs font-bold uppercase tracking-wider text-emerald-900">
+              1. Meditatio (Co Bóg mówi do mego życia przez te wersety?)
+            </label>
+            <textarea id="note-meditatio" rows="4" placeholder="Zapisz swoje poruszenia, odniesienie do codzienności, zranień, zaufania..." class="w-full p-3 text-xs rounded-xl border border-slate-200 bg-slate-50 focus:outline-none focus:border-emerald-500 focus:bg-white"></textarea>
+          </div>
+
+          <div class="space-y-1.5">
+            <label class="text-xs font-bold uppercase tracking-wider text-sky-900">
+              2. Oratio (Odpowiedź serca — modlitwa prośby, dziękczynienia)
+            </label>
+            <textarea id="note-oratio" rows="4" placeholder="Twoja bezpośrednia modlitwa do Boga w odpowiedzi na usłyszane Słowo..." class="w-full p-3 text-xs rounded-xl border border-slate-200 bg-slate-50 focus:outline-none focus:border-sky-500 focus:bg-white"></textarea>
+          </div>
+        </div>
+
+        <div class="p-4 rounded-xl bg-amber-50/80 border border-amber-200 space-y-2">
+          <label class="text-xs font-bold uppercase tracking-wider text-amber-900 flex items-center gap-1.5">
+            <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-700"></i>
+            <span>3. Słowo Życia (Rhema na dzisiejszy dzień)</span>
+          </label>
+          <input type="text" id="note-rhema" placeholder="Krótki werset lub zdanie, które będziesz nosić w sercu przez cały dzień (np. «Nie lękaj się, bo Ja jestem z tobą»)" class="w-full px-3.5 py-2.5 rounded-lg border border-amber-200 bg-white text-xs font-serif font-semibold text-amber-950 focus:outline-none focus:border-amber-500" />
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ========================================== -->
+    <!-- VIEW 4: OJCOWIE KOŚCIOŁA (PATRYSTYKA)      -->
+    <!-- ========================================== -->
+    <section id="view-patristic" class="space-y-6 hidden">
+      
+      <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-xs">
+        <div class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-sky-800 mb-1">
+          <i data-lucide="scroll" class="w-4 h-4 text-sky-600"></i> Catena Aurea & Tradycja Ojców
+        </div>
+        <h2 class="text-xl sm:text-2xl font-serif font-bold text-slate-900">
+          Komentarze Ojców Kościoła i Języki Oryginalne
+        </h2>
+        <p class="text-xs sm:text-sm text-slate-500 mt-1">
+          Odkrywaj komentarze św. Jana Chryzostoma, św. Augustyna, św. Tomasza z Akwinu, św. Cyryla, św. Hieronima i innych doktorów Kościoła.
+        </p>
+
+        <!-- Quick selection pills -->
+        <div class="mt-4 flex flex-wrap gap-2">
+          <button onclick="loadPatristicForVerse('J 1, 29')" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-sky-50 text-sky-900 border border-sky-200 hover:bg-sky-100 transition">J 1, 29 (Baranek Boży)</button>
+          <button onclick="loadPatristicForVerse('Iz 61, 1')" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-sky-50 text-sky-900 border border-sky-200 hover:bg-sky-100 transition">Iz 61, 1 (Duch Pana nade mną)</button>
+          <button onclick="loadPatristicForVerse('Ps 23, 1')" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-sky-50 text-sky-900 border border-sky-200 hover:bg-sky-100 transition">Ps 23, 1 (Pan jest moim pasterzem)</button>
+          <button onclick="loadPatristicForVerse('Mk 7, 1')" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-sky-50 text-sky-900 border border-sky-200 hover:bg-sky-100 transition">Mk 7, 1 (Czystość serca)</button>
+          <button onclick="loadPatristicForVerse('1 Kor 2, 3')" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-sky-50 text-sky-900 border border-sky-200 hover:bg-sky-100 transition">1 Kor 2, 3 (W słabości i drżeniu)</button>
+        </div>
+      </div>
+
+      <!-- Patristic Details Render Container -->
+      <div id="patristic-render-container" class="space-y-4">
+        <!-- Rendered by JS -->
+      </div>
+
+    </section>
+
+    <!-- ========================================== -->
+    <!-- VIEW 5: DZIENNIK DUCHOWY                  -->
+    <!-- ========================================== -->
+    <section id="view-journal" class="space-y-6 hidden">
+      
+      <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <div class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-emerald-800 mb-1">
+            <i data-lucide="bookmark-check" class="w-4 h-4 text-emerald-600"></i> Osobiste Świadectwo Wiary
+          </div>
+          <h2 class="text-xl sm:text-2xl font-serif font-bold text-slate-900">
+            Zapisane Skrutacje & Notatki
+          </h2>
+          <p class="text-xs text-slate-500">
+            Twoja historia modlitwy, odkrytych wersetów i Słów Życia (Rhema).
+          </p>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2">
+          <button onclick="exportJournalBackupJson()" class="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium flex items-center gap-1.5 transition">
+            <i data-lucide="download" class="w-3.5 h-3.5"></i>
+            <span>Kopia JSON</span>
+          </button>
+          <button onclick="exportJournalFormattedTxt()" class="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium flex items-center gap-1.5 transition">
+            <i data-lucide="file-text" class="w-3.5 h-3.5"></i>
+            <span>Eksportuj TXT</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- List of saved entries -->
+      <div id="journal-sessions-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Rendered by JS -->
+      </div>
+
     </section>
 
   </main>
 
   <!-- FOOTER -->
-  <footer class="mt-auto border-t border-[#3D3524] bg-[#0A0A0C] text-[#8C8270] py-6 px-4 text-center text-xs">
-    <div class="max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
-      <div class="flex items-center gap-2">
-        <span class="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span>
-        <span>Aplikacja Scrutatio Scripturae — Wersja Autonomiczna 100% Offline</span>
+  <footer class="mt-auto border-t border-slate-200 bg-white text-slate-500 py-6 px-4 text-center text-xs">
+    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
+      <div class="flex items-center gap-2 font-medium">
+        <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block animate-pulse"></span>
+        <span class="text-slate-800 font-semibold">Aplikacja Scrutatio Scripturae</span>
+        <span class="text-slate-400">•</span>
+        <span>100% Autonomiczna Wersja HTML Offline</span>
       </div>
-      <div>
-        <span>Biblia Tysiąclecia • Lekcjonarz Episkopatu Polski • Catena Aurea</span>
+      <div class="text-slate-500">
+        Biblia Tysiąclecia • Biblia Jerozolimska • Lekcjonarz Episkopatu Polski • Catena Aurea
       </div>
     </div>
   </footer>
 
-  <!-- CORE LOGIC SCRIPTS -->
+  <!-- ========================================== -->
+  <!-- JAVASCRIPT EMBEDDED APPLICATION CORE       -->
+  <!-- ========================================== -->
   <script>
-    // LITURGICAL READINGS DATABASE
-    const READINGS_DATA = [
+    // --- 1. LITURGICAL CALENDAR DATABASE & ENGINE ---
+    const LITURGICAL_SAMPLES = [
       {
-        id: 'r1',
-        title: 'I Czytanie',
-        siglum: 'Pwt 4, 1-2. 6-8',
-        theme: 'Mądrość Przymierza i wierność Słowu Bożemu',
-        text: `Mojżesz powiedział do ludu:\n«A teraz, Izraelu, słuchaj praw i nakazów, które was uczę wypełniać, abyście żyli i doszli do posiadania ziemi, którą wam daje Pan, Bóg waszych ojców. Nic nie dodacie do tego, co wam nakazuję, i nic z tego nie odejmiecie, strzegąc nakazów Pana, Boga waszego, które wam przekazuję.\n\nStrzeżcie ich i wypełniajcie je, bo one są waszą mądrością i umiejętnością w oczach narodów, które usłyszawszy o tych wszystkich prawach, powiedzą: "Zaprawdę, mądry i rozumny jest ten wielki naród!".\n\nBo któryż naród wielki ma bogów tak bliskich, jak Pan, Bóg nasz, ilekroć Go wzywamy? I któryż naród wielki ma prawa i nakazy tak sprawiedliwe, jak całe to Prawo, które wam dziś daję?».`
-      },
-      {
-        id: 'r2',
-        title: 'Psalm Responsoryjny',
-        siglum: 'Ps 15 (14), 2-3ab. 3cd-4ab. 5',
-        theme: 'Kto zamieszka w Twym przybytku, Panie?',
-        text: `Refren: Prawy zamieszka w domu Twoim, Panie.\n\nKto nienagannie postępuje i czyni to, co sprawiedliwe,\nkto mówi prawdę w swoim sercu\ni nie rzuca oszczerstw swym językiem.\n\nKto nie czyni zła swemu bliźniemu\ni nie zniesławia swego sąsiada,\nkto za nic uważa tego, którym gardzi Bóg,\nale czci tych, którzy boją się Pana.\n\nKto nie daje swoich pieniędzy na lichwę\ni nie daje się przekupić przeciw niewinnemu.\nKto tak postępuje, nigdy się nie zachwieje.`
-      },
-      {
-        id: 'r3',
-        title: 'II Czytanie',
-        siglum: 'Jk 1, 17-18. 21b-22. 27',
-        theme: 'Bądźcie wykonawcami Słowa, a nie tylko słuchaczami',
-        text: `Najmilsi:\nKażde dobro, które otrzymujemy, i wszelki dar doskonały zstępują z góry, od Ojca świateł, u którego nie ma przemiany ani cienia zmienności. Ze swej woli zrodził nas przez słowo prawdy, abyśmy byli jakby pierwocinami Jego stworzeń.\n\nPrzyjmijcie w duchu łagodności zaszczepione w was słowo, które ma moc zbawić wasze dusze. Wprowadzajcie zaś słowo w czyn, a nie bądźcie tylko słuchaczami oszukującymi samych siebie.\n\nCzystą i nieskalaną pobożnością przed Bogiem i Ojcem jest to: nieść pomoc sierotom i wdowom w ich utrapieniu i zachować siebie samego niesplamionym od wpływów świata.`
-      },
-      {
-        id: 'r4',
-        title: 'Ewangelia',
-        siglum: 'Mk 7, 1-8. 14-15. 21-23',
-        theme: 'Czystość serca i moc Bożego przykazania',
-        text: `U Jezusa zebrali się faryzeusze i kilku uczonych w Piśmie, którzy przybyli z Jerozolimy. I zauważyli, że niektórzy z Jego uczniów brali posiłek nieczystymi, to znaczy nie umytymi rękami...\n\nI zapytali Go faryzeusze i uczeni w Piśmie: «Dlaczego Twoi uczniowie nie postępują według tradycji starszych, lecz jedzą nieczystymi rękami?»\n\nOdpowiedział im: «Trafnie prorokował Izajasz o was, obłudnikach, jak jest napisane: "Ten lud czci Mnie wargami, lecz sercem swym daleko jest ode Mnie. Ale czczą Mnie na próżno, ucząc zasad podanych przez ludzi". Uchyliliście przykazanie Boże, a trzymacie się ludzkiej tradycji».\n\nPotem przywołał znowu tłum do siebie i mówił do nich: «Słuchajcie Mnie wszyscy i zrozumiejcie! Nic nie wchodzi z zewnątrz w człowieka, co mogłoby uczynić go nieczystym; lecz co wychodzi z człowieka, to czyni człowieka nieczystym...\n\nZ wnętrza bowiem, z serca ludzkiego pochodzą złe myśli, nierząd, kradzieże, zabójstwa, cudzołóstwa, chciwość, przewrotność, podstęp, wyuzdanie, zazdrość, obelgi, pycha, głupota. Całe to zło z wnętrza pochodzi i czyni człowieka nieczystym».`
-      }
-    ];
-
-    // STATE
-    let currentReadingIndex = 3; // Gospel by default
-    let activeTab = 'daily';
-    let scrutationNodes = [
-      {
-        id: 'n1',
-        siglum: 'Mk 7, 1-8. 14-15. 21-23',
-        text: 'Z wnętrza bowiem, z serca ludzkiego pochodzą złe myśli... Całe to zło z wnętrza pochodzi i czyni człowieka nieczystym.',
-        theologicalNote: 'Punkt wyjścia: Jezus przenosi punkt ciężkości z rytualizmu na wnętrze i stan serca.',
-        crossRefs: [
-          { siglum: 'Iz 29, 13', note: 'Proroctwo o czczeniu Boga wargami przy dalekim sercu' },
-          { siglum: 'Ps 51, 12', note: 'Stwórz, o Boże, we mnie serce czyste (prośba o nowe stworzenie)' },
-          { siglum: 'Rz 14, 17', note: 'Królestwo Boże to nie pokarm i napój, lecz pokój i radość w Duchu' }
+        dayKey: 'today',
+        title: 'Czytania Mszalne na Dziś',
+        season: 'Okres Wielkiego Postu',
+        readings: [
+          {
+            type: 'reading_1',
+            title: 'I Czytanie',
+            siglum: 'Pwt 4, 1-2. 6-8',
+            theme: 'Mądrość Przymierza i wierność Słowu Bożemu',
+            text: `Mojżesz powiedział do ludu:\n«A teraz, Izraelu, słuchaj praw i nakazów, które was uczę wypełniać, abyście żyli i doszli do posiadania ziemi, którą wam daje Pan, Bóg waszych ojców. Nic nie dodacie do tego, co wam nakazuję, i nic z tego nie odejmiecie, strzegąc nakazów Pana, Boga waszego, które wam przekazuję.\n\nStrzeżcie ich i wypełniajcie je, bo one są waszą mądrością i umiejętnością w oczach narodów, które usłyszawszy o tych wszystkich prawach, powiedzą: "Zaprawdę, mądry i rozumny jest ten wielki naród!".\n\nBo któryż naród wielki ma bogów tak bliskich, jak Pan, Bóg nasz, ilekroć Go wzywamy? I któryż naród wielki ma prawa i nakazy tak sprawiedliwe, jak całe to Prawo, które wam dziś daję?».`,
+            originalScript: 'וְעַתָּ֣ה יִשְׂרָאֵ֗ל שְׁמַ֤ע אֶל־הַֽחֻקִּים֙ וְאֶל־הַמִּשְׁפָּטִ֔ים אֲשֶׁ֧ר אָנֹכִ֛י מְלַמֵּ֥ד אֶתְכֶ֖ם לַעֲשׂ֑וֹת...',
+            latinVulgate: 'Et nunc, Israel, audi praecepta atque iudicia quae ego doceo te ut faciens ea vivas...'
+          },
+          {
+            type: 'psalm',
+            title: 'Psalm Responsoryjny',
+            siglum: 'Ps 15 (14), 2-3ab. 3cd-4ab. 5',
+            theme: 'Kto zamieszka w Twym przybytku, Panie?',
+            response: 'Prawy zamieszka w domu Twoim, Panie.',
+            stanzas: [
+              'Kto nienagannie postępuje i czyni to, co sprawiedliwe,\nkto mówi prawdę w swoim sercu\ni nie rzuca oszczerstw swym językiem.',
+              'Kto nie czyni zła swemu bliźniemu\ni nie zniesławia swego sąsiada,\nkto za nic uważa tego, którym gardzi Bóg,\nale czci tych, którzy boją się Pana.',
+              'Kto nie daje swoich pieniędzy na lichwę\ni nie daje się przekupić przeciw niewinnemu.\nKto tak postępuje, nigdy się nie zachwieje.'
+            ],
+            text: `Refren: Prawy zamieszka w domu Twoim, Panie.\n\nKto nienagannie postępuje i czyni to, co sprawiedliwe,\nkto mówi prawdę w swoim sercu i nie rzuca oszczerstw swym językiem.\n\nKto nie czyni zła swemu bliźniemu i nie zniesławia swego sąsiada, kto za nic uważa tego, którym gardzi Bóg, ale czci tych, którzy boją się Pana.\n\nKto nie daje swoich pieniędzy na lichwę i nie daje się przekupić przeciw niewinnemu. Kto tak postępuje, nigdy się nie zachwieje.`,
+            originalScript: 'יְהֹוָה מִי־יָגוּר בְּאָהֳלֶךָ מִי־יִשְׁכֹּן בְּהַר קָדְשֶׁךָ: הוֹלֵךְ תָּמִים וּפֹעֵל צֶדֶק...',
+            latinVulgate: 'Domine, quis habitabit in tabernaculo tuo? aut quis requiescet in monte sancto tuo? Qui ingreditur sine macula, et operatur iustitiam...'
+          },
+          {
+            type: 'reading_2',
+            title: 'II Czytanie',
+            siglum: 'Jk 1, 17-18. 21b-22. 27',
+            theme: 'Bądźcie wykonawcami Słowa, a nie tylko słuchaczami',
+            text: `Najmilsi:\nKażde dobro, które otrzymujemy, i wszelki dar doskonały zstępują z góry, od Ojca świateł, u którego nie ma przemiany ani cienia zmienności. Ze swej woli zrodził nas przez słowo prawdy, abyśmy byli jakby pierwocinami Jego stworzeń.\n\nPrzyjmijcie w duchu łagodności zaszczepione w was słowo, które ma moc zbawić wasze dusze. Wprowadzajcie zaś słowo w czyn, a nie bądźcie tylko słuchaczami oszukującymi samych siebie.\n\nCzystą i nieskalaną pobożnością przed Bogiem i Ojcem jest to: nieść pomoc sierotom i wdowom w ich utrapieniu i zachować siebie samego niesplamionym od wpływów świata.`,
+            originalScript: 'Πᾶσα δόσις ἀγαθὴ καὶ πᾶν δώρημα τέλειον ἄνωθέν ἐστιν, καταβαῖνον ἀπὸ τοῦ πατρὸς τῶν φώτων...',
+            latinVulgate: 'Omne datum optimum et omne donum perfectum desursum est, descendens a Patre luminum...'
+          },
+          {
+            type: 'gospel',
+            title: 'Ewangelia',
+            siglum: 'Mk 7, 1-8. 14-15. 21-23',
+            theme: 'Czystość serca i moc Bożego przykazania',
+            text: `U Jezusa zebrali się faryzeusze i kilku uczonych w Piśmie, którzy przybyli z Jerozolimy. I zauważyli, że niektórzy z Jego uczniów brali posiłek nieczystymi, to znaczy nie umytymi rękami...\n\nI zapytali Go faryzeusze i uczeni w Piśmie: «Dlaczego Twoi uczniowie nie postępują według tradycji starszych, lecz jedzą nieczystymi rękami?»\n\nOdpowiedział im: «Trafnie prorokował Izajasz o was, obłudnikach, jak jest napisane: "Ten lud czci Mnie wargami, lecz sercem swym daleko jest ode Mnie. Ale czczą Mnie na próżno, ucząc zasad podanych przez ludzi". Uchyliliście przykazanie Boże, a trzymacie się ludzkiej tradycji».\n\nPotem przywołał znowu tłum do siebie i mówił do nich: «Słuchajcie Mnie wszyscy i zrozumiejcie! Nic nie wchodzi z zewnątrz w człowieka, co mogłoby uczynić go nieczystym; lecz co wychodzi z człowieka, to czyni człowieka nieczystym...\n\nZ wnętrza bowiem, z serca ludzkiego pochodzą złe myśli, nierząd, kradzieże, zabójstwa, cudzołóstwa, chciwość, przewrotność, podstęp, wyuzdanie, zazdrość, obelgi, pycha, głupota. Całe to zło z wnętrza pochodzi i czyni człowieka nieczystym».`,
+            originalScript: 'Καὶ συνάγονται πρὸς αὐτὸν οἱ Φαρισαῖοι καί τινες τῶν γραμματέων ἐλθόντες ἀπὸ Ἱεροσολύμων...',
+            latinVulgate: 'Et conveniunt ad eum Pharisaei, et quidam de scribis venientes ab Ierosolymis...'
+          }
         ]
       }
     ];
-    let journalEntries = JSON.parse(localStorage.getItem('scrutatio_journal_v1') || '[]');
 
-    // INITIALIZATION
-    function init() {
-      // Set Liturgy date
-      const now = new Date();
-      const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-      document.getElementById('liturgy-date').textContent = now.toLocaleDateString('pl-PL', options);
-      
-      renderReadingsTabs();
-      showReading(3);
-      renderScrutationTree();
-      renderJournal();
-      loadPatristicFor('J 1, 29');
-
-      lucide.createIcons();
-    }
-
-    function switchTab(tab) {
-      activeTab = tab;
-      const views = ['daily', 'workspace', 'patristic', 'journal'];
-      views.forEach(v => {
-        const el = document.getElementById('view-' + v);
-        const btn = document.getElementById('tab-btn-' + v);
-        if (v === tab) {
-          el.classList.remove('hidden');
-          btn.className = 'px-3 py-2 rounded-md transition text-[#C5A059] bg-[#1F1E24] border border-[#3D3524] flex items-center gap-1.5 font-medium';
-        } else {
-          el.classList.add('hidden');
-          btn.className = 'px-3 py-2 rounded-md transition text-[#8C8270] hover:text-[#E0E0D6] flex items-center gap-1.5';
-        }
-      });
-      lucide.createIcons();
-    }
-
-    function renderReadingsTabs() {
-      const container = document.getElementById('readings-tabs-container');
-      container.innerHTML = READINGS_DATA.map((r, i) => `
-        <button onclick="showReading(${i})" class="px-3.5 py-2 rounded-lg text-xs font-semibold tracking-wide transition border ${
-          i === currentReadingIndex 
-            ? 'bg-[#8F7034] text-white border-[#C5A059] shadow' 
-            : 'bg-[#1F1E24] text-[#C5A059] border-[#3D3524] hover:bg-[#2A2930]'
-        }">
-          ${r.title} (${r.siglum.split(' ')[0]})
-        </button>
-      `).join('');
-    }
-
-    function showReading(index) {
-      currentReadingIndex = index;
-      renderReadingsTabs();
-      const item = READINGS_DATA[index];
-      document.getElementById('reading-badge').textContent = item.title;
-      document.getElementById('reading-siglum').textContent = item.siglum;
-      document.getElementById('reading-theme-box').textContent = 'Motyw: ' + item.theme;
-      document.getElementById('reading-body-text').textContent = item.text;
-    }
-
-    function startScrutationFromDaily() {
-      const reading = READINGS_DATA[currentReadingIndex];
-      scrutationNodes = [
-        {
-          id: 'node_' + Date.now(),
-          siglum: reading.siglum,
-          text: reading.text.substring(0, 300) + '...',
-          theologicalNote: reading.theme,
-          crossRefs: [
-            { siglum: 'Ps 119, 105', note: 'Twoje słowo jest lampą dla moich stóp' },
-            { siglum: 'Hbr 4, 12', note: 'Żywe jest słowo Boże i skuteczne' }
-          ]
-        }
-      ];
-      renderScrutationTree();
-      switchTab('workspace');
-    }
-
-    function renderScrutationTree() {
-      const container = document.getElementById('scrutation-tree-container');
-      if (!scrutationNodes.length) {
-        container.innerHTML = `<div class="p-8 text-center text-[#8C8270] italic">Brak dodanych wersetów. Dodaj werset powyżej lub wybierz z czytań z dnia.</div>`;
-        return;
-      }
-
-      container.innerHTML = scrutationNodes.map((node, idx) => `
-        <div class="bg-[#1A1A20] border border-[#3D3524] rounded-xl p-5 shadow-lg relative">
-          <div class="flex items-start justify-between gap-3 border-b border-[#3D3524] pb-3 mb-3">
-            <div>
-              <span class="text-[10px] uppercase tracking-wider text-[#8F7034] font-bold">Węzeł ${idx + 1}</span>
-              <h3 class="font-display text-lg text-[#C5A059] font-bold">${node.siglum}</h3>
-            </div>
-            <div class="flex items-center gap-2">
-              <button onclick="openPatristicModal('${node.siglum}')" class="px-2.5 py-1 rounded bg-[#25252D] hover:bg-[#3D3524] text-[11px] text-[#C5A059] border border-[#3D3524]">
-                Ojcowie Kościoła
-              </button>
-              <button onclick="removeNode(${idx})" class="text-rose-400 hover:text-rose-300 p-1 text-xs">
-                ✕
-              </button>
-            </div>
-          </div>
-          <p class="font-scripture text-base text-[#FAF8F5] leading-relaxed mb-4 italic bg-[#141417] p-3.5 rounded border border-[#2D281E]">
-            «${node.text}»
-          </p>
-          
-          <div class="space-y-2">
-            <span class="text-xs text-[#8C8270] uppercase tracking-wider font-semibold">Odnośniki Pisma Świętego (Aparat biblijny):</span>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
-              ${node.crossRefs.map(cr => `
-                <div onclick="addLinkedVerse('${cr.siglum}', '${cr.note}')" class="p-2.5 rounded bg-[#141417] border border-[#3D3524] hover:border-[#C5A059] cursor-pointer transition flex items-center justify-between">
-                  <div>
-                    <strong class="text-xs text-[#C5A059]">${cr.siglum}</strong>
-                    <p class="text-[11px] text-[#8C8270]">${cr.note}</p>
-                  </div>
-                  <span class="text-xs text-[#C5A059] font-bold">+</span>
-                </div>
-              `).join('')}
-            </div>
-          </div>
-        </div>
-      `).join('');
-      lucide.createIcons();
-    }
-
-    function addNewNodeBySiglum() {
-      const input = document.getElementById('quick-siglum-input');
-      const sig = input.value.trim();
-      if (!sig) return;
-      
-      scrutationNodes.push({
-        id: 'node_' + Date.now(),
-        siglum: sig,
-        text: `Fragment z ${sig}. Słowo Boże badane w modlitwie osobistej.`,
-        theologicalNote: 'Skrutacja biblijna',
+    // --- 2. BIBLICAL CROSS REFERENCE DATABASE (Biblia Jerozolimska) ---
+    const CROSS_REFS_DATABASE = {
+      'Mk 7, 1-8': {
+        siglum: 'Mk 7, 1-8. 14-15. 21-23',
+        theology: 'Jezus przenosi punkt ciężkości z ludzkiego rytualizmu na stan serca i czystość intencji.',
         crossRefs: [
-          { siglum: 'J 5, 39', note: 'Badacie Pisma, to one dają o Mnie świadectwo' },
-          { siglum: 'Łk 24, 27', note: 'Wykładał im, co we wszystkich Pismach odnosiło się do Niego' }
+          { siglum: 'Iz 29, 13', text: 'Ten lud zbliża się do Mnie tylko wargami, lecz sercem swym daleki jest ode Mnie.', testament: 'ST', relation: 'Proroctwo spełnione', note: 'Ostrzeżenie przed religijnością czysto zewnętrzną.' },
+          { siglum: 'Ps 51, 12', text: 'Stwórz, o Boże, we mnie serce czyste i odnów we mnie moc ducha.', testament: 'ST', relation: 'Modlitwa o nowe serce', note: 'Tylko Bóg może obmyć serce człowieka.' },
+          { siglum: 'Rz 14, 17', text: 'Królestwo Boże to nie sprawa tego, co się je i pije, ale to sprawiedliwość, pokój i radość w Duchu Świętym.', testament: 'NT', relation: 'Wypełnienie w Kościele', note: 'Wolność chrześcijańska w Duchu.' },
+          { siglum: 'Ez 36, 26', text: 'I dam wam serce nowe i ducha nowego tchnę do waszego wnętrza, odbiorę wam serce kamienne, a dam serce z ciała.', testament: 'ST', relation: 'Obietnica Nowego Przymierza', note: 'Przemiana wewnętrzna człowieka.' }
         ]
-      });
-      input.value = '';
-      renderScrutationTree();
-    }
-
-    function addLinkedVerse(sig, note) {
-      scrutationNodes.push({
-        id: 'node_' + Date.now(),
-        siglum: sig,
-        text: `Tekst z ${sig} — ${note}.`,
-        theologicalNote: note,
+      },
+      'J 1, 29': {
+        siglum: 'J 1, 29',
+        theology: 'Świadectwo Chrzciciela: Chrystus jest prawdziwym Barankiem Paschalnym niosącym grzech świata.',
         crossRefs: [
-          { siglum: 'Ps 23, 1', note: 'Pan jest moim pasterzem' },
-          { siglum: 'Rz 8, 28', note: 'Bóg z tymi, którzy Go miłują, współdziała we wszystkim' }
+          { siglum: 'Wj 12, 1-14', text: 'Baranek będzie bez skazy, samiec jednoroczny... Krew posłuży do oznaczenia waszych domów.', testament: 'ST', relation: 'Typologia Paschalna', note: 'Krew baranka ratująca od śmierci w Egipcie.' },
+          { siglum: 'Iz 53, 7.11-12', text: 'Dręczono Go, lecz sam się dał gnębić, nawet nie otworzył ust swoich. Jak baranek na rzeź prowadzony...', testament: 'ST', relation: 'Proroctwo o Słudze Pańskim', note: 'Dobrowolne wzięcie win wielu na siebie.' },
+          { siglum: '1 P 1, 18-19', text: 'Wiecie bowiem, że nie czymś przemijającym zostaliście wykupieni, ale drogocenną krwią Chrystusa, jako baranka niepokalanego.', testament: 'NT', relation: 'Apostoł Piotr o Odkupieniu', note: 'Cena zbawienia człowieka.' },
+          { siglum: 'Ap 5, 6.12', text: 'I ujrzałem pośrodku tronu stojącego Baranka jakby zabitego... Godzien jest Baranek zabity wziąć potęgę i bogactwo!', testament: 'NT', relation: 'Liturgia Niebiańska', note: 'Wieczne zwycięstwo Baranka.' }
         ]
-      });
-      renderScrutationTree();
-    }
-
-    function removeNode(index) {
-      scrutationNodes.splice(index, 1);
-      renderScrutationTree();
-    }
-
-    function saveCurrentSessionToJournal() {
-      const title = prompt('Podaj tytuł lub owoc modlitwy:', 'Skrutacja — ' + new Date().toLocaleDateString('pl-PL'));
-      if (!title) return;
-
-      const newEntry = {
-        id: 'j_' + Date.now(),
-        date: new Date().toISOString(),
-        title: title,
-        passages: scrutationNodes.map(n => n.siglum),
-        content: `Rozważane wersety: ${scrutationNodes.map(n => n.siglum).join(' → ')}.\nŚwiatło Słowa dla życia.`
-      };
-
-      journalEntries.unshift(newEntry);
-      localStorage.setItem('scrutatio_journal_v1', JSON.stringify(journalEntries));
-      renderJournal();
-      alert('Pomyślnie zapisano sesję w Dzienniku Duchowym!');
-      switchTab('journal');
-    }
-
-    function renderJournal() {
-      const container = document.getElementById('journal-entries-container');
-      if (!journalEntries.length) {
-        container.innerHTML = `<div class="p-8 text-center text-[#8C8270] italic">Twój dziennik jest pusty. Zapisz sesję ze Skrutacji, aby zachować owoce Słowa.</div>`;
-        return;
+      },
+      'Ps 15': {
+        siglum: 'Ps 15 (14), 2-5',
+        theology: 'Warunki zamieszkania w Namiocie Boga: prawość serca, brak lichwy i prawdomówność.',
+        crossRefs: [
+          { siglum: 'Ps 24, 3-4', text: 'Kto wstąpi na górę Pana, kto stanie w Jego świętym miejscu? Człowiek o rękach nieskalanych i czystym sercu.', testament: 'ST', relation: 'Psalm Wejścia', note: 'Wymogi czystości przed Bogiem.' },
+          { siglum: 'Mt 5, 8', text: 'Błogosławieni czystego serca, albowiem oni Boga oglądać będą.', testament: 'NT', relation: 'Wypełnienie w Kazaniu na Górze', note: 'Ewangeliczna obietnica oglądania Boga.' },
+          { siglum: 'Jk 1, 26-27', text: 'Jeśli ktoś sądzi, że jest pobożny, a nie powściąga swego języka, to oszukuje swe serce...', testament: 'NT', relation: 'Praktyka wiary', note: 'Mądrość listu św. Jakuba.' }
+        ]
+      },
+      '1 Kor 2, 3': {
+        siglum: '1 Kor 2, 1-5',
+        theology: 'Święty Paweł głosi mądrość Krzyża nie w ludzkiej pysze, lecz w słabości i mocy Ducha.',
+        crossRefs: [
+          { siglum: '2 Kor 12, 9-10', text: 'Lecz Pan mi powiedział: «Wystarczy ci mojej łaski. Moc bowiem w słabości się doskonali».', testament: 'NT', relation: 'Moc w Słabości', note: 'Paradoks chrześcijańskiej siły.' },
+          { siglum: 'Iz 53, 2-4', text: 'Nie miał On wdzięku ani blasku... Mąż boleści, oswojony z cierpieniem.', testament: 'ST', relation: 'Figura Chrystusa', note: 'Uniżenie Zbawiciela.' },
+          { siglum: 'Flp 2, 6-8', text: 'Ogołocił samego siebie, przyjąwszy postać sługi...', testament: 'NT', relation: 'Kenoza Chrystusa', note: 'Droga pokory Syna Bożego.' }
+        ]
       }
+    };
 
-      container.innerHTML = journalEntries.map((e, idx) => `
-        <div class="bg-[#1A1A20] border border-[#3D3524] rounded-lg p-4">
-          <div class="flex items-center justify-between border-b border-[#3D3524] pb-2 mb-2">
-            <h4 class="font-display font-semibold text-[#C5A059] text-base">${e.title}</h4>
-            <span class="text-[11px] text-[#8C8270]">${new Date(e.date).toLocaleDateString('pl-PL')}</span>
-          </div>
-          <p class="text-xs text-[#E0E0D6] whitespace-pre-line mb-3">${e.content}</p>
-          <div class="flex flex-wrap gap-1.5">
-            ${(e.passages || []).map(p => `<span class="px-2 py-0.5 rounded bg-[#141417] text-[#8F7034] border border-[#3D3524] text-[10px] font-bold">${p}</span>`).join('')}
-          </div>
-        </div>
-      `).join('');
-    }
-
-    function exportJournalText() {
-      const content = journalEntries.map(e => `=== ${e.title} (${new Date(e.date).toLocaleDateString('pl-PL')}) ===\nWersety: ${e.passages.join(', ')}\n${e.content}\n\n`).join('\n');
-      const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'dziennik_skrutacji.txt';
-      a.click();
-    }
-
-    // PATRISTIC DATA
-    const PATRISTIC_SAMPLES = {
+    // --- 3. PATRISTIC SAMPLES & COMMENTARIES ---
+    const PATRISTIC_DATABASE = {
       'J 1, 29': {
         siglum: 'J 1, 29',
         polish: 'Oto Baranek Boży, który gładzi grzech świata.',
@@ -545,48 +691,17 @@
           {
             author: 'Św. Jan Chryzostom (Złotousty)',
             century: 'IV w.',
-            quote: '«Nie powiedział: "Baranek, który gładzi grzechy", lecz "grzech świata", wskazując, że usuwa korzeń wszelkiego grzechu i całkowitą winę całej ludzkości.»'
+            quote: '«Nie powiedział: "Baranek, który gładzi grzechy", lecz "grzech świata", wskazując, że usuwa korzeń wszelkiego grzechu i winę całej ludzkości.»'
           },
           {
             author: 'Św. Augustyn z Hippony',
             century: 'IV/V w.',
-            quote: '«Czym jest grzech świata? Wszyscy ludzie przychodzący na ten świat są grzesznikami. Przyszedł tylko Jeden, który grzechu nie ma: oto Baranek Boży.»'
+            quote: '«Czym jest grzech świata? Wszyscy ludzie rodzą się w niewoli Adama. Przyszedł tylko Jeden, który grzechu nie ma: oto Baranek Boży.»'
           },
           {
             author: 'Św. Tomasz z Akwinu (Catena Aurea)',
             century: 'XIII w.',
-            quote: '«Nazwany jest Barankiem z racji niewinności oraz ze względu na ofiarę: tak jak bowiem baranek był prowadzony na ofiarę, tak Chrystus poniósł śmierć dla nas.»'
-          }
-        ]
-      },
-      'Iz 61, 1': {
-        siglum: 'Iz 61, 1',
-        polish: 'Duch Pana Boga nade mną, bo Pan mnie namaścił. Posłał mnie, by głosić dobrą nowinę ubogim...',
-        originalText: 'רוּחַ אֲדֹנָי יְהוִה עָלָי יַעַן מָשַׁח יְהוָה אֹתִי לְבַשֵּׂר עֲנָוִים...',
-        latin: 'Spiritus Domini Dei super me, eo quod unxerit Dominus me; ad evangelizandum pauperibus misit me...',
-        fathers: [
-          {
-            author: 'Św. Cyryl Aleksandryjski',
-            century: 'V w.',
-            quote: '«Został namaszczony jako człowiek, chociaż z natury jest Bogiem, aby w ludziach odnowić i zaszczepić utraconą przez Adama łaskę Ducha Świętego.»'
-          },
-          {
-            author: 'Św. Hieronim',
-            century: 'IV/V w.',
-            quote: '«Ten fragment Chrystus odczytał w Nazarecie ogłaszając, że DZIŚ słowo to wypełniło się w uszach słuchaczy.»'
-          }
-        ]
-      },
-      'Ps 23, 1': {
-        siglum: 'Ps 23, 1',
-        polish: 'Pan jest moim pasterzem, nie brak mi niczego. Pozwala mi leżeć na zielonych pastwiskach...',
-        originalText: 'יְהוָה רֹעִי לֹא אֶחְסָר: בִּנְאוֹת דֶּשֶׁא יַרְבִּיצֵנִי...',
-        latin: 'Dominus pascit me, et nihil mihi deerit: in loco pascuae ibi me collocavit...',
-        fathers: [
-          {
-            author: 'Św. Augustyn',
-            century: 'IV w.',
-            quote: '«Zielone pastwiska to życiodajne wersety Pisma Świętego badane w modlitwie, a wody odpoczynku to sakramenty Kościoła.»'
+            quote: '«Nazwany jest Barankiem z racji niewinności oraz ze względu na ofiarę: poniósł śmierć, aby nas ocalić od potępienia.»'
           }
         ]
       },
@@ -599,95 +714,614 @@
           {
             author: 'Św. Beda Czcigodny',
             century: 'VIII w.',
-            quote: '«Czyste serce stwarza w nas Bóg przez wiarę i miłość, a nie przez obmywanie cielesnych rąk.»'
+            quote: '«Czyste serce stwarza w nas Bóg przez wiarę i miłość, a nie przez samo rytualne obmywanie rąk.»'
+          },
+          {
+            author: 'Św. Hieronim',
+            century: 'IV/V w.',
+            quote: '«Bóg patrzy na dno serca, podczas gdy człowiek widzi tylko to, co wpada w oczy.»'
+          }
+        ]
+      },
+      'Iz 61, 1': {
+        siglum: 'Iz 61, 1',
+        polish: 'Duch Pana Boga nade mną, bo Pan mnie namaścił. Posłał mnie, by głosić dobrą nowinę ubogim...',
+        originalText: 'רוּחַ אֲדֹנָי יְהוִה עָלָי יַעַן מָשַׁח יְהוָה אֹתִי לְבַשֵּׂר עֲנָוִים...',
+        latin: 'Spiritus Domini Dei super me, eo quod unxerit Dominus me; ad evangelizandum pauperibus misit me...',
+        fathers: [
+          {
+            author: 'Św. Cyryl Aleksandryjski',
+            century: 'V w.',
+            quote: '«Został namaszczony jako człowiek, aby w ludziach odnowić utraconą przez upadek łaskę Ducha Świętego.»'
+          }
+        ]
+      },
+      'Ps 23, 1': {
+        siglum: 'Ps 23, 1',
+        polish: 'Pan jest moim pasterzem, nie brak mi niczego.',
+        originalText: 'יְהוָה רֹעִי לֹא אֶחְסָר: בִּנְאוֹת דֶּשֶׁא יַרְבִּיצֵנִי...',
+        latin: 'Dominus pascit me, et nihil mihi deerit...',
+        fathers: [
+          {
+            author: 'Św. Augustyn',
+            century: 'IV w.',
+            quote: '«Zielone pastwiska to wersety Pisma Świętego badane w modlitwie, a wody odpoczynku to źródła łaski sakramentalnej.»'
           }
         ]
       }
     };
 
-    function loadPatristicFor(siglum) {
-      const data = PATRISTIC_SAMPLES[siglum] || PATRISTIC_SAMPLES['J 1, 29'];
-      const container = document.getElementById('patristic-details-container');
-      container.innerHTML = `
-        <div class="bg-[#1A1A20] border border-[#3D3524] rounded-xl p-6">
-          <div class="border-b border-[#3D3524] pb-4 mb-4">
-            <span class="text-xs text-[#C5A059] uppercase font-bold tracking-wider">Analiza wersetu:</span>
-            <h3 class="font-display text-xl text-[#E0E0D6] font-bold mt-1">${data.siglum}</h3>
-            <p class="font-scripture text-lg text-[#FAF8F5] mt-2 italic">«${data.polish}»</p>
-          </div>
+    // --- 4. FAMOUS PERICOPES PRESETS ---
+    const FAMOUS_PERICOPES = [
+      { siglum: '1 Kor 13, 1-13', title: 'Hymn o Miłości', desc: 'Miłość cierpliwa jest, łaskawa jest... Nigdy nie ustaje.' },
+      { siglum: 'J 1, 29-34', title: 'Oto Baranek Boży', desc: 'Jan wskazuje na Jezusa gładzącego grzech świata.' },
+      { siglum: 'Mt 5, 1-12', title: 'Osiem Błogosławieństw', desc: 'Błogosławieni ubodzy w duchu, albowiem do nich należy królestwo.' },
+      { siglum: 'Iz 53, 1-12', title: 'Pieśń o Słudze Pańskim', desc: 'On był przebity za nasze grzechy, zdruzgotany za nasze winy.' },
+      { siglum: 'Ps 23, 1-6', title: 'Pan jest moim Pasterzem', desc: 'Chociażbym chodził ciemną doliną, zła się nie ulęknę.' },
+      { siglum: 'Łk 15, 11-32', title: 'Syn Marnotrawny i Miłosierny Ojciec', desc: 'Ojciec wybiegł mu naprzeciw, rzucił mu się na szyję i ucałował go.' }
+    ];
 
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-            <div class="p-4 rounded bg-[#141417] border border-[#3D3524]">
-              <span class="text-[11px] text-[#8C8270] uppercase font-bold tracking-wider">Język Oryginalny (Biblia):</span>
-              <p class="font-serif text-lg text-[#E5C98B] mt-1.5">${data.originalText}</p>
-            </div>
-            <div class="p-4 rounded bg-[#141417] border border-[#3D3524]">
-              <span class="text-[11px] text-[#8C8270] uppercase font-bold tracking-wider">Łacińska Wulgata (Vulgata Clementina):</span>
-              <p class="font-serif text-base text-[#FAF8F5] mt-1.5 italic">${data.latin}</p>
-            </div>
-          </div>
+    // --- 5. RANDOM QUOTES (Sors Biblica) ---
+    const RANDOM_QUOTES = [
+      { siglum: 'Mt 11, 28-30', title: 'Przyjdźcie do Mnie wszyscy utrudzeni', text: '«Przyjdźcie do Mnie wszyscy, którzy utrudzeni i obciążeni jesteście, a Ja wam dam ukojenie. Weźcie moje jarzmo na siebie i uczcie się ode Mnie, bo jestem cichy i pokorny sercem».', theology: 'Chrystus jako źródło odpoczynku i pokoju serca.' },
+      { siglum: 'J 14, 6', title: 'Ja jestem Drogą, Prawdą i Życiem', text: 'Odpowiedział mu Jezus: «Ja jestem drogą i prawdą, i życiem. Nikt nie przychodzi do Ojca inaczej jak tylko przeze Mnie».', theology: 'Jezus jako jedyny Pośrednik i Brama do Ojca.' },
+      { siglum: 'Iz 43, 1-2', title: 'Nie lękaj się, bo cię wykupiłem', text: '«Nie lękaj się, bo cię wykupiłem, wezwałem cię po imieniu; tyś moim! Gdy pójdziesz przez wody, Ja będę z tobą!».', theology: 'Niezawodna opieka Boga nad Jego wybranymi.' },
+      { siglum: 'Rz 8, 31-32', title: 'Jeżeli Bóg z nami, któż przeciwko nam?', text: 'Cóż więc na to powiemy? Jeżeli Bóg z nami, któż przeciwko nam? On, który nawet własnego Syna nie oszczędził, ale Go za nas wszystkich wydał...', theology: 'Pełnia miłości Ojca w Krzyżu Chrystusa.' },
+      { siglum: 'Ps 119, 105', title: 'Twoje Słowo jest lampą', text: 'Twoje słowo jest lampą dla moich stóp i światłem na mojej ścieżce.', theology: 'Moc Słowa Bożego rozpraszająca mroki życia.' }
+    ];
 
-          <h4 class="text-xs uppercase text-[#C5A059] tracking-wider font-bold mb-3">Głos Tradycji i Ojców Kościoła:</h4>
-          <div class="space-y-3">
-            ${data.fathers.map(f => `
-              <div class="p-4 rounded-lg bg-[#141417] border-l-2 border-[#C5A059] border-y border-r border-[#3D3524]">
-                <div class="flex items-baseline justify-between mb-1">
-                  <strong class="text-xs text-[#C5A059] font-display">${f.author}</strong>
-                  <span class="text-[10px] text-[#8C8270]">${f.century}</span>
-                </div>
-                <p class="text-xs text-[#E0E0D6] leading-relaxed italic">${f.quote}</p>
-              </div>
-            `).join('')}
-          </div>
-        </div>
-      `;
+    // --- 6. RUNTIME APP STATE ---
+    let currentReadingIndex = 3; // Gospel by default
+    let activeDate = new Date();
+    let currentScrutation = {
+      rootSiglum: 'Mk 7, 1-8',
+      rootText: 'Z wnętrza bowiem, z serca ludzkiego pochodzą złe myśli... Całe to zło z wnętrza pochodzi i czyni człowieka nieczystym.',
+      rootTheology: 'Motyw czystości serca w świetle Prawa Bożego.',
+      nodes: []
+    };
+    let journalEntries = JSON.parse(localStorage.getItem('scrutatio_journal_entries_v2') || '[]');
+    let timerInterval = null;
+    let timerSeconds = 0;
+    let isTimerRunning = false;
+
+    // --- 7. INITIALIZATION ON LOAD ---
+    function initApp() {
+      // Set date picker
+      const datePicker = document.getElementById('daily-date-picker');
+      if (datePicker) datePicker.value = activeDate.toISOString().slice(0, 10);
+      
+      renderDailyReadingButtons();
+      displayReading(3);
+      renderFamousPericopes();
+      loadPatristicForVerse('J 1, 29');
+      renderJournal();
+
+      // Initialize default scrutation tree
+      currentScrutation.nodes = [
+        {
+          id: 'n_1',
+          siglum: 'Iz 29, 13',
+          relation: 'Proroctwo spełnione (Biblia Jerozolimska)',
+          text: 'Ten lud zbliża się do Mnie tylko wargami, lecz sercem swym daleki jest ode Mnie.',
+          note: 'Ostrzeżenie przed religijnością czysto zewnętrzną.'
+        },
+        {
+          id: 'n_2',
+          siglum: 'Ps 51, 12',
+          relation: 'Modlitwa o nowe serce',
+          text: 'Stwórz, o Boże, we mnie serce czyste i odnów we mnie moc ducha.',
+          note: 'Tylko Bóg może obmyć serce człowieka.'
+        }
+      ];
+      renderWorkspaceVerses();
+
+      lucide.createIcons();
     }
 
-    function openPatristicModal(siglum) {
-      switchTab('patristic');
-      loadPatristicFor(siglum);
+    // --- NAVIGATION TABS ---
+    function switchTab(tabId) {
+      const tabs = ['daily', 'selector', 'workspace', 'patristic', 'journal'];
+      tabs.forEach(t => {
+        const sec = document.getElementById('view-' + t);
+        const btn = document.getElementById('nav-btn-' + t);
+        if (t === tabId) {
+          sec.classList.remove('hidden');
+          btn.className = 'px-3 py-2 rounded-xl transition flex items-center gap-1.5 font-semibold text-emerald-900 bg-emerald-100/90 border border-emerald-300 shadow-xs';
+        } else {
+          sec.classList.add('hidden');
+          btn.className = 'px-3 py-2 rounded-xl transition text-slate-600 hover:text-slate-900 hover:bg-slate-100 flex items-center gap-1.5 font-medium';
+        }
+      });
+      lucide.createIcons();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    // WEB SPEECH AUDIO SYNTHESIS
-    let isSpeaking = false;
-    function readAloudCurrentReading() {
+    // --- DAILY READINGS LOGIC ---
+    function renderDailyReadingButtons() {
+      const container = document.getElementById('readings-buttons-grid');
+      const readings = LITURGICAL_SAMPLES[0].readings;
+      
+      container.innerHTML = readings.map((r, i) => `
+        <button onclick="displayReading(${i})" class="p-3 rounded-xl border text-left transition ${
+          i === currentReadingIndex 
+            ? 'bg-emerald-700 text-white border-emerald-700 shadow-xs' 
+            : 'bg-white text-slate-700 border-slate-200 hover:border-emerald-300 hover:bg-slate-50'
+        }">
+          <span class="text-[10px] uppercase font-bold tracking-wider opacity-80 block">${r.title}</span>
+          <span class="text-xs font-serif font-bold truncate block mt-0.5">${r.siglum}</span>
+        </button>
+      `).join('');
+    }
+
+    function displayReading(index) {
+      currentReadingIndex = index;
+      renderDailyReadingButtons();
+      const r = LITURGICAL_SAMPLES[0].readings[index];
+
+      document.getElementById('active-reading-badge').textContent = r.title;
+      document.getElementById('active-reading-siglum').textContent = r.siglum;
+      document.getElementById('active-reading-theme').textContent = 'Motyw: ' + r.theme;
+      document.getElementById('reading-original-script').textContent = r.originalScript || '—';
+      document.getElementById('reading-latin-vulgate').textContent = r.latinVulgate || '—';
+
+      const isPsalm = r.type === 'psalm';
+      const psalmContainer = document.getElementById('psalm-special-container');
+      const standardBody = document.getElementById('standard-reading-body');
+
+      if (isPsalm && r.stanzas && r.stanzas.length > 0) {
+        psalmContainer.classList.remove('hidden');
+        document.getElementById('psalm-response-text').textContent = r.response;
+        
+        const stanzasList = document.getElementById('psalm-stanzas-list');
+        stanzasList.innerHTML = r.stanzas.map((st, sIdx) => `
+          <div class="p-3.5 rounded-xl bg-white border border-slate-200 hover:border-emerald-400 hover:shadow-xs transition group">
+            <div class="flex items-center justify-between mb-1.5">
+              <span class="text-[11px] font-bold text-slate-500 uppercase">Zwrotka ${sIdx + 1}</span>
+              <button onclick="selectSpecificVerseForScrutation('${st.replace(/\n/g, ' ')}', '${r.siglum} (Zwrotka ${sIdx + 1})')" class="text-xs font-bold text-emerald-700 group-hover:underline flex items-center gap-1">
+                <span>Skrutuj tę zwrotkę</span>
+                <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+              </button>
+            </div>
+            <p class="font-scripture text-base text-slate-800 whitespace-pre-line leading-relaxed italic">«${st}»</p>
+          </div>
+        `).join('');
+      } else {
+        psalmContainer.classList.add('hidden');
+      }
+
+      // Sentence slicing for clickable interactive reading
+      const rawSentences = r.text.split(/([.!?]+[\s\n]+)/);
+      let htmlSentences = '';
+      for (let i = 0; i < rawSentences.length; i += 2) {
+        const sentence = (rawSentences[i] || '') + (rawSentences[i+1] || '');
+        if (sentence.trim()) {
+          const clean = sentence.replace(/"/g, '&quot;').replace(/'/g, "\\'");
+          htmlSentences += `<span class="selectable-sentence" onclick="selectSpecificVerseForScrutation('${clean}', '${r.siglum}')" title="Kliknij, aby wybrać ten fragment do skrutacji">${sentence}</span> `;
+        }
+      }
+      document.getElementById('active-reading-sentences').innerHTML = htmlSentences;
+
+      lucide.createIcons();
+    }
+
+    function toggleOriginalLanguages() {
+      const content = document.getElementById('orig-lang-content');
+      const indicator = document.getElementById('orig-lang-toggle-indicator');
+      if (content.classList.contains('hidden')) {
+        content.classList.remove('hidden');
+        indicator.textContent = 'Zwiń ▲';
+      } else {
+        content.classList.add('hidden');
+        indicator.textContent = 'Rozwiń ▼';
+      }
+    }
+
+    function selectSpecificVerseForScrutation(text, siglumLabel) {
+      currentScrutation.rootSiglum = siglumLabel || 'Wybrany Werset';
+      currentScrutation.rootText = text.trim();
+      currentScrutation.rootTheology = 'Werset wybrany z dzisiejszej liturgii słowa do modlitwy w ciszy.';
+      
+      // Auto-populate initial cross-references from database
+      const match = CROSS_REFS_DATABASE[siglumLabel] || CROSS_REFS_DATABASE['Mk 7, 1-8'];
+      currentScrutation.nodes = (match.crossRefs || []).map((cr, idx) => ({
+        id: 'n_' + Date.now() + '_' + idx,
+        siglum: cr.siglum,
+        relation: cr.relation,
+        text: cr.text,
+        note: cr.note
+      }));
+
+      updateWorkspaceView();
+      switchTab('workspace');
+    }
+
+    function startScrutationFromCurrentReading() {
+      const r = LITURGICAL_SAMPLES[0].readings[currentReadingIndex];
+      selectSpecificVerseForScrutation(r.text, r.siglum);
+    }
+
+    function copyCurrentReadingText() {
+      const r = LITURGICAL_SAMPLES[0].readings[currentReadingIndex];
+      navigator.clipboard.writeText(`${r.title} — ${r.siglum}\n\n${r.text}`).then(() => {
+        alert('Skopiowano treść czytania do schowka!');
+      });
+    }
+
+    let isAudioPlaying = false;
+    function readAloudText() {
       if (!('speechSynthesis' in window)) {
         alert('Twoja przeglądarka nie obsługuje syntezy mowy.');
         return;
       }
-      if (isSpeaking) {
+      if (isAudioPlaying) {
         window.speechSynthesis.cancel();
-        isSpeaking = false;
-        document.getElementById('read-aloud-btn-text').textContent = 'Odsłuchaj lektorem';
+        isAudioPlaying = false;
+        document.getElementById('audio-speak-label').textContent = 'Odsłuchaj lektorem';
         return;
       }
 
-      const item = READINGS_DATA[currentReadingIndex];
-      const textToSpeak = `${item.title}. ${item.siglum}. ${item.text}`;
+      const r = LITURGICAL_SAMPLES[0].readings[currentReadingIndex];
+      const textToSpeak = `${r.title}. ${r.siglum}. ${r.text}`;
       const utterance = new SpeechSynthesisUtterance(textToSpeak);
       utterance.lang = 'pl-PL';
-      utterance.rate = 0.95;
+      utterance.rate = 0.92;
 
       utterance.onstart = () => {
-        isSpeaking = true;
-        document.getElementById('read-aloud-btn-text').textContent = 'Zatrzymaj lektora';
+        isAudioPlaying = true;
+        document.getElementById('audio-speak-label').textContent = 'Zatrzymaj lektora';
       };
       utterance.onend = () => {
-        isSpeaking = false;
-        document.getElementById('read-aloud-btn-text').textContent = 'Odsłuchaj lektorem';
+        isAudioPlaying = false;
+        document.getElementById('audio-speak-label').textContent = 'Odsłuchaj lektorem';
       };
       utterance.onerror = () => {
-        isSpeaking = false;
-        document.getElementById('read-aloud-btn-text').textContent = 'Odsłuchaj lektorem';
+        isAudioPlaying = false;
+        document.getElementById('audio-speak-label').textContent = 'Odsłuchaj lektorem';
       };
 
       window.speechSynthesis.speak(utterance);
     }
 
-    // DOWNLOAD CURRENT HTML APP DIRECTLY
-    function downloadSelf() {
-      const htmlContent = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
-      const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+    function changeDateOffset(offset) {
+      activeDate.setDate(activeDate.getDate() + offset);
+      document.getElementById('daily-date-picker').value = activeDate.toISOString().slice(0, 10);
+      const opts = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+      document.getElementById('liturgy-heading').textContent = 'Czytania na ' + activeDate.toLocaleDateString('pl-PL', opts);
+    }
+
+    function onManualDatePick(val) {
+      if (!val) return;
+      activeDate = new Date(val);
+      const opts = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+      document.getElementById('liturgy-heading').textContent = 'Czytania na ' + activeDate.toLocaleDateString('pl-PL', opts);
+    }
+
+    // --- FAMOUS PERICOPES & RANDOM QUOTES ---
+    function renderFamousPericopes() {
+      const grid = document.getElementById('famous-pericopes-grid');
+      grid.innerHTML = FAMOUS_PERICOPES.map(p => `
+        <div class="p-4 rounded-xl bg-white border border-slate-200 hover:border-emerald-400 hover:shadow-xs transition flex flex-col justify-between space-y-2">
+          <div>
+            <span class="px-2 py-0.5 rounded text-[10px] font-bold font-mono bg-emerald-50 text-emerald-800 border border-emerald-200">${p.siglum}</span>
+            <h4 class="font-serif font-bold text-slate-900 text-base mt-1.5">${p.title}</h4>
+            <p class="text-xs text-slate-500 font-scripture italic mt-1">«${p.desc}»</p>
+          </div>
+          <button onclick="selectSpecificVerseForScrutation('${p.desc}', '${p.siglum}')" class="mt-2 text-xs font-bold text-emerald-700 hover:text-emerald-900 flex items-center gap-1">
+            <span>Rozpocznij Skrutację</span>
+            <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+          </button>
+        </div>
+      `).join('');
+    }
+
+    let lastRandomQuote = null;
+    function drawRandomScriptureQuote() {
+      const idx = Math.floor(Math.random() * RANDOM_QUOTES.length);
+      const q = RANDOM_QUOTES[idx];
+      lastRandomQuote = q;
+
+      document.getElementById('rq-siglum').textContent = q.siglum;
+      document.getElementById('rq-title').textContent = q.title;
+      document.getElementById('rq-text').textContent = q.text;
+      document.getElementById('rq-theology').textContent = 'Kontekst teologiczny: ' + q.theology;
+      document.getElementById('random-quote-display-box').classList.remove('hidden');
+      document.getElementById('random-quote-display-box').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function startScrutationFromRandomQuote() {
+      if (!lastRandomQuote) return;
+      selectSpecificVerseForScrutation(lastRandomQuote.text, lastRandomQuote.siglum);
+    }
+
+    function onSearchCustomSiglum() {
+      const input = document.getElementById('custom-siglum-search');
+      const sig = input.value.trim();
+      if (!sig) return;
+      selectSpecificVerseForScrutation(`Słowo Boże z ${sig} badane w osobistej modlitwie.`, sig);
+      input.value = '';
+    }
+
+    // --- WORKSPACE LOGIC ---
+    function updateWorkspaceView() {
+      document.getElementById('workspace-main-title').textContent = 'Skrutacja: ' + currentScrutation.rootSiglum;
+      document.getElementById('root-node-siglum').textContent = currentScrutation.rootSiglum;
+      document.getElementById('root-node-text').textContent = `«${currentScrutation.rootText}»`;
+      document.getElementById('root-theology-box').textContent = currentScrutation.rootTheology || 'Punkt wyjścia skrutacji biblijnej.';
+      renderWorkspaceVerses();
+    }
+
+    function renderWorkspaceVerses() {
+      const container = document.getElementById('workspace-verses-container');
+      document.getElementById('chain-count-badge').textContent = (currentScrutation.nodes.length + 1).toString();
+
+      if (!currentScrutation.nodes.length) {
+        container.innerHTML = `<div class="p-6 text-center text-slate-500 bg-white border border-slate-200 rounded-xl text-xs italic">Brak kolejnych wersetów w łańcuchu. Kliknij «Odkryj kolejny werset z aparatu» lub dodaj własne siglum.</div>`;
+        return;
+      }
+
+      container.innerHTML = currentScrutation.nodes.map((n, idx) => `
+        <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-xs relative hover:border-slate-300 transition">
+          <div class="flex items-start justify-between gap-3 border-b border-slate-100 pb-2.5 mb-2.5">
+            <div class="flex items-center gap-2">
+              <span class="w-5 h-5 rounded-full bg-emerald-100 text-emerald-800 text-[11px] font-bold flex items-center justify-center">${idx + 1}</span>
+              <span class="font-mono font-bold text-sm text-slate-900">${n.siglum}</span>
+              <span class="text-xs text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 font-semibold">${n.relation || 'Odnośnik'}</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <button onclick="openPatristicFor('${n.siglum}')" class="px-2.5 py-1 rounded bg-sky-50 text-sky-800 hover:bg-sky-100 text-[11px] font-semibold border border-sky-200 transition">
+                Ojcowie Kościoła
+              </button>
+              <button onclick="removeWorkspaceNode(${idx})" class="text-slate-400 hover:text-red-500 p-1 text-xs">✕</button>
+            </div>
+          </div>
+
+          <p class="font-scripture text-base text-slate-800 leading-relaxed italic bg-slate-50 p-3 rounded-lg border border-slate-100">
+            «${n.text}»
+          </p>
+          ${n.note ? `<p class="text-xs text-slate-500 mt-2"><strong>Klucz teologiczny:</strong> ${n.note}</p>` : ''}
+        </div>
+      `).join('');
+
+      lucide.createIcons();
+    }
+
+    function addManualVerseToTree() {
+      const input = document.getElementById('ws-quick-add-siglum');
+      const sig = input.value.trim();
+      if (!sig) return;
+
+      currentScrutation.nodes.push({
+        id: 'n_' + Date.now(),
+        siglum: sig,
+        relation: 'Własny odnośnik',
+        text: `Fragment z ${sig}. Słowo Boże badane w modlitwie.`,
+        note: 'Dodane z aparatu biblijnego.'
+      });
+      input.value = '';
+      renderWorkspaceVerses();
+    }
+
+    function discoverNextAutomaticCrossReference() {
+      const extraList = [
+        { siglum: 'Hbr 4, 12', relation: 'Moc Słowa Bożego', text: 'Żywe bowiem jest słowo Boże, skuteczne i ostrzejsze niż wszelki miecz obosieczny.', note: 'Przenika aż do rozdzielenia duszy i ducha.' },
+        { siglum: 'Rz 8, 28', relation: 'Opatrzność Boża', text: 'Wiemy też, że Bóg z tymi, którzy Go miłują, współdziała we wszystkim dla ich dobra.', note: 'Nadzieja chrześcijańska w trudnościach.' },
+        { siglum: 'Iz 55, 11', relation: 'Skuteczność Słowa', text: 'Tak słowo, które wychodzi z ust moich, nie wraca do Mnie bezowocne, zanim nie dokona tego, co chciałem.', note: 'Niezawodna obietnica owocu Słowa.' },
+        { siglum: 'J 15, 5', relation: 'Trwanie w Chrystusie', text: '«Ja jestem krzewem winnym, wy – latoroślami. Kto trwa we Mnie, a Ja w nim, ten przynosi owoc obfity».', note: 'Źródło życia duchowego.' }
+      ];
+
+      const unused = extraList.find(e => !currentScrutation.nodes.some(n => n.siglum === e.siglum)) || extraList[0];
+      currentScrutation.nodes.push({
+        id: 'n_' + Date.now(),
+        siglum: unused.siglum,
+        relation: unused.relation,
+        text: unused.text,
+        note: unused.note
+      });
+      renderWorkspaceVerses();
+    }
+
+    function removeWorkspaceNode(idx) {
+      currentScrutation.nodes.splice(idx, 1);
+      renderWorkspaceVerses();
+    }
+
+    // PRAYER TIMER
+    function togglePrayerTimer() {
+      const btn = document.getElementById('timer-toggle-btn');
+      if (isTimerRunning) {
+        clearInterval(timerInterval);
+        isTimerRunning = false;
+        btn.textContent = 'Wznów';
+      } else {
+        isTimerRunning = true;
+        btn.textContent = 'Pauza';
+        timerInterval = setInterval(() => {
+          timerSeconds++;
+          const mins = Math.floor(timerSeconds / 60).toString().padStart(2, '0');
+          const secs = (timerSeconds % 60).toString().padStart(2, '0');
+          document.getElementById('prayer-timer-display').textContent = `${mins}:${secs}`;
+        }, 1000);
+      }
+    }
+
+    // SAVE SESSION TO JOURNAL
+    function saveCurrentScrutationSession() {
+      const rhema = document.getElementById('note-rhema').value.trim();
+      const meditatio = document.getElementById('note-meditatio').value.trim();
+      const oratio = document.getElementById('note-oratio').value.trim();
+
+      const newEntry = {
+        id: 'j_' + Date.now(),
+        date: new Date().toISOString(),
+        title: 'Skrutacja: ' + currentScrutation.rootSiglum,
+        rootSiglum: currentScrutation.rootSiglum,
+        rootText: currentScrutation.rootText,
+        chain: currentScrutation.nodes.map(n => n.siglum),
+        rhema: rhema || currentScrutation.rootSiglum,
+        meditatio: meditatio,
+        oratio: oratio
+      };
+
+      journalEntries.unshift(newEntry);
+      localStorage.setItem('scrutatio_journal_entries_v2', JSON.stringify(journalEntries));
+      renderJournal();
+      alert('Pomyślnie zapisano skrutację w Dzienniku Duchowym!');
+      switchTab('journal');
+    }
+
+    // --- PATRISTIC VIEW LOGIC ---
+    function loadPatristicForVerse(siglum) {
+      const data = PATRISTIC_DATABASE[siglum] || PATRISTIC_DATABASE['J 1, 29'];
+      const container = document.getElementById('patristic-render-container');
+      
+      container.innerHTML = `
+        <div class="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-xs space-y-6">
+          <div class="border-b border-slate-100 pb-4">
+            <span class="text-xs font-bold uppercase tracking-wider text-sky-800">Analiza Wersetu:</span>
+            <h3 class="text-2xl font-serif font-bold text-slate-900 mt-1">${data.siglum}</h3>
+            <p class="font-scripture text-lg text-slate-800 italic mt-2 bg-slate-50 p-4 rounded-xl border border-slate-200">
+              «${data.polish}»
+            </p>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="p-4 rounded-xl bg-slate-50 border border-slate-200">
+              <span class="text-[10px] uppercase font-bold tracking-wider text-slate-500 block mb-1">Oryginał Biblijny (Greka / Hebrajski):</span>
+              <p class="font-serif text-base text-slate-900 italic font-semibold">${data.originalText}</p>
+            </div>
+            <div class="p-4 rounded-xl bg-slate-50 border border-slate-200">
+              <span class="text-[10px] uppercase font-bold tracking-wider text-slate-500 block mb-1">Łacińska Wulgata (Vulgata Clementina):</span>
+              <p class="font-serif text-base text-slate-800 italic">${data.latin}</p>
+            </div>
+          </div>
+
+          <div>
+            <h4 class="text-xs font-bold uppercase tracking-wider text-slate-700 mb-3">Głos Ojców Kościoła i Tradycji:</h4>
+            <div class="space-y-3">
+              ${data.fathers.map(f => `
+                <div class="p-4 rounded-xl bg-slate-50 border-l-4 border-sky-600 border-y border-r border-slate-200">
+                  <div class="flex items-baseline justify-between mb-1">
+                    <strong class="text-xs font-bold text-sky-950">${f.author}</strong>
+                    <span class="text-[10px] font-semibold text-slate-500">${f.century}</span>
+                  </div>
+                  <p class="text-xs text-slate-700 italic leading-relaxed">${f.quote}</p>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function openPatristicFor(siglum) {
+      switchTab('patristic');
+      loadPatristicForVerse(siglum);
+    }
+
+    // --- JOURNAL LOGIC ---
+    function renderJournal() {
+      const container = document.getElementById('journal-sessions-grid');
+      if (!journalEntries.length) {
+        container.innerHTML = `
+          <div class="col-span-2 p-12 text-center bg-white border border-slate-200 rounded-2xl space-y-3">
+            <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center mx-auto">
+              <i data-lucide="bookmark-check" class="w-6 h-6"></i>
+            </div>
+            <h4 class="text-lg font-serif font-bold text-slate-900">Twój Dziennik Duchowy jest jeszcze pusty</h4>
+            <p class="text-xs text-slate-500 max-w-md mx-auto">
+              Gdy ukończysz modlitwę w Warsztacie, kliknij «Zapisz w Dzienniku», aby utrwalić łańcuch wersetów i Słowo Życia (Rhema).
+            </p>
+          </div>
+        `;
+        lucide.createIcons();
+        return;
+      }
+
+      container.innerHTML = journalEntries.map((e, idx) => `
+        <div class="p-5 rounded-2xl bg-white border border-slate-200 hover:border-emerald-300 shadow-xs flex flex-col justify-between space-y-4">
+          <div class="space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="px-2.5 py-0.5 rounded-md bg-emerald-100 text-emerald-900 text-xs font-mono font-bold">${e.rootSiglum || 'Skrutacja'}</span>
+              <span class="text-[11px] text-slate-400">${new Date(e.date).toLocaleDateString('pl-PL')}</span>
+            </div>
+
+            <h4 class="text-base font-serif font-bold text-slate-900">${e.title}</h4>
+
+            ${e.rhema ? `
+              <div class="p-3 rounded-lg bg-amber-50 border border-amber-200 text-xs">
+                <span class="font-bold text-amber-900 uppercase text-[10px] block">Słowo Życia (Rhema):</span>
+                <p class="font-scripture italic font-semibold text-amber-950 mt-0.5">«${e.rhema}»</p>
+              </div>
+            ` : ''}
+
+            <div class="space-y-1">
+              <span class="text-[10px] uppercase font-bold text-slate-400">Łańcuch wersetów:</span>
+              <div class="flex flex-wrap gap-1">
+                ${(e.chain || []).map(c => `<span class="px-2 py-0.5 rounded text-[10px] font-mono bg-slate-100 text-slate-700 border border-slate-200">${c}</span>`).join('')}
+              </div>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between pt-3 border-t border-slate-100">
+            <button onclick="deleteJournalEntry(${idx})" class="text-xs text-red-500 hover:text-red-700 font-medium">Usuń</button>
+            <button onclick="openSavedJournalInWorkspace(${idx})" class="px-3 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-semibold flex items-center gap-1">
+              <span>Wczytaj w Warsztacie</span>
+              <i data-lucide="arrow-right" class="w-3 h-3"></i>
+            </button>
+          </div>
+        </div>
+      `).join('');
+
+      lucide.createIcons();
+    }
+
+    function deleteJournalEntry(idx) {
+      if (confirm('Czy na pewno chcesz usunąć ten wpis z dziennika?')) {
+        journalEntries.splice(idx, 1);
+        localStorage.setItem('scrutatio_journal_entries_v2', JSON.stringify(journalEntries));
+        renderJournal();
+      }
+    }
+
+    function openSavedJournalInWorkspace(idx) {
+      const e = journalEntries[idx];
+      currentScrutation.rootSiglum = e.rootSiglum;
+      currentScrutation.rootText = e.rootText;
+      currentScrutation.rootTheology = 'Wczytana sesja z Dziennika: ' + e.title;
+      currentScrutation.nodes = (e.chain || []).map((sig, i) => ({
+        id: 'n_restored_' + i,
+        siglum: sig,
+        relation: 'Zapisany łańcuch',
+        text: `Werset ${sig}`,
+        note: ''
+      }));
+      updateWorkspaceView();
+      switchTab('workspace');
+    }
+
+    function exportJournalBackupJson() {
+      const blob = new Blob([JSON.stringify(journalEntries, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `dziennik_skrutacji_${new Date().toISOString().slice(0,10)}.json`;
+      a.click();
+    }
+
+    function exportJournalFormattedTxt() {
+      const txt = journalEntries.map(e => `=== ${e.title} (${new Date(e.date).toLocaleDateString('pl-PL')}) ===\nWerset: ${e.rootSiglum}\nSłowo Życia (Rhema): ${e.rhema || '—'}\nŁańcuch: ${(e.chain || []).join(' → ')}\n\nMeditatio:\n${e.meditatio || '—'}\n\nOratio:\n${e.oratio || '—'}\n\n--------------------------------------------\n`).join('\n');
+      const blob = new Blob([txt], { type: 'text/plain;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `dziennik_skrutacji_${new Date().toISOString().slice(0,10)}.txt`;
+      a.click();
+    }
+
+    // --- 8. DOWNLOAD STANDALONE HTML FILE (Self Export) ---
+    function downloadSelfHtml() {
+      const fullHtml = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+      const blob = new Blob([fullHtml], { type: 'text/html;charset=utf-8' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -695,8 +1329,7 @@
       a.click();
     }
 
-    // RUN ON LOAD
-    window.addEventListener('DOMContentLoaded', init);
+    window.addEventListener('DOMContentLoaded', initApp);
   </script>
 </body>
 </html>

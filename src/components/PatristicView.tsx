@@ -93,87 +93,85 @@ export const PatristicView: React.FC<PatristicViewProps> = ({ defaultSiglum }) =
   });
 
   return (
-    <div className="space-y-8 animate-fadeIn max-w-6xl mx-auto">
+    <div className="space-y-8 animate-fadeIn max-w-6xl mx-auto text-slate-900">
       {/* Top Banner Header */}
-      <div className="bg-gradient-to-b from-[#18181E] via-[#141417] to-[#0D0D10] border border-[#3D3524] rounded-2xl p-6 sm:p-8 relative overflow-hidden shadow-2xl">
-        <div className="absolute -right-16 -top-16 w-64 h-64 bg-[#C5A059]/10 rounded-full blur-3xl pointer-events-none" />
-        
+      <div className="bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 relative overflow-hidden shadow-xs">
         <div className="flex flex-wrap items-center justify-between gap-4 mb-3">
           <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-[#C5A059] animate-pulse" />
-            <span className="text-xs uppercase tracking-[0.25em] text-[#C5A059] font-medium">
+            <span className="w-2 h-2 rounded-full bg-sky-600 animate-pulse" />
+            <span className="text-xs uppercase tracking-[0.25em] text-sky-900 font-bold">
               Catena Aurea • Święta Tradycja • Języki Biblijne
             </span>
           </div>
 
           {/* Sub-tab navigation: Komentarze vs Katalog Ojców */}
-          <div className="inline-flex rounded-xl p-1 bg-[#0E0E12] border border-[#3D3524] shadow-inner">
+          <div className="inline-flex rounded-xl p-1 bg-slate-100 border border-slate-200">
             <button
               onClick={() => setActiveSubTab('commentaries')}
-              className={`px-3.5 py-1.5 rounded-lg text-xs font-sans uppercase tracking-wider font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
+              className={`px-3.5 py-1.5 rounded-lg text-xs font-sans uppercase tracking-wider font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
                 activeSubTab === 'commentaries'
-                  ? 'bg-[#3D3524] text-[#C5A059] shadow-sm'
-                  : 'text-[#8C8270] hover:text-[#E0E0D6]'
+                  ? 'bg-white text-sky-950 shadow-xs border border-slate-200'
+                  : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              <Scroll className="w-3.5 h-3.5" />
+              <Scroll className="w-3.5 h-3.5 text-sky-600" />
               <span>Komentarze i Języki</span>
             </button>
             <button
               onClick={() => setActiveSubTab('fathers_directory')}
-              className={`px-3.5 py-1.5 rounded-lg text-xs font-sans uppercase tracking-wider font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
+              className={`px-3.5 py-1.5 rounded-lg text-xs font-sans uppercase tracking-wider font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
                 activeSubTab === 'fathers_directory'
-                  ? 'bg-[#3D3524] text-[#C5A059] shadow-sm'
-                  : 'text-[#8C8270] hover:text-[#E0E0D6]'
+                  ? 'bg-white text-sky-950 shadow-xs border border-slate-200'
+                  : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              <Users className="w-3.5 h-3.5" />
+              <Users className="w-3.5 h-3.5 text-sky-600" />
               <span>Ojcowie Kościoła ({CHURCH_FATHERS_DIRECTORY.length})</span>
             </button>
           </div>
         </div>
 
-        <h1 className="font-display text-2xl sm:text-3xl lg:text-4xl text-white font-normal tracking-wide">
+        <h1 className="font-serif text-2xl sm:text-3xl lg:text-4xl text-slate-900 font-bold tracking-tight">
           Ojcowie Kościoła i Języki Oryginalne
         </h1>
         
-        <p className="text-sm text-[#A0A095] max-w-3xl mt-2 leading-relaxed font-serif">
-          Zanurz się w autentycznej interpretacji Pisma Świętego według Ojców Wschodu i Zachodu (św. Augustyn, św. Jan Chryzostom, św. Hieronim, św. Grzegorz Wielki, Orygenes, św. Ireneusz) oraz zobacz oryginalne brzmienie w grece <span className="text-[#C5A059] italic">Koine</span>, hebrajskim i łacińskiej <span className="text-[#C5A059] italic">Wulgacie</span>.
+        <p className="text-sm text-slate-600 max-w-3xl mt-2 leading-relaxed font-sans">
+          Zanurz się w autentycznej interpretacji Pisma Świętego według Ojców Wschodu i Zachodu (św. Augustyn, św. Jan Chryzostom, św. Hieronim, św. Grzegorz Wielki, Orygenes, św. Ireneusz) oraz zobacz oryginalne brzmienie w grece <span className="text-sky-800 font-serif italic font-semibold">Koine</span>, hebrajskim i łacińskiej <span className="text-sky-800 font-serif italic font-semibold">Wulgacie</span>.
         </p>
 
         {/* Source Selector: Czytania z Dnia vs Inne Sigla */}
         {activeSubTab === 'commentaries' && (
-          <div className="mt-6 pt-6 border-t border-[#3D3524]/60 space-y-4">
+          <div className="mt-6 pt-6 border-t border-slate-100 space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <span className="text-xs uppercase tracking-wider text-[#C5A059] font-bold flex items-center gap-1.5">
-                <Compass className="w-3.5 h-3.5" />
+              <span className="text-xs uppercase tracking-wider text-sky-900 font-bold flex items-center gap-1.5">
+                <Compass className="w-3.5 h-3.5 text-sky-600" />
                 Wybierz źródło wersetu:
               </span>
 
               {/* Mode Toggle Button Group */}
-              <div className="inline-flex rounded-xl p-1 bg-[#09090C] border border-[#3D3524] self-start sm:self-auto">
+              <div className="inline-flex rounded-xl p-1 bg-slate-100 border border-slate-200 self-start sm:self-auto">
                 <button
                   type="button"
                   onClick={() => setSourceMode('daily')}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-sans uppercase tracking-wider font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
+                  className={`px-3 py-1.5 rounded-lg text-xs font-sans uppercase tracking-wider font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
                     sourceMode === 'daily'
-                      ? 'bg-[#C5A059] text-[#0F0F12] shadow'
-                      : 'text-[#8C8270] hover:text-[#E0E0D6]'
+                      ? 'bg-white text-emerald-950 shadow-xs border border-slate-200'
+                      : 'text-slate-600 hover:text-slate-900'
                   }`}
                 >
-                  <Calendar className="w-3.5 h-3.5" />
+                  <Calendar className="w-3.5 h-3.5 text-emerald-600" />
                   <span>Czytania z dnia</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => setSourceMode('custom')}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-sans uppercase tracking-wider font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
+                  className={`px-3 py-1.5 rounded-lg text-xs font-sans uppercase tracking-wider font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
                     sourceMode === 'custom'
-                      ? 'bg-[#C5A059] text-[#0F0F12] shadow'
-                      : 'text-[#8C8270] hover:text-[#E0E0D6]'
+                      ? 'bg-white text-sky-950 shadow-xs border border-slate-200'
+                      : 'text-slate-600 hover:text-slate-900'
                   }`}
                 >
-                  <Layers className="w-3.5 h-3.5" />
+                  <Layers className="w-3.5 h-3.5 text-sky-600" />
                   <span>Inne sigle / Własne</span>
                 </button>
               </div>
@@ -181,10 +179,10 @@ export const PatristicView: React.FC<PatristicViewProps> = ({ defaultSiglum }) =
 
             {/* VIEW A: Czytania z dzisiejszej Liturgii Słowa */}
             {sourceMode === 'daily' && (
-              <div className="p-4 rounded-xl bg-[#0E0E12] border border-[#2B2B38] space-y-3 animate-fade-in">
+              <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-3 animate-fade-in">
                 <div className="flex items-center justify-between">
-                  <div className="text-xs text-[#C5A059] font-medium flex items-center gap-1.5">
-                    <Calendar className="w-3.5 h-3.5" />
+                  <div className="text-xs text-slate-700 font-medium flex items-center gap-1.5">
+                    <Calendar className="w-3.5 h-3.5 text-emerald-600" />
                     <span>Liturgia Słowa na dziś: <strong>{dailyLiturgical.formattedDate}</strong> ({dailyLiturgical.liturgicalCelebration})</span>
                   </div>
                 </div>
@@ -199,27 +197,27 @@ export const PatristicView: React.FC<PatristicViewProps> = ({ defaultSiglum }) =
                         onClick={() => handleSelectDailyReading(r.siglum, r.text)}
                         className={`p-3 rounded-xl text-left border transition-all cursor-pointer flex flex-col justify-between gap-2 ${
                           isSelected
-                            ? 'bg-[#2A2415] border-[#C5A059] shadow-lg scale-[1.02]'
-                            : 'bg-[#15151C] border-[#2B2B38] hover:border-[#C5A059]/60 hover:bg-[#1C1C24]'
+                            ? 'bg-white border-emerald-500 shadow-xs ring-1 ring-emerald-500'
+                            : 'bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50'
                         }`}
                       >
                         <div className="flex items-center justify-between">
                           <span className={`text-[10px] font-sans uppercase tracking-wider font-bold px-2 py-0.5 rounded ${
-                            isSelected ? 'bg-[#C5A059] text-black' : 'bg-[#22222E] text-[#8C8270]'
+                            isSelected ? 'bg-emerald-100 text-emerald-900' : 'bg-slate-100 text-slate-600'
                           }`}>
                             {r.label}
                           </span>
-                          <span className="font-mono text-xs text-[#C5A059] font-bold">
+                          <span className="font-mono text-xs text-slate-900 font-bold">
                             {r.siglum}
                           </span>
                         </div>
 
-                        <p className="text-[11px] text-[#A0A095] line-clamp-2 font-serif italic">
+                        <p className="text-[11px] text-slate-600 line-clamp-2 font-serif italic">
                           «{r.text}»
                         </p>
 
                         {isSelected && (
-                          <span className="text-[10px] text-[#C5A059] font-sans font-semibold flex items-center gap-1">
+                          <span className="text-[10px] text-emerald-700 font-sans font-semibold flex items-center gap-1">
                             <CheckCircle2 className="w-3 h-3" />
                             Aktywny fragment
                           </span>
@@ -233,9 +231,9 @@ export const PatristicView: React.FC<PatristicViewProps> = ({ defaultSiglum }) =
 
             {/* VIEW B: Inne sigle / Własne / Kluczowe perykopy */}
             {sourceMode === 'custom' && (
-              <div className="p-4 rounded-xl bg-[#0E0E12] border border-[#2B2B38] space-y-4 animate-fade-in">
+              <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-4 animate-fade-in">
                 <div>
-                  <span className="text-xs uppercase tracking-wider text-[#8C8270] mb-2 block font-semibold">
+                  <span className="text-xs uppercase tracking-wider text-slate-600 mb-2 block font-bold">
                     Wybierz z fundamentalnych wersetów biblijnych:
                   </span>
                   <div className="flex flex-wrap gap-2">
@@ -246,12 +244,12 @@ export const PatristicView: React.FC<PatristicViewProps> = ({ defaultSiglum }) =
                         onClick={() => handleSelectPredefined(p)}
                         className={`px-3 py-1.5 rounded-xl text-xs transition-all border flex items-center gap-1.5 cursor-pointer ${
                           selectedSiglum === p.siglum
-                            ? 'bg-[#3D3524] text-[#C5A059] border-[#C5A059] font-semibold shadow-md'
-                            : 'bg-[#15151C] text-[#8C8270] hover:text-[#E0E0D6] border-[#2B2B38] hover:bg-[#1F1E28]'
+                            ? 'bg-sky-100 text-sky-950 border-sky-300 font-bold shadow-xs'
+                            : 'bg-white text-slate-700 hover:text-slate-900 border-slate-200 hover:bg-slate-100'
                         }`}
                       >
-                        <Scroll className="w-3.5 h-3.5 text-[#C5A059]" />
-                        <span className="font-mono font-bold text-amber-200">{p.siglum}</span>
+                        <Scroll className="w-3.5 h-3.5 text-sky-600" />
+                        <span className="font-mono font-bold text-sky-900">{p.siglum}</span>
                         <span className="opacity-70 hidden md:inline truncate max-w-[200px]">({p.label})</span>
                       </button>
                     ))}
@@ -259,17 +257,17 @@ export const PatristicView: React.FC<PatristicViewProps> = ({ defaultSiglum }) =
                 </div>
 
                 {/* Custom siglum input form */}
-                <form onSubmit={handleSearchCustom} className="flex flex-col sm:flex-row gap-2 pt-2 border-t border-[#22222C]">
+                <form onSubmit={handleSearchCustom} className="flex flex-col sm:flex-row gap-2 pt-2 border-t border-slate-200">
                   <input
                     type="text"
                     value={customInput}
                     onChange={(e) => setCustomInput(e.target.value)}
                     placeholder="Wpisz dowolne siglum Pisma Świętego (np. Rz 8, 28, Jk 1, 17, Rdz 1, 1)..."
-                    className="flex-1 px-4 py-2.5 rounded-xl bg-[#08080A] border border-[#3D3524] text-xs text-[#E0E0D6] focus:outline-none focus:border-[#C5A059] font-mono"
+                    className="flex-1 px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-sky-500 font-mono"
                   />
                   <button
                     type="submit"
-                    className="px-5 py-2.5 rounded-xl bg-[#C5A059] text-black font-semibold text-xs uppercase tracking-wider hover:bg-[#E5C98B] transition flex items-center justify-center gap-1.5 cursor-pointer shrink-0 shadow"
+                    className="px-5 py-2.5 rounded-xl bg-sky-700 text-white font-semibold text-xs uppercase tracking-wider hover:bg-sky-800 transition flex items-center justify-center gap-1.5 cursor-pointer shrink-0 shadow-xs"
                   >
                     <Search className="w-3.5 h-3.5" />
                     <span>Zbadaj werset</span>
@@ -285,7 +283,7 @@ export const PatristicView: React.FC<PatristicViewProps> = ({ defaultSiglum }) =
       {/* SUB-TAB 1: KOMENTARZE PATRYSTYCZNE I JĘZYKI ORYGINALNE DLA WYBRANEGO SIGLUM */}
       {/* ========================================================================= */}
       {activeSubTab === 'commentaries' && (
-        <div className="bg-[#141417] border border-[#3D3524] rounded-2xl p-6 sm:p-8 shadow-xl">
+        <div className="bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 shadow-xs">
           <PatristicCommentarySection
             siglum={selectedSiglum}
             verseText={verseText}
@@ -299,15 +297,15 @@ export const PatristicView: React.FC<PatristicViewProps> = ({ defaultSiglum }) =
       {activeSubTab === 'fathers_directory' && (
         <div className="space-y-6">
           {/* Directory Filter Bar */}
-          <div className="p-5 rounded-2xl bg-[#141417] border border-[#3D3524] shadow-lg flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+          <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-xs flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
             <div className="relative flex-1 max-w-md">
-              <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400" />
+              <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
               <input
                 type="text"
                 value={fatherSearchFilter}
                 onChange={(e) => setFatherSearchFilter(e.target.value)}
                 placeholder="Szukaj Ojca Kościoła, dzieła, pojęcia..."
-                className="w-full pl-10 pr-4 py-2 rounded-xl bg-[#0A0A0D] border border-[#3D3524] text-xs text-white placeholder-stone-500 focus:outline-none focus:border-[#C5A059]"
+                className="w-full pl-10 pr-4 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-sky-500 focus:bg-white"
               />
             </div>
 
@@ -318,8 +316,8 @@ export const PatristicView: React.FC<PatristicViewProps> = ({ defaultSiglum }) =
                 onClick={() => setSelectedFatherTradition('all')}
                 className={`px-3 py-1.5 rounded-lg text-xs font-sans uppercase tracking-wider font-semibold transition-all cursor-pointer ${
                   selectedFatherTradition === 'all'
-                    ? 'bg-[#C5A059] text-black'
-                    : 'bg-[#1D1D26] text-stone-400 hover:text-white'
+                    ? 'bg-sky-700 text-white shadow-xs'
+                    : 'bg-slate-100 text-slate-600 hover:text-slate-900'
                 }`}
               >
                 Wszyscy ({CHURCH_FATHERS_DIRECTORY.length})
@@ -329,8 +327,8 @@ export const PatristicView: React.FC<PatristicViewProps> = ({ defaultSiglum }) =
                 onClick={() => setSelectedFatherTradition('Łacińska')}
                 className={`px-3 py-1.5 rounded-lg text-xs font-sans uppercase tracking-wider font-semibold transition-all cursor-pointer ${
                   selectedFatherTradition === 'Łacińska'
-                    ? 'bg-[#C5A059] text-black'
-                    : 'bg-[#1D1D26] text-stone-400 hover:text-white'
+                    ? 'bg-sky-700 text-white shadow-xs'
+                    : 'bg-slate-100 text-slate-600 hover:text-slate-900'
                 }`}
               >
                 Łacińscy (Zachód)
@@ -340,8 +338,8 @@ export const PatristicView: React.FC<PatristicViewProps> = ({ defaultSiglum }) =
                 onClick={() => setSelectedFatherTradition('Grecka')}
                 className={`px-3 py-1.5 rounded-lg text-xs font-sans uppercase tracking-wider font-semibold transition-all cursor-pointer ${
                   selectedFatherTradition === 'Grecka'
-                    ? 'bg-[#C5A059] text-black'
-                    : 'bg-[#1D1D26] text-stone-400 hover:text-white'
+                    ? 'bg-sky-700 text-white shadow-xs'
+                    : 'bg-slate-100 text-slate-600 hover:text-slate-900'
                 }`}
               >
                 Greccy (Wschód)
@@ -351,8 +349,8 @@ export const PatristicView: React.FC<PatristicViewProps> = ({ defaultSiglum }) =
                 onClick={() => setSelectedFatherTradition('Syriacka')}
                 className={`px-3 py-1.5 rounded-lg text-xs font-sans uppercase tracking-wider font-semibold transition-all cursor-pointer ${
                   selectedFatherTradition === 'Syriacka'
-                    ? 'bg-[#C5A059] text-black'
-                    : 'bg-[#1D1D26] text-stone-400 hover:text-white'
+                    ? 'bg-sky-700 text-white shadow-xs'
+                    : 'bg-slate-100 text-slate-600 hover:text-slate-900'
                 }`}
               >
                 Syriaccy / Orientalni
@@ -365,33 +363,33 @@ export const PatristicView: React.FC<PatristicViewProps> = ({ defaultSiglum }) =
             {filteredFathers.map((father) => (
               <div
                 key={father.id}
-                className="p-6 rounded-2xl bg-[#141419] border border-[#2D2B24] hover:border-[#C5A059] transition-all flex flex-col justify-between gap-4 shadow-lg group relative overflow-hidden"
+                className="p-6 rounded-2xl bg-white border border-slate-200 hover:border-sky-300 transition-all flex flex-col justify-between gap-4 shadow-xs group relative overflow-hidden"
               >
                 <div className="space-y-3">
                   <div className="flex items-start justify-between gap-2">
                     <div>
-                      <span className="text-[10px] font-sans uppercase tracking-wider px-2 py-0.5 rounded bg-[#C5A059]/20 text-[#C5A059] font-bold border border-[#C5A059]/30">
+                      <span className="text-[10px] font-sans uppercase tracking-wider px-2 py-0.5 rounded bg-sky-50 text-sky-800 font-bold border border-sky-200">
                         {father.category}
                       </span>
-                      <h3 className="font-display text-lg font-semibold text-white mt-1.5 group-hover:text-[#C5A059] transition-colors">
+                      <h3 className="font-serif text-lg font-bold text-slate-900 mt-1.5 group-hover:text-sky-800 transition-colors">
                         {father.name}
                       </h3>
-                      <p className="text-xs text-stone-400 font-mono">
+                      <p className="text-xs text-slate-400 font-mono">
                         {father.dates} • {father.tradition}
                       </p>
                     </div>
-                    <Award className="w-5 h-5 text-[#C5A059]/60 shrink-0" />
+                    <Award className="w-5 h-5 text-sky-600 shrink-0" />
                   </div>
 
-                  <p className="text-xs text-stone-300 font-serif leading-relaxed">
+                  <p className="text-xs text-slate-600 font-serif leading-relaxed">
                     {father.shortDescription}
                   </p>
 
-                  <div className="space-y-1.5 pt-2 border-t border-[#22222E]">
-                    <span className="text-[10px] uppercase tracking-wider text-[#C5A059] font-bold block">
+                  <div className="space-y-1.5 pt-2 border-t border-slate-100">
+                    <span className="text-[10px] uppercase tracking-wider text-sky-900 font-bold block">
                       Główne dzieła:
                     </span>
-                    <ul className="text-xs text-[#A0A095] space-y-0.5 list-disc list-inside">
+                    <ul className="text-xs text-slate-600 space-y-0.5 list-disc list-inside">
                       {father.keyWorks.map((work, wIdx) => (
                         <li key={wIdx} className="truncate italic">
                           {work}
@@ -401,12 +399,12 @@ export const PatristicView: React.FC<PatristicViewProps> = ({ defaultSiglum }) =
                   </div>
                 </div>
 
-                <div className="pt-3 border-t border-[#22222E] bg-black/20 p-3 rounded-xl">
-                  <span className="text-[10px] uppercase tracking-wider text-amber-300/80 font-bold block mb-1 flex items-center gap-1">
-                    <Flame className="w-3 h-3 text-[#C5A059]" />
+                <div className="pt-3 border-t border-slate-100 bg-amber-50/60 p-3 rounded-xl border border-amber-200/60">
+                  <span className="text-[10px] uppercase tracking-wider text-amber-900 font-bold block mb-1 flex items-center gap-1">
+                    <Flame className="w-3 h-3 text-amber-700" />
                     Charyzmat duchowy:
                   </span>
-                  <p className="text-xs text-stone-300 font-serif italic leading-relaxed">
+                  <p className="text-xs text-amber-950 font-serif italic leading-relaxed">
                     «{father.spiritualCharisma}»
                   </p>
                 </div>
@@ -415,13 +413,13 @@ export const PatristicView: React.FC<PatristicViewProps> = ({ defaultSiglum }) =
           </div>
 
           {filteredFathers.length === 0 && (
-            <div className="text-center py-12 bg-[#141419] border border-[#3D3524] rounded-2xl p-8 space-y-3">
-              <Info className="w-8 h-8 text-[#C5A059] mx-auto" />
-              <p className="text-sm text-stone-300 font-medium">Nie znaleziono Ojca Kościoła dla podanej frazy.</p>
+            <div className="text-center py-12 bg-white border border-slate-200 rounded-2xl p-8 space-y-3">
+              <Info className="w-8 h-8 text-sky-600 mx-auto" />
+              <p className="text-sm text-slate-700 font-medium">Nie znaleziono Ojca Kościoła dla podanej frazy.</p>
               <button
                 type="button"
                 onClick={() => { setFatherSearchFilter(''); setSelectedFatherTradition('all'); }}
-                className="px-4 py-2 rounded-xl bg-[#3D3524] text-[#C5A059] text-xs font-semibold uppercase tracking-wider cursor-pointer hover:bg-[#4E442F]"
+                className="px-4 py-2 rounded-xl bg-sky-100 text-sky-900 text-xs font-semibold uppercase tracking-wider cursor-pointer hover:bg-sky-200"
               >
                 Wyczyść filtry
               </button>

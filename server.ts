@@ -7,6 +7,7 @@ import { createServer as createViteServer } from 'vite';
 import { getGuaranteedDailyReadings } from './src/data/liturgicalCalendarFallback';
 import { getGuaranteedPatristicData } from './src/data/patristicDatabase';
 import { getGuaranteedCrossReferences } from './src/data/crossReferenceDatabase';
+import { getRandomScriptureQuote } from './src/data/randomScriptureQuotes';
 
 dotenv.config();
 
@@ -516,6 +517,79 @@ Podaj:
   }
 });
 
+
+// API: Random Scripture Quote / Sors Biblica from the entire Bible
+app.post('/api/scrutation/random-quote', async (req, res) => {
+  const { category, testament, useAi } = req.body;
+  const guaranteed = getRandomScriptureQuote(category, testament);
+
+  if (!useAi) {
+    return res.json(guaranteed);
+  }
+
+  try {
+    const ai = getGeminiClient();
+    if (!ai) {
+      return res.json(guaranteed);
+    }
+
+    const prompt = `Jesteś katolickim biblistą i mistrzem duchowym Skrutacji Pisma Świętego.
+Wylosuj głęboki, autentyczny i poruszający werset z Pisma Świętego (Biblia Tysiąclecia / Biblia Jerozolimska) do osobistej modlitwy i skrutacji.
+${testament ? `Testament: ${testament}` : 'Z całego Pisma Świętego (Stary lub Nowy Testament)'}
+${category ? `Kategoria / Tradycja: ${category}` : ''}
+
+Podaj:
+1. Dokładne siglum (np. "Iz 43, 1-4", "Rz 8, 31-39", "Ps 139, 1-5").
+2. Pełną nazwę księgi.
+3. Testament ("ST" lub "NT").
+4. Kategorię: "Pięcioksiąg i Historia" | "Mądrość i Psalmy" | "Prorocy" | "Ewangelie" | "Dzieje i Listy Apostolskie" | "Apokalipsa".
+5. Tytuł inspirujący do modlitwy.
+6. Dokładny, pełny polski tekst cytatu.
+7. Zwięzłe wyjaśnienie teologiczne i egzystencjalne (jak to Słowo przemawia do serca).
+8. 2-3 powiązane sigla odnośników biblijnych (ST i NT) wraz z relacją i krótkim tekstem.`;
+
+    const schema = {
+      type: Type.OBJECT,
+      properties: {
+        id: { type: Type.STRING },
+        siglum: { type: Type.STRING },
+        bookName: { type: Type.STRING },
+        testament: { type: Type.STRING, enum: ['ST', 'NT'] },
+        category: { type: Type.STRING },
+        title: { type: Type.STRING },
+        text: { type: Type.STRING },
+        theologicalContext: { type: Type.STRING },
+        crossReferencesPreview: {
+          type: Type.ARRAY,
+          items: {
+            type: Type.OBJECT,
+            properties: {
+              siglum: { type: Type.STRING },
+              relation: { type: Type.STRING },
+              text: { type: Type.STRING },
+              testament: { type: Type.STRING, enum: ['ST', 'NT'] }
+            },
+            required: ['siglum', 'relation', 'text']
+          }
+        }
+      },
+      required: ['siglum', 'bookName', 'testament', 'category', 'title', 'text', 'theologicalContext']
+    };
+
+    const parsed = await generateContentWithFallback(ai, { prompt, schema });
+    if (!parsed || !parsed.siglum || !parsed.text) {
+      return res.json(guaranteed);
+    }
+
+    res.json({
+      ...parsed,
+      id: parsed.id || `rnd_ai_${Date.now()}`
+    });
+  } catch (err) {
+    console.warn('Fallback for random quote due to AI error:', err);
+    res.json(guaranteed);
+  }
+});
 
 // Vite / Production handler
 async function startServer() {

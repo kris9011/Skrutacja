@@ -5,6 +5,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Header } from './components/Header';
+import { SimpleLightScrutationView } from './components/SimpleLightScrutationView';
 import { ScrutationGuideView } from './components/ScrutationGuideView';
 import { ActiveScrutationWorkspace } from './components/ActiveScrutationWorkspace';
 import { ThemePresetsView } from './components/ThemePresetsView';
@@ -20,7 +21,7 @@ const LOCAL_STORAGE_ACTIVE_SESSION = 'scrutatio_active_session_v1';
 const LOCAL_STORAGE_JOURNAL = 'scrutatio_journal_v1';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<'daily' | 'workspace' | 'patristic' | 'journal' | 'guide' | 'themes' | 'books'>('daily');
+  const [activeTab, setActiveTab] = useState<'simple' | 'daily' | 'workspace' | 'patristic' | 'journal' | 'guide' | 'themes' | 'books'>('daily');
   const [activeSession, setActiveSession] = useState<ScrutationSession | null>(null);
   const [journalSessions, setJournalSessions] = useState<ScrutationSession[]>([]);
   const [patristicSiglum, setPatristicSiglum] = useState<string>('Mk 7, 1-8');
@@ -196,7 +197,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0F0F12] text-[#E0E0D6] flex flex-col selection:bg-[#3D3524] selection:text-[#C5A059]">
+    <div className="min-h-screen bg-white text-slate-900 flex flex-col selection:bg-emerald-100 selection:text-emerald-900">
       {/* Top Navigation */}
       <Header
         activeTab={activeTab}
@@ -206,6 +207,22 @@ export default function App() {
 
       {/* Main View Router */}
       <main className="flex-1 pb-16 md:pb-0">
+        {activeTab === 'simple' && (
+          <div className="bg-gradient-to-b from-sky-50/40 via-slate-50 to-emerald-50/30 min-h-screen text-slate-900 pb-16">
+            <SimpleLightScrutationView
+              onStartFullScrutation={(session) => {
+                handleUpdateSession(session);
+                setActiveTab('workspace');
+                showToast(`Przeniesiono do pełnego pulpitu skrutacji: "${session.title}"`);
+              }}
+              onOpenPatristicView={(sig) => {
+                setPatristicSiglum(sig);
+                setActiveTab('patristic');
+              }}
+            />
+          </div>
+        )}
+
         {activeTab === 'guide' && (
           <ScrutationGuideView
             onStartScrutation={handleStartNewGeneric}
@@ -275,12 +292,12 @@ export default function App() {
       </main>
 
       {/* Mobile Sticky Bottom Navigation (Thumb-friendly 48px targets) */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#0F0F12]/95 backdrop-blur border-t border-[#3D3524] px-2 py-1.5 flex items-center justify-around">
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200 px-2 py-1.5 flex items-center justify-around shadow-lg">
         <button
           id="mobile-nav-daily"
           onClick={() => setActiveTab('daily')}
-          className={`flex flex-col items-center justify-center min-h-[48px] px-3 rounded-lg transition-colors ${
-            activeTab === 'daily' ? 'text-[#C5A059] font-bold' : 'text-[#8C8270]'
+          className={`flex flex-col items-center justify-center min-h-[48px] px-3 rounded-lg transition-colors cursor-pointer ${
+            activeTab === 'daily' ? 'text-emerald-700 font-bold' : 'text-slate-500'
           }`}
         >
           <CalendarDays className="w-5 h-5 mb-0.5" />
@@ -290,33 +307,44 @@ export default function App() {
         <button
           id="mobile-nav-workspace"
           onClick={() => setActiveTab('workspace')}
-          className={`flex flex-col items-center justify-center min-h-[48px] px-3 rounded-lg transition-colors relative ${
-            activeTab === 'workspace' ? 'text-[#C5A059] font-bold' : 'text-[#8C8270]'
+          className={`flex flex-col items-center justify-center min-h-[48px] px-3 rounded-lg transition-colors cursor-pointer relative ${
+            activeTab === 'workspace' ? 'text-emerald-700 font-bold' : 'text-slate-500'
           }`}
         >
           <BookOpen className="w-5 h-5 mb-0.5" />
           <span className="text-[10px] tracking-wider uppercase">Odnośniki</span>
           {Boolean(activeSession) && (
-            <span className="w-1.5 h-1.5 rounded-full bg-[#C5A059] absolute top-1 right-2 animate-pulse" />
+            <span className="w-2 h-2 rounded-full bg-emerald-600 absolute top-1 right-2 animate-pulse" />
           )}
+        </button>
+
+        <button
+          id="mobile-nav-simple"
+          onClick={() => setActiveTab('simple')}
+          className={`flex flex-col items-center justify-center min-h-[48px] px-3 rounded-lg transition-colors cursor-pointer ${
+            activeTab === 'simple' ? 'text-emerald-700 font-bold' : 'text-slate-500'
+          }`}
+        >
+          <Sparkles className="w-5 h-5 mb-0.5 text-emerald-600" />
+          <span className="text-[10px] tracking-wider uppercase">Skrutuj</span>
         </button>
 
         <button
           id="mobile-nav-patristic"
           onClick={() => setActiveTab('patristic')}
-          className={`flex flex-col items-center justify-center min-h-[48px] px-3 rounded-lg transition-colors ${
-            activeTab === 'patristic' ? 'text-[#C5A059] font-bold' : 'text-[#8C8270]'
+          className={`flex flex-col items-center justify-center min-h-[48px] px-3 rounded-lg transition-colors cursor-pointer ${
+            activeTab === 'patristic' ? 'text-sky-700 font-bold' : 'text-slate-500'
           }`}
         >
-          <Sparkles className="w-5 h-5 mb-0.5 text-[#C5A059]" />
+          <Sparkles className="w-5 h-5 mb-0.5 text-sky-600" />
           <span className="text-[10px] tracking-wider uppercase">Ojcowie</span>
         </button>
 
         <button
           id="mobile-nav-journal"
           onClick={() => setActiveTab('journal')}
-          className={`flex flex-col items-center justify-center min-h-[48px] px-3 rounded-lg transition-colors ${
-            activeTab === 'journal' ? 'text-[#C5A059] font-bold' : 'text-[#8C8270]'
+          className={`flex flex-col items-center justify-center min-h-[48px] px-3 rounded-lg transition-colors cursor-pointer ${
+            activeTab === 'journal' ? 'text-emerald-700 font-bold' : 'text-slate-500'
           }`}
         >
           <BookmarkCheck className="w-5 h-5 mb-0.5" />
@@ -326,20 +354,20 @@ export default function App() {
 
       {/* Toast Notification */}
       {toastMessage && (
-        <div className="fixed bottom-6 right-6 z-50 animate-bounce-in bg-[#141417] text-[#E0E0D6] px-4 py-3 border border-[#3D3524] shadow-xl flex items-center gap-2.5 text-xs sm:text-sm font-medium">
-          <CheckCircle2 className="w-4 h-4 text-[#C5A059] shrink-0" />
+        <div className="fixed bottom-6 right-6 z-50 animate-bounce-in bg-white text-slate-800 px-4 py-3 border border-emerald-300 rounded-2xl shadow-xl flex items-center gap-2.5 text-xs sm:text-sm font-medium">
+          <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
           <span>{toastMessage}</span>
         </div>
       )}
 
       {/* Footer */}
-      <footer className="border-t border-[#3D3524] bg-[#0F0F12] py-8 text-center text-xs text-[#8C8270] font-sans">
+      <footer className="border-t border-slate-200 bg-white py-8 text-center text-xs text-slate-500 font-sans">
         <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2 font-display font-medium text-[#C5A059] tracking-wider">
-            <Flame className="w-4 h-4" />
+          <div className="flex items-center gap-2 font-serif font-semibold text-emerald-900 tracking-wider">
+            <Flame className="w-4 h-4 text-emerald-600" />
             <span>Scrutatio Scripturae — «Badajcie Pisma» (J 5, 39)</span>
           </div>
-          <p className="text-[#8C8270] text-xs font-sans">
+          <p className="text-slate-500 text-xs font-sans">
             Aparat odnośników biblijnych, tradycja Biblii Jerozolimskiej i modlitwa Słowem Bożym.
           </p>
         </div>

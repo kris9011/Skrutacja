@@ -3,10 +3,12 @@ import {
   DailyLiturgicalReadings, 
   DailyReadingItem, 
   ScriptureLookupResult, 
-  ScrutationSession 
+  ScrutationSession,
+  RandomScriptureQuote
 } from '../types';
 import { BIBLE_BOOKS } from '../data/biblicalData';
 import { getGuaranteedDailyReadings } from '../data/liturgicalCalendarFallback';
+import { getRandomScriptureQuote, RANDOM_SCRIPTURE_QUOTES } from '../data/randomScriptureQuotes';
 import { 
   CalendarDays, 
   BookOpen, 
@@ -27,7 +29,13 @@ import {
   Info,
   Calendar,
   Layers,
-  X
+  X,
+  Shuffle,
+  Dice5,
+  RefreshCw,
+  Compass,
+  CheckCircle2,
+  MousePointerClick
 } from 'lucide-react';
 
 interface DailyReadingsAndPassageSelectorProps {
@@ -163,11 +171,24 @@ export const DailyReadingsAndPassageSelector: React.FC<DailyReadingsAndPassageSe
   onStartScrutationWithPassage,
   onOpenPatristicForVerse
 }) => {
-  const [activeSubTab, setActiveSubTab] = useState<'daily' | 'passage'>('daily');
+  const [activeSubTab, setActiveSubTab] = useState<'daily' | 'passage' | 'random'>('daily');
+
+  // Helper for today's local date string
+  const getLocalTodayDateString = (): string => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
 
   // Daily Readings state
   const [selectedDate, setSelectedDate] = useState<string>(() => {
-    return new Date().toISOString().slice(0, 10);
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   });
   const [dailyData, setDailyData] = useState<DailyLiturgicalReadings | null>(null);
   const [isLoadingDaily, setIsLoadingDaily] = useState<boolean>(false);
@@ -179,7 +200,7 @@ export const DailyReadingsAndPassageSelector: React.FC<DailyReadingsAndPassageSe
   // Verse Picker Modal State
   const [readingToPickVerse, setReadingToPickVerse] = useState<DailyReadingItem | null>(null);
   const [customVerseInput, setCustomVerseInput] = useState<string>('');
-  const [customVerseTextInput, setCustomVerseTextInput] = useState<string>('');
+  const [selectedSentenceText, setSelectedSentenceText] = useState<string | null>(null);
 
   // Passage lookup state
   const [selectedBookSiglum, setSelectedBookSiglum] = useState<string>('J');
@@ -190,6 +211,13 @@ export const DailyReadingsAndPassageSelector: React.FC<DailyReadingsAndPassageSe
   const [isLoadingPassage, setIsLoadingPassage] = useState<boolean>(false);
   const [passageLookupResult, setPassageLookupResult] = useState<ScriptureLookupResult | null>(null);
   const [passageError, setPassageError] = useState<string | null>(null);
+
+  // Random Scripture Quote state (Sors Biblica)
+  const [randomCategoryFilter, setRandomCategoryFilter] = useState<string>('Wszystkie');
+  const [randomTestamentFilter, setRandomTestamentFilter] = useState<'ALL' | 'ST' | 'NT'>('ALL');
+  const [currentRandomQuote, setCurrentRandomQuote] = useState<RandomScriptureQuote | null>(() => getRandomScriptureQuote());
+  const [isDrawingRandom, setIsDrawingRandom] = useState<boolean>(false);
+  const [drawHistory, setDrawHistory] = useState<RandomScriptureQuote[]>([]);
 
   // Current selected book info
   const currentBookInfo = BIBLE_BOOKS.find(b => b.siglum === selectedBookSiglum) || BIBLE_BOOKS[0];
@@ -215,7 +243,6 @@ export const DailyReadingsAndPassageSelector: React.FC<DailyReadingsAndPassageSe
       }
     } catch (err) {
       console.warn('Używam lokalnego silnika lekcjonarza liturgicznego:', err);
-      // Seamless fallback so the user always has verified, authentic Catholic readings
       setDailyData(getGuaranteedDailyReadings(dateStr));
       setDailyError(null);
     } finally {
@@ -229,14 +256,16 @@ export const DailyReadingsAndPassageSelector: React.FC<DailyReadingsAndPassageSe
 
   // Quick date change handlers
   const handleSetToday = () => {
-    const today = new Date().toISOString().slice(0, 10);
-    setSelectedDate(today);
+    setSelectedDate(getLocalTodayDateString());
   };
 
   const handleShiftDate = (days: number) => {
-    const d = new Date(selectedDate);
-    d.setDate(d.getDate() + days);
-    setSelectedDate(d.toISOString().slice(0, 10));
+    const parts = selectedDate.split('-').map(Number);
+    const d = new Date(parts[0], parts[1] - 1, parts[2] + days, 12, 0, 0);
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    setSelectedDate(`${y}-${m}-${day}`);
   };
 
   // Copy citation helper
@@ -303,7 +332,6 @@ export const DailyReadingsAndPassageSelector: React.FC<DailyReadingsAndPassageSe
       }
       const data = await res.json();
       setPassageLookupResult(data);
-      // scroll to result
       window.scrollTo({ top: 380, behavior: 'smooth' });
     } catch (err) {
       console.error('Error looking up scripture:', err);
@@ -313,18 +341,11 @@ export const DailyReadingsAndPassageSelector: React.FC<DailyReadingsAndPassageSe
     }
   };
 
-  // Helper: Extract or get all selectable verses / fragments for a reading
+  // Helper: Extract all selectable strophes and verses for a reading
   const getSelectableVersesForReading = (reading: DailyReadingItem) => {
-    const list: { siglum: string; label: string; text: string; theme?: string; isFull?: boolean }[] = [
-      {
-        siglum: reading.siglum,
-        label: 'Cała perykopa czytania',
-        text: reading.text,
-        theme: reading.theologicalTheme,
-        isFull: true
-      }
-    ];
+    const list: { siglum: string; label: string; text: string; theme?: string; isFull?: boolean }[] = [];
 
+    // 1. Key Verses if defined
     if (reading.keyVerses && reading.keyVerses.length > 0) {
       reading.keyVerses.forEach(kv => {
         list.push({
@@ -337,7 +358,44 @@ export const DailyReadingsAndPassageSelector: React.FC<DailyReadingsAndPassageSe
       });
     }
 
+    // 2. If it's a psalm or has stanza breaks (\n\n), extract stanzas if not already in list
+    const paragraphs = reading.text.split(/\n\s*\n/).map(s => s.trim()).filter(s => s.length > 10);
+    if (paragraphs.length > 1) {
+      paragraphs.forEach((pText, pIdx) => {
+        const cleanSnippet = pText.replace(/\n/g, ' ');
+        const exists = list.some(item => item.text.includes(cleanSnippet.slice(0, 25)));
+        if (!exists) {
+          list.push({
+            siglum: `${reading.siglum} (Zwrotka ${pIdx + 1})`,
+            label: `Zwrotka ${pIdx + 1}`,
+            text: cleanSnippet,
+            theme: `Zwrotka ${pIdx + 1} z ${reading.siglum}`,
+            isFull: false
+          });
+        }
+      });
+    }
+
     return list;
+  };
+
+  // Helper: Extract individual sentences/lines from reading text for granular click
+  const getSentencesFromReading = (text: string) => {
+    // Split by newlines or full stops followed by capital letters
+    const rawLines = text
+      .split(/\n+/)
+      .map(l => l.trim())
+      .filter(l => l.length > 8);
+    
+    if (rawLines.length > 1) {
+      return rawLines;
+    }
+    
+    // Fallback: split by sentences
+    return text
+      .split(/(?<=[.?!])\s+/)
+      .map(s => s.trim())
+      .filter(s => s.length > 10);
   };
 
   // Launch Scrutation from a Daily Reading with optional specific verse
@@ -367,7 +425,7 @@ export const DailyReadingsAndPassageSelector: React.FC<DailyReadingsAndPassageSe
           text: targetText,
           testament: isNT ? 'NT' : 'ST',
           theologicalTheme: targetTheme,
-          crossReferenceReason: `Punkt startowy ze Słowa Bożego na dziś: ${reading.label} (${targetSiglum})`,
+          crossReferenceReason: `Punkt startowy ze Słowa Bożego: ${reading.label} (${targetSiglum})`,
           order: 0,
           isExpanded: true,
           createdAt: Date.now()
@@ -391,6 +449,7 @@ export const DailyReadingsAndPassageSelector: React.FC<DailyReadingsAndPassageSe
     };
 
     setReadingToPickVerse(null);
+    setSelectedSentenceText(null);
     onStartScrutationWithPassage(newSession);
   };
 
@@ -436,90 +495,142 @@ export const DailyReadingsAndPassageSelector: React.FC<DailyReadingsAndPassageSe
     onStartScrutationWithPassage(newSession);
   };
 
-  // Liturgical color formatting
+  // Launch Scrutation from Random Quote
+  const startScrutationFromRandomQuote = (quote: RandomScriptureQuote) => {
+    const newSession: ScrutationSession = {
+      id: 'session_random_' + Date.now(),
+      title: `${quote.title} (${quote.siglum})`,
+      theme: quote.theologicalContext || `Skrutacja: ${quote.title}`,
+      initialSiglum: quote.siglum,
+      initialText: quote.text,
+      nodes: [
+        {
+          id: 'node_root',
+          parentId: null,
+          siglum: quote.siglum,
+          text: quote.text,
+          testament: quote.testament,
+          theologicalTheme: quote.theologicalContext,
+          crossReferenceReason: `Wylosowane Słowo Opatrzności: ${quote.title} (${quote.siglum})`,
+          order: 0,
+          isExpanded: true,
+          createdAt: Date.now()
+        }
+      ],
+      activeStep: 0,
+      prayerNotes: {
+        statio: '',
+        invocatio: '',
+        lectio: quote.text,
+        meditatio: '',
+        oratio: '',
+        contemplatio: '',
+        actio: '',
+        wordOfLife: quote.text
+      },
+      durationSeconds: 0,
+      isCompleted: false,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+
+    onStartScrutationWithPassage(newSession);
+  };
+
+  // Draw Random Quote
+  const handleDrawRandomQuote = (category?: string, testament?: 'ALL' | 'ST' | 'NT') => {
+    setIsDrawingRandom(true);
+    setTimeout(() => {
+      const drawn = getRandomScriptureQuote(
+        category || randomCategoryFilter,
+        testament || randomTestamentFilter
+      );
+      setCurrentRandomQuote(drawn);
+      setDrawHistory(prev => [drawn, ...prev.filter(q => q.id !== drawn.id)].slice(0, 10));
+      setIsDrawingRandom(false);
+    }, 280);
+  };
+
+  // Liturgical color styles
   const getLiturgicalColorStyle = (color?: string) => {
     switch (color) {
-      case 'green':
-        return { 
-          name: 'Zieleń liturgiczna (Okres Zwykły)', 
-          badgeClass: 'bg-emerald-950/60 text-emerald-300 border-emerald-700/60',
-          indicator: 'bg-emerald-500'
-        };
-      case 'purple':
-        return { 
-          name: 'Fiolet liturgiczny (Adwent / Wielki Post)', 
-          badgeClass: 'bg-purple-950/60 text-purple-200 border-purple-700/60',
-          indicator: 'bg-purple-500'
-        };
       case 'white':
         return { 
-          name: 'Biel / Złoto (Okres Paschalny / Narodzenia / Uroczystości)', 
-          badgeClass: 'bg-[#22222a] text-[#C5A059] border-[#C5A059]/60',
-          indicator: 'bg-[#C5A059]'
+          name: 'Biel liturgiczna', 
+          badgeClass: 'bg-amber-50 text-amber-900 border-amber-300',
+          indicator: 'bg-amber-400'
+        };
+      case 'violet':
+        return { 
+          name: 'Fiolet liturgiczny', 
+          badgeClass: 'bg-purple-50 text-purple-900 border-purple-300',
+          indicator: 'bg-purple-500'
         };
       case 'red':
         return { 
-          name: 'Czerwień liturgiczna (Męka Pańska / Duch Święty / Męczennicy)', 
-          badgeClass: 'bg-red-950/60 text-red-300 border-red-700/60',
+          name: 'Czerwień liturgiczna', 
+          badgeClass: 'bg-red-50 text-red-900 border-red-300',
           indicator: 'bg-red-500'
         };
       default:
         return { 
           name: 'Zieleń liturgiczna', 
-          badgeClass: 'bg-emerald-950/60 text-emerald-300 border-emerald-700/60',
+          badgeClass: 'bg-emerald-50 text-emerald-900 border-emerald-300',
           indicator: 'bg-emerald-500'
         };
     }
   };
 
-  // Filtered pericopes
   const filteredPericopes = FAMOUS_PERICOPES.filter(p => {
     if (pericopeCategoryFilter === 'Wszystkie') return true;
     return p.category === pericopeCategoryFilter;
   });
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8 sm:py-12 space-y-8 text-[#E0E0D6]">
+    <div className="max-w-6xl mx-auto px-4 py-8 sm:py-12 space-y-8 text-slate-800">
       {/* ========================================================================= */}
-      {/* MODAL: WYBÓR KONKRETNEGO FRAGMENTU / WERSETU DO SKRUTACJI */}
+      {/* MODAL: WYBÓR KONKRETNEGO ZDANIA / WERSETU / ZWROTKI DO SKRUTACJI */}
       {/* ========================================================================= */}
       {readingToPickVerse && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fade-in overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs animate-fade-in overflow-y-auto">
           <div 
-            className="relative w-full max-w-2xl bg-[#141419] border-2 border-[#C5A059]/60 rounded-2xl shadow-2xl overflow-hidden my-8"
+            className="relative w-full max-w-3xl bg-white border border-slate-200 rounded-2xl shadow-2xl overflow-hidden my-8"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
-            <div className="p-5 sm:p-6 bg-gradient-to-b from-[#1E1E28] to-[#141419] border-b border-[#3D3524] flex items-start justify-between gap-4">
-              <div className="space-y-1">
+            <div className="p-5 sm:p-6 bg-slate-50 border-b border-slate-200 flex items-start justify-between gap-4">
+              <div className="space-y-1.5">
                 <div className="flex items-center gap-2">
-                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-sans font-bold uppercase tracking-wider bg-[#C5A059]/20 text-[#C5A059] border border-[#C5A059]/40">
+                  <span className="px-2.5 py-0.5 rounded-full text-[11px] font-sans font-bold uppercase tracking-wider bg-emerald-100 text-emerald-900 border border-emerald-300">
                     {readingToPickVerse.label}
                   </span>
-                  <span className="font-mono text-xs text-amber-200/90 font-bold">
+                  <span className="font-mono text-xs font-bold text-slate-700 bg-white px-2.5 py-0.5 rounded border border-slate-300">
                     {readingToPickVerse.siglum}
                   </span>
                 </div>
-                <h3 className="font-display text-xl sm:text-2xl font-semibold text-white">
-                  Wybierz fragment do skrutacji
+                <h3 className="font-serif text-xl sm:text-2xl font-bold text-slate-900">
+                  Wybierz werset lub konkretne zdanie do skrutacji
                 </h3>
-                <p className="text-xs text-[#A39B8B] font-serif leading-relaxed">
-                  Możesz skrutować całą perykopę lub wybrać konkretny werset, który szczególnie porusza Twoje serce w dzisiejszej modlitwie.
+                <p className="text-xs text-slate-600 font-sans leading-relaxed">
+                  Możesz skrutować całą perykopę, wybrać wyodrębnioną zwrotkę / kluczowy werset, albo kliknąć w dowolne zdanie z tekstu poniżej.
                 </p>
               </div>
               
               <button
                 type="button"
-                onClick={() => setReadingToPickVerse(null)}
-                className="p-2 rounded-xl bg-[#20202A] hover:bg-[#2A2A38] text-stone-400 hover:text-white transition-colors cursor-pointer shrink-0"
+                onClick={() => {
+                  setReadingToPickVerse(null);
+                  setSelectedSentenceText(null);
+                }}
+                className="p-2 rounded-xl bg-slate-200/80 hover:bg-slate-300 text-slate-600 hover:text-slate-900 transition-colors cursor-pointer shrink-0"
                 title="Zamknij"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            {/* Modal Body: Verse List */}
-            <div className="p-5 sm:p-6 space-y-4 max-h-[60vh] overflow-y-auto custom-scrollbar">
+            {/* Modal Body */}
+            <div className="p-5 sm:p-6 space-y-5 max-h-[65vh] overflow-y-auto custom-scrollbar">
               {/* Option 1: Whole Pericope */}
               <div 
                 onClick={() => startScrutationFromDailyReading(
@@ -528,87 +639,126 @@ export const DailyReadingsAndPassageSelector: React.FC<DailyReadingsAndPassageSe
                   readingToPickVerse.text, 
                   readingToPickVerse.theologicalTheme
                 )}
-                className="p-4 rounded-xl bg-[#1A1A24] hover:bg-[#232332] border-2 border-[#3D3524] hover:border-[#C5A059] transition-all cursor-pointer group shadow-md"
+                className="p-4 rounded-xl bg-slate-50 hover:bg-emerald-50/70 border border-slate-200 hover:border-emerald-500 transition-all cursor-pointer group shadow-xs"
               >
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
-                    <BookOpen className="w-4 h-4 text-[#C5A059]" />
-                    <span className="font-bold text-sm text-white group-hover:text-[#C5A059]">
+                    <BookOpen className="w-4 h-4 text-emerald-700" />
+                    <span className="font-bold text-sm text-slate-900 group-hover:text-emerald-800">
                       Całe czytanie (Perykopa)
                     </span>
-                    <span className="font-mono text-xs px-2 py-0.5 rounded bg-black/40 text-amber-200 font-semibold border border-amber-900/40">
+                    <span className="font-mono text-xs px-2 py-0.5 rounded bg-emerald-100 text-emerald-900 font-bold border border-emerald-200">
                       {readingToPickVerse.siglum}
                     </span>
                   </div>
-                  <span className="text-xs font-bold text-[#C5A059] flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
+                  <span className="text-xs font-bold text-emerald-700 flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
                     Skrutuj całość <ArrowRight className="w-3.5 h-3.5" />
                   </span>
                 </div>
-                <p className="text-xs text-[#A0A095] line-clamp-2 font-serif italic leading-relaxed">
+                <p className="text-xs text-slate-600 line-clamp-2 font-scripture italic leading-relaxed">
                   «{readingToPickVerse.text}»
                 </p>
               </div>
 
-              {/* Option 2: Specific Key Verses */}
-              {readingToPickVerse.keyVerses && readingToPickVerse.keyVerses.length > 0 && (
-                <div className="space-y-2.5 pt-2">
-                  <span className="text-[11px] font-sans uppercase tracking-wider text-[#C5A059] font-bold flex items-center gap-1.5">
-                    <Sparkles className="w-3.5 h-3.5" />
-                    Wyodrębnione kluczowe wersety:
+              {/* Option 2: Structured Strophes & Key Verses */}
+              {getSelectableVersesForReading(readingToPickVerse).length > 0 && (
+                <div className="space-y-2.5 pt-1">
+                  <span className="text-xs font-sans uppercase tracking-wider text-emerald-800 font-bold flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
+                    {readingToPickVerse.type === 'psalm' ? 'Zwrotki Psalmu i wersety:' : 'Wyodrębnione kluczowe wersety:'}
                   </span>
 
-                  <div className="space-y-2.5">
-                    {readingToPickVerse.keyVerses.map((kv, idx) => (
+                  <div className="grid grid-cols-1 gap-2.5">
+                    {getSelectableVersesForReading(readingToPickVerse).map((item, idx) => (
                       <div
                         key={idx}
                         onClick={() => startScrutationFromDailyReading(
                           readingToPickVerse, 
-                          kv.siglum, 
-                          kv.text, 
-                          kv.theme
+                          item.siglum, 
+                          item.text, 
+                          item.theme
                         )}
-                        className="p-4 rounded-xl bg-[#16161E] hover:bg-[#1E1E2A] border border-[#2D2D3A] hover:border-[#C5A059] transition-all cursor-pointer group"
+                        className="p-3.5 rounded-xl bg-white hover:bg-emerald-50/50 border border-slate-200 hover:border-emerald-500 transition-all cursor-pointer group shadow-xs"
                       >
                         <div className="flex items-center justify-between mb-1.5">
                           <div className="flex items-center gap-2">
-                            <span className="px-2 py-0.5 rounded bg-[#C5A059]/20 text-[#C5A059] font-mono text-xs font-bold border border-[#C5A059]/30">
-                              {kv.siglum}
+                            <span className="px-2 py-0.5 rounded bg-emerald-50 text-emerald-800 font-mono text-xs font-bold border border-emerald-200">
+                              {item.siglum}
                             </span>
-                            <span className="font-semibold text-sm text-[#E0E0D6] group-hover:text-white">
-                              {kv.label}
+                            <span className="font-semibold text-sm text-slate-800 group-hover:text-emerald-900">
+                              {item.label}
                             </span>
                           </div>
-                          <span className="text-xs font-medium text-[#C5A059] opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
-                            Skrutuj ten werset <ArrowRight className="w-3.5 h-3.5" />
+                          <span className="text-xs font-bold text-emerald-700 opacity-90 group-hover:opacity-100 transition-opacity flex items-center gap-1">
+                            Skrutuj ten fragment <ArrowRight className="w-3.5 h-3.5" />
                           </span>
                         </div>
-                        <p className="text-xs text-stone-300 font-serif leading-relaxed italic bg-black/40 p-2.5 rounded-lg border border-[#22222C]">
-                          «{kv.text}»
+                        <p className="text-xs text-slate-700 font-scripture leading-relaxed italic bg-slate-50 p-2.5 rounded-lg border border-slate-200">
+                          «{item.text}»
                         </p>
-                        {kv.theme && (
-                          <span className="inline-block mt-2 text-[11px] text-[#8C8270] font-sans">
-                            <strong className="text-[#C5A059]/80 font-normal">Temat teologiczny:</strong> {kv.theme}
-                          </span>
-                        )}
                       </div>
                     ))}
                   </div>
                 </div>
               )}
 
-              {/* Option 3: Custom Siglum / Verse Input */}
-              <div className="p-4 rounded-xl bg-[#101014] border border-[#2D2D3A] space-y-3">
-                <span className="text-[11px] font-sans uppercase tracking-wider text-stone-300 font-bold flex items-center gap-1.5">
-                  <Layers className="w-3.5 h-3.5 text-[#C5A059]" />
-                  Lub wpisz własny werset z tego czytania:
+              {/* Option 3: Interactive Sentences in Full Text */}
+              <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
+                <span className="text-xs font-sans uppercase tracking-wider text-slate-800 font-bold flex items-center gap-1.5">
+                  <MousePointerClick className="w-3.5 h-3.5 text-emerald-600" />
+                  Kliknij w konkretne zdanie / linijkę z tekstu:
+                </span>
+                
+                <div className="space-y-1.5">
+                  {getSentencesFromReading(readingToPickVerse.text).map((sentence, sIdx) => {
+                    const isSelected = selectedSentenceText === sentence;
+                    return (
+                      <div
+                        key={sIdx}
+                        onClick={() => setSelectedSentenceText(sentence)}
+                        className={`p-2.5 rounded-lg border transition-all cursor-pointer text-xs font-scripture leading-relaxed flex items-start justify-between gap-3 ${
+                          isSelected 
+                            ? 'bg-emerald-100 border-emerald-500 text-emerald-950 font-medium shadow-xs' 
+                            : 'bg-white hover:bg-slate-100 border-slate-200 text-slate-800'
+                        }`}
+                      >
+                        <span className="flex-1">
+                          «{sentence}»
+                        </span>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            startScrutationFromDailyReading(
+                              readingToPickVerse,
+                              `${readingToPickVerse.siglum} (Werset ${sIdx + 1})`,
+                              sentence,
+                              `Fragment z ${readingToPickVerse.siglum}`
+                            );
+                          }}
+                          className="px-2 py-1 rounded bg-emerald-700 hover:bg-emerald-800 text-white font-sans text-[11px] font-bold uppercase shrink-0 transition-colors shadow-xs"
+                        >
+                          Skrutuj to zdanie
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Option 4: Custom Siglum Input */}
+              <div className="p-4 rounded-xl bg-white border border-slate-200 space-y-3">
+                <span className="text-xs font-sans uppercase tracking-wider text-slate-800 font-bold flex items-center gap-1.5">
+                  <Layers className="w-3.5 h-3.5 text-emerald-600" />
+                  Lub wpisz własny numer wersetu:
                 </span>
                 <div className="flex flex-col sm:flex-row gap-2">
                   <input
                     type="text"
                     value={customVerseInput}
                     onChange={(e) => setCustomVerseInput(e.target.value)}
-                    placeholder={`np. ${readingToPickVerse.siglum.split(' ')[0]} 7, 6`}
-                    className="flex-1 px-3.5 py-2.5 rounded-xl bg-[#0C0C0F] border border-[#3D3524] text-white text-xs font-mono focus:outline-none focus:border-[#C5A059]"
+                    placeholder={`np. ${readingToPickVerse.siglum.split(' ')[0]} 1, 3`}
+                    className="flex-1 px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 text-xs font-mono focus:outline-none focus:border-emerald-600 focus:bg-white"
                   />
                   <button
                     type="button"
@@ -617,11 +767,11 @@ export const DailyReadingsAndPassageSelector: React.FC<DailyReadingsAndPassageSe
                       startScrutationFromDailyReading(
                         readingToPickVerse, 
                         finalSiglum, 
-                        customVerseTextInput.trim() || readingToPickVerse.text,
+                        selectedSentenceText || readingToPickVerse.text,
                         `Werset: ${finalSiglum}`
                       );
                     }}
-                    className="px-4 py-2.5 rounded-xl bg-[#C5A059] hover:bg-[#b08e4c] text-[#0F0F12] text-xs font-sans font-bold uppercase tracking-wider transition-all cursor-pointer shrink-0 shadow"
+                    className="px-4 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-sans font-bold uppercase tracking-wider transition-all cursor-pointer shrink-0 shadow-xs"
                   >
                     Skrutuj ten werset
                   </button>
@@ -630,11 +780,14 @@ export const DailyReadingsAndPassageSelector: React.FC<DailyReadingsAndPassageSe
             </div>
 
             {/* Modal Footer */}
-            <div className="p-4 bg-[#0E0E11] border-t border-[#3D3524] flex justify-end">
+            <div className="p-4 bg-slate-50 border-t border-slate-200 flex justify-end">
               <button
                 type="button"
-                onClick={() => setReadingToPickVerse(null)}
-                className="px-5 py-2.5 rounded-xl bg-[#1E1E26] hover:bg-[#282834] text-stone-300 text-xs font-sans font-semibold uppercase tracking-wider transition-all cursor-pointer"
+                onClick={() => {
+                  setReadingToPickVerse(null);
+                  setSelectedSentenceText(null);
+                }}
+                className="px-5 py-2.5 rounded-xl bg-white hover:bg-slate-100 border border-slate-300 text-slate-700 text-xs font-sans font-semibold uppercase tracking-wider transition-all cursor-pointer shadow-xs"
               >
                 Anuluj
               </button>
@@ -642,52 +795,65 @@ export const DailyReadingsAndPassageSelector: React.FC<DailyReadingsAndPassageSe
           </div>
         </div>
       )}
-      {/* Editorial Header Banner */}
-      <div className="relative p-8 sm:p-10 rounded-2xl bg-gradient-to-b from-[#18181E] via-[#121216] to-[#0D0D10] border border-[#3D3524] shadow-2xl overflow-hidden text-center space-y-4">
-        {/* Subtle Decorative Background Gold Lines */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-3/4 h-px bg-gradient-to-r from-transparent via-[#C5A059]/40 to-transparent" />
-        <div className="absolute -top-24 -left-24 w-48 h-48 bg-[#C5A059]/5 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-24 -right-24 w-48 h-48 bg-[#C5A059]/5 rounded-full blur-3xl pointer-events-none" />
 
-        <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#0F0F12] border border-[#3D3524] text-[#C5A059] text-[11px] font-sans uppercase tracking-[0.25em]">
-          <CalendarDays className="w-3.5 h-3.5" />
+      {/* Editorial Header Banner */}
+      <div className="relative p-8 sm:p-10 rounded-2xl bg-white border border-slate-200 shadow-sm text-center space-y-4">
+        <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-[11px] font-sans uppercase tracking-[0.2em] font-bold">
+          <CalendarDays className="w-3.5 h-3.5 text-emerald-600" />
           <span>Liturgia Słowa & Kanon Pisma</span>
         </div>
 
-        <h1 className="font-display text-2xl sm:text-4xl lg:text-5xl font-light tracking-wide text-[#E0E0D6]">
-          Źródło Słowa do <span className="text-[#C5A059] italic font-normal">Skrutacji</span>
+        <h1 className="font-serif text-2xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-slate-900">
+          Źródło Słowa do <span className="text-emerald-800 font-normal italic">Skrutacji</span>
         </h1>
 
-        <p className="text-sm sm:text-base font-serif text-[#A39B8B] max-w-2xl mx-auto leading-relaxed">
+        <p className="text-sm sm:text-base font-sans text-slate-600 max-w-2xl mx-auto leading-relaxed">
           Wybierz dzisiejsze czytanie mszalne z Lekcjonarza Kościoła lub odszukaj dowolną perykopę ze Starego bądź Nowego Testamentu, aby natychmiast rozpocząć drogę odnośników biblijnych.
         </p>
 
         {/* Liturgical Tab Switcher */}
         <div className="pt-4 flex justify-center">
-          <div className="inline-flex p-1.5 bg-[#0F0F12] border border-[#3D3524] rounded-xl max-w-md w-full shadow-inner">
+          <div className="inline-flex p-1.5 bg-slate-100 border border-slate-200 rounded-xl max-w-xl w-full shadow-inner">
             <button
               id="subtab-daily-btn"
               onClick={() => setActiveSubTab('daily')}
-              className={`flex-1 py-3 px-5 rounded-lg text-xs font-sans uppercase tracking-wider font-semibold transition-all flex items-center justify-center gap-2.5 cursor-pointer ${
+              className={`flex-1 py-3 px-3 sm:px-5 rounded-lg text-xs font-sans uppercase tracking-wider font-semibold transition-all flex items-center justify-center gap-2 cursor-pointer ${
                 activeSubTab === 'daily'
-                  ? 'bg-gradient-to-r from-[#3D3524] to-[#2E281C] text-[#C5A059] border border-[#C5A059]/40 shadow-md'
-                  : 'text-[#8C8270] hover:text-[#E0E0D6]'
+                  ? 'bg-white text-emerald-900 border border-slate-200 shadow-sm font-bold'
+                  : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              <CalendarDays className="w-4 h-4" />
+              <CalendarDays className="w-4 h-4 shrink-0 text-emerald-600" />
               <span>Czytania z Dnia</span>
             </button>
             <button
               id="subtab-passage-btn"
               onClick={() => setActiveSubTab('passage')}
-              className={`flex-1 py-3 px-5 rounded-lg text-xs font-sans uppercase tracking-wider font-semibold transition-all flex items-center justify-center gap-2.5 cursor-pointer ${
+              className={`flex-1 py-3 px-3 sm:px-5 rounded-lg text-xs font-sans uppercase tracking-wider font-semibold transition-all flex items-center justify-center gap-2 cursor-pointer ${
                 activeSubTab === 'passage'
-                  ? 'bg-gradient-to-r from-[#3D3524] to-[#2E281C] text-[#C5A059] border border-[#C5A059]/40 shadow-md'
-                  : 'text-[#8C8270] hover:text-[#E0E0D6]'
+                  ? 'bg-white text-emerald-900 border border-slate-200 shadow-sm font-bold'
+                  : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              <Scroll className="w-4 h-4" />
+              <Scroll className="w-4 h-4 shrink-0 text-emerald-600" />
               <span>Wybór Fragmentu</span>
+            </button>
+            <button
+              id="subtab-random-btn"
+              onClick={() => {
+                setActiveSubTab('random');
+                if (!currentRandomQuote) {
+                  handleDrawRandomQuote();
+                }
+              }}
+              className={`flex-1 py-3 px-3 sm:px-5 rounded-lg text-xs font-sans uppercase tracking-wider font-semibold transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                activeSubTab === 'random'
+                  ? 'bg-white text-emerald-900 border border-slate-200 shadow-sm font-bold'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <Dice5 className="w-4 h-4 shrink-0 text-emerald-600" />
+              <span>Losuj Cytat</span>
             </button>
           </div>
         </div>
@@ -698,24 +864,58 @@ export const DailyReadingsAndPassageSelector: React.FC<DailyReadingsAndPassageSe
       {/* ========================================================================= */}
       {activeSubTab === 'daily' && (
         <div className="space-y-6">
+          {/* Daily Date Verification Status Badge */}
+          {selectedDate === getLocalTodayDateString() ? (
+            <div className="p-3.5 sm:p-4 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-between gap-3 text-xs shadow-xs">
+              <div className="flex items-center gap-2.5 text-emerald-900">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-600 animate-pulse shrink-0" />
+                <span className="font-sans font-bold">
+                  Czytania na dziś ({dailyData?.formattedDate || selectedDate}):
+                </span>
+                <span className="text-emerald-800 font-serif italic hidden md:inline">
+                  {dailyData?.liturgicalCelebration}
+                </span>
+              </div>
+              <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 border border-emerald-300 text-[10px] uppercase font-bold text-emerald-900 tracking-wider shrink-0">
+                ✓ Zweryfikowane z dnia
+              </span>
+            </div>
+          ) : (
+            <div className="p-3.5 sm:p-4 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-between gap-3 text-xs shadow-xs">
+              <div className="flex items-center gap-2.5 text-amber-900">
+                <Info className="w-4 h-4 text-amber-600 shrink-0" />
+                <span className="font-sans">
+                  Przeglądasz czytania z dnia: <strong className="text-amber-950">{dailyData?.formattedDate || selectedDate}</strong> ({dailyData?.liturgicalCelebration})
+                </span>
+              </div>
+              <button
+                onClick={handleSetToday}
+                className="px-3.5 py-1.5 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white font-sans font-bold text-xs uppercase tracking-wider transition-all cursor-pointer shrink-0 shadow-xs flex items-center gap-1.5"
+              >
+                <CalendarDays className="w-3.5 h-3.5" />
+                <span>Wróć do dzisiaj</span>
+              </button>
+            </div>
+          )}
+
           {/* Liturgical Control Bar */}
-          <div className="bg-[#141418] rounded-xl p-4 sm:p-5 border border-[#3D3524] shadow-md flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="bg-white rounded-xl p-4 sm:p-5 border border-slate-200 shadow-xs flex flex-col md:flex-row items-center justify-between gap-4">
             {/* Date navigation */}
             <div className="flex items-center gap-2 flex-wrap">
               <button
                 id="daily-prev-day-btn"
                 onClick={() => handleShiftDate(-1)}
-                className="p-2.5 rounded-lg bg-[#0F0F12] border border-[#3D3524] hover:border-[#C5A059] text-[#8C8270] hover:text-[#C5A059] transition-colors cursor-pointer flex items-center gap-1 text-xs font-sans"
+                className="p-2.5 rounded-lg bg-slate-50 border border-slate-200 hover:bg-slate-100 text-slate-700 transition-colors cursor-pointer flex items-center gap-1 text-xs font-sans"
                 title="Poprzedni dzień"
               >
-                <ChevronLeft className="w-4 h-4" />
+                <ChevronLeft className="w-4 h-4 text-slate-600" />
                 <span className="hidden sm:inline">Wczoraj</span>
               </button>
               
               <button
                 id="daily-today-btn"
                 onClick={handleSetToday}
-                className="px-3.5 py-2 rounded-lg bg-[#1F1F26] border border-[#3D3524] hover:border-[#C5A059] text-xs font-sans uppercase tracking-wider text-[#C5A059] font-semibold transition-colors cursor-pointer"
+                className="px-3.5 py-2 rounded-lg bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 text-xs font-sans uppercase tracking-wider text-emerald-900 font-bold transition-colors cursor-pointer"
               >
                 Dzisiaj
               </button>
@@ -723,21 +923,21 @@ export const DailyReadingsAndPassageSelector: React.FC<DailyReadingsAndPassageSe
               <button
                 id="daily-next-day-btn"
                 onClick={() => handleShiftDate(1)}
-                className="p-2.5 rounded-lg bg-[#0F0F12] border border-[#3D3524] hover:border-[#C5A059] text-[#8C8270] hover:text-[#C5A059] transition-colors cursor-pointer flex items-center gap-1 text-xs font-sans"
+                className="p-2.5 rounded-lg bg-slate-50 border border-slate-200 hover:bg-slate-100 text-slate-700 transition-colors cursor-pointer flex items-center gap-1 text-xs font-sans"
                 title="Następny dzień"
               >
                 <span className="hidden sm:inline">Jutro</span>
-                <ChevronRight className="w-4 h-4" />
+                <ChevronRight className="w-4 h-4 text-slate-600" />
               </button>
 
-              <div className="flex items-center gap-2 pl-2 border-l border-[#3D3524]/60">
-                <Calendar className="w-4 h-4 text-[#8C8270]" />
+              <div className="flex items-center gap-2 pl-2 border-l border-slate-200">
+                <Calendar className="w-4 h-4 text-slate-500" />
                 <input
                   id="daily-date-picker"
                   type="date"
                   value={selectedDate}
                   onChange={(e) => setSelectedDate(e.target.value)}
-                  className="px-3 py-1.5 rounded-lg bg-[#0F0F12] border border-[#3D3524] text-xs text-[#E0E0D6] font-mono focus:outline-none focus:border-[#C5A059] cursor-pointer"
+                  className="px-3 py-1.5 rounded-lg bg-white border border-slate-300 text-xs text-slate-800 font-mono focus:outline-none focus:border-emerald-600 cursor-pointer"
                 />
               </div>
             </div>
@@ -745,11 +945,11 @@ export const DailyReadingsAndPassageSelector: React.FC<DailyReadingsAndPassageSe
             {/* Liturgical Badges */}
             {dailyData && (
               <div className="flex items-center gap-3 flex-wrap justify-end">
-                <span className={`inline-flex items-center gap-1.5 text-[11px] font-sans font-semibold uppercase tracking-wider px-3 py-1 rounded-full border shadow-sm ${getLiturgicalColorStyle(dailyData.liturgicalColor).badgeClass}`}>
+                <span className={`inline-flex items-center gap-1.5 text-[11px] font-sans font-semibold uppercase tracking-wider px-3 py-1 rounded-full border shadow-xs ${getLiturgicalColorStyle(dailyData.liturgicalColor).badgeClass}`}>
                   <span className={`w-2 h-2 rounded-full ${getLiturgicalColorStyle(dailyData.liturgicalColor).indicator}`} />
                   {getLiturgicalColorStyle(dailyData.liturgicalColor).name}
                 </span>
-                <span className="text-xs font-mono text-[#A39B8B] px-2.5 py-1 rounded bg-[#0F0F12] border border-[#3D3524]">
+                <span className="text-xs font-mono text-slate-600 px-2.5 py-1 rounded bg-slate-50 border border-slate-200">
                   {dailyData.liturgicalCycle}
                 </span>
               </div>
@@ -758,18 +958,18 @@ export const DailyReadingsAndPassageSelector: React.FC<DailyReadingsAndPassageSe
 
           {/* Liturgical Celebration Header Ribbon */}
           {dailyData && (
-            <div className="p-6 rounded-xl bg-gradient-to-r from-[#1A1A22] via-[#141418] to-[#141418] border border-[#3D3524] flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-lg">
+            <div className="p-6 rounded-xl bg-gradient-to-r from-emerald-50 via-slate-50 to-white border border-emerald-200/80 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-xs">
               <div className="space-y-1">
-                <div className="flex items-center gap-2 text-[#C5A059] text-xs font-sans uppercase tracking-[0.2em] font-semibold">
-                  <Flame className="w-4 h-4" />
+                <div className="flex items-center gap-2 text-emerald-800 text-xs font-sans uppercase tracking-[0.2em] font-bold">
+                  <Flame className="w-4 h-4 text-emerald-600" />
                   <span>{dailyData.formattedDate}</span>
                 </div>
-                <h2 className="font-display text-xl sm:text-2xl font-light text-[#E0E0D6]">
+                <h2 className="font-serif text-xl sm:text-2xl font-bold text-slate-900">
                   {dailyData.liturgicalCelebration}
                 </h2>
               </div>
-              <div className="flex items-center gap-3 bg-[#0F0F12] p-3 rounded-lg border border-[#3D3524]/80 text-xs font-serif text-[#A39B8B] max-w-sm">
-                <Info className="w-5 h-5 text-[#C5A059] shrink-0" />
+              <div className="flex items-center gap-3 bg-white p-3 rounded-lg border border-slate-200 text-xs font-sans text-slate-600 max-w-sm">
+                <Info className="w-5 h-5 text-emerald-600 shrink-0" />
                 <span>
                   Wybierz werset z poniższego zestawu czytań, aby wejść w modlitwę i zbadać jego korzenie w całym Piśmie Świętym.
                 </span>
@@ -779,9 +979,9 @@ export const DailyReadingsAndPassageSelector: React.FC<DailyReadingsAndPassageSe
 
           {/* Loading Indicator */}
           {isLoadingDaily && (
-            <div className="py-24 text-center space-y-4 rounded-xl bg-[#141418] border border-[#3D3524]">
-              <Loader2 className="w-10 h-10 text-[#C5A059] animate-spin mx-auto" />
-              <p className="text-sm font-serif text-[#A39B8B] tracking-wide">
+            <div className="py-24 text-center space-y-4 rounded-xl bg-white border border-slate-200 shadow-xs">
+              <Loader2 className="w-10 h-10 text-emerald-600 animate-spin mx-auto" />
+              <p className="text-sm font-sans text-slate-600 tracking-wide">
                 Pobieranie czytań mszalnych z Lekcjonarza Kościoła...
               </p>
             </div>
@@ -789,7 +989,7 @@ export const DailyReadingsAndPassageSelector: React.FC<DailyReadingsAndPassageSe
 
           {/* Error message */}
           {dailyError && (
-            <div className="p-5 rounded-xl bg-red-950/40 border border-red-800 text-red-200 text-sm">
+            <div className="p-5 rounded-xl bg-red-50 border border-red-200 text-red-900 text-sm">
               {dailyError}
             </div>
           )}
@@ -803,19 +1003,20 @@ export const DailyReadingsAndPassageSelector: React.FC<DailyReadingsAndPassageSe
                 const isLangOpen = expandedReadingLang === reading.id;
                 const isSpeaking = speakingSiglum === reading.siglum;
                 const isCopied = copiedSiglum === reading.siglum;
+                const selectableVerses = getSelectableVersesForReading(reading);
 
                 return (
                   <div
                     key={reading.id}
-                    className={`relative rounded-2xl border transition-all duration-200 flex flex-col justify-between overflow-hidden group ${
+                    className={`relative rounded-2xl border transition-all duration-200 flex flex-col justify-between overflow-hidden group bg-white shadow-xs ${
                       isGospel 
-                        ? 'bg-gradient-to-b from-[#1C1A17] to-[#141418] border-[#C5A059] shadow-xl shadow-[#C5A059]/5' 
-                        : 'bg-[#141418] border-[#3D3524] hover:border-[#8C8270]/80 shadow-md'
+                        ? 'border-emerald-300 ring-1 ring-emerald-200 shadow-md' 
+                        : 'border-slate-200 hover:border-emerald-300 hover:shadow-md'
                     }`}
                   >
                     {/* Gospel Golden Top Ribbon */}
                     {isGospel && (
-                      <div className="h-1.5 w-full bg-gradient-to-r from-[#C5A059] via-[#E5C158] to-[#C5A059]" />
+                      <div className="h-1.5 w-full bg-gradient-to-r from-emerald-600 via-amber-500 to-emerald-600" />
                     )}
 
                     <div className="p-6 sm:p-7 space-y-5">
@@ -825,22 +1026,22 @@ export const DailyReadingsAndPassageSelector: React.FC<DailyReadingsAndPassageSe
                           <div className="flex items-center gap-2 mb-1.5">
                             <span className={`px-2.5 py-1 rounded text-xs font-sans uppercase font-bold tracking-wider ${
                               isGospel 
-                                ? 'bg-[#C5A059] text-[#0F0F12] shadow-sm' 
+                                ? 'bg-emerald-700 text-white shadow-xs' 
                                 : isPsalm
-                                ? 'bg-[#22222A] text-amber-300 border border-amber-500/30'
-                                : 'bg-[#0F0F12] text-[#C5A059] border border-[#3D3524]'
+                                ? 'bg-amber-100 text-amber-900 border border-amber-200'
+                                : 'bg-slate-100 text-slate-800 border border-slate-200'
                             }`}>
                               {reading.label}
                             </span>
                             {isGospel && (
-                              <span className="flex items-center gap-1 text-[11px] font-sans text-[#C5A059] font-semibold">
-                                <Flame className="w-3.5 h-3.5" />
+                              <span className="flex items-center gap-1 text-[11px] font-sans text-emerald-800 font-bold">
+                                <Flame className="w-3.5 h-3.5 text-emerald-600" />
                                 Szczyt Liturgii Słowa
                               </span>
                             )}
                           </div>
                           
-                          <span className="font-mono text-sm font-bold text-[#E0E0D6] bg-[#0F0F12] px-2.5 py-1 rounded border border-[#3D3524] inline-block">
+                          <span className="font-mono text-sm font-bold text-slate-900 bg-slate-50 px-2.5 py-1 rounded border border-slate-200 inline-block">
                             {reading.siglum}
                           </span>
                         </div>
@@ -851,8 +1052,8 @@ export const DailyReadingsAndPassageSelector: React.FC<DailyReadingsAndPassageSe
                             onClick={() => handleSpeakText(reading.siglum, reading.text)}
                             className={`p-2 rounded-lg border transition-colors cursor-pointer ${
                               isSpeaking 
-                                ? 'bg-[#C5A059] text-[#0F0F12] border-[#C5A059]' 
-                                : 'bg-[#0F0F12] text-[#8C8270] hover:text-[#C5A059] border-[#3D3524]'
+                                ? 'bg-emerald-700 text-white border-emerald-700' 
+                                : 'bg-white text-slate-600 hover:text-emerald-700 border-slate-200 hover:bg-slate-50'
                             }`}
                             title="Odsłuchaj lektora (synteza mowy)"
                           >
@@ -861,18 +1062,18 @@ export const DailyReadingsAndPassageSelector: React.FC<DailyReadingsAndPassageSe
 
                           <button
                             onClick={() => handleCopyText(reading.siglum, reading.text)}
-                            className="p-2 rounded-lg bg-[#0F0F12] text-[#8C8270] hover:text-[#C5A059] border border-[#3D3524] transition-colors cursor-pointer"
+                            className="p-2 rounded-lg bg-white text-slate-600 hover:text-emerald-700 border border-slate-200 hover:bg-slate-50 transition-colors cursor-pointer"
                             title="Skopiuj werset do schowka"
                           >
-                            {isCopied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                            {isCopied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
                           </button>
 
                           <button
                             onClick={() => setExpandedReadingLang(isLangOpen ? null : reading.id)}
                             className={`p-2 rounded-lg border transition-colors cursor-pointer ${
                               isLangOpen 
-                                ? 'bg-[#3D3524] text-[#C5A059] border-[#C5A059]' 
-                                : 'bg-[#0F0F12] text-[#8C8270] hover:text-[#C5A059] border-[#3D3524]'
+                                ? 'bg-emerald-50 text-emerald-800 border-emerald-300 font-bold' 
+                                : 'bg-white text-slate-600 hover:text-emerald-700 border-slate-200 hover:bg-slate-50'
                             }`}
                             title="Podgląd tekstu oryginalnego i Wulgaty"
                           >
@@ -883,42 +1084,42 @@ export const DailyReadingsAndPassageSelector: React.FC<DailyReadingsAndPassageSe
 
                       {/* Liturgical Introduction */}
                       {reading.liturgicalIntroduction && (
-                        <p className="text-xs font-sans italic text-[#8C8270] border-l-2 border-[#3D3524] pl-3 py-0.5">
+                        <p className="text-xs font-sans italic text-slate-500 border-l-2 border-emerald-600 pl-3 py-0.5">
                           {reading.liturgicalIntroduction}
                         </p>
                       )}
 
                       {/* Psalm Response Banner */}
                       {reading.psalmResponse && (
-                        <div className="p-3.5 bg-gradient-to-r from-[#191922] to-[#121216] rounded-xl border border-[#3D3524] space-y-1">
-                          <span className="text-[10px] font-sans uppercase tracking-[0.2em] text-[#C5A059] font-bold block">
+                        <div className="p-3.5 bg-amber-50/80 rounded-xl border border-amber-200 space-y-1">
+                          <span className="text-[10px] font-sans uppercase tracking-[0.2em] text-amber-900 font-bold block">
                             Refren Psalmu:
                           </span>
-                          <p className="font-scripture text-base font-medium text-[#E0E0D6] italic">
+                          <p className="font-scripture text-base font-semibold text-slate-900 italic">
                             «{reading.psalmResponse}»
                           </p>
                         </div>
                       )}
 
-                      {/* Scripture Body with Illuminated Manuscript Styling */}
-                      <div className="p-4 rounded-xl bg-[#0C0C0F] border border-[#272730] max-h-56 overflow-y-auto pr-3 custom-scrollbar">
-                        <p className="font-scripture text-base text-[#E0E0D6] leading-relaxed whitespace-pre-line">
+                      {/* Scripture Body */}
+                      <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 max-h-56 overflow-y-auto pr-3 custom-scrollbar">
+                        <p className="font-scripture text-base text-slate-900 leading-relaxed whitespace-pre-line">
                           «{reading.text}»
                         </p>
                       </div>
 
                       {/* Parallel Original Language Preview Drawer */}
                       {isLangOpen && (
-                        <div className="p-4 rounded-xl bg-[#101014] border border-[#C5A059]/40 space-y-3 animate-fade-in text-xs">
-                          <div className="flex items-center justify-between text-[11px] font-sans uppercase tracking-wider text-[#C5A059] font-semibold border-b border-[#3D3524] pb-2">
+                        <div className="p-4 rounded-xl bg-slate-50 border border-emerald-200 space-y-3 animate-fade-in text-xs">
+                          <div className="flex items-center justify-between text-[11px] font-sans uppercase tracking-wider text-emerald-900 font-bold border-b border-slate-200 pb-2">
                             <span>Teksty Źródłowe & Wulgata</span>
-                            <span className="text-[#8C8270]">Originalia</span>
+                            <span className="text-slate-500">Originalia</span>
                           </div>
                           
                           {reading.greekText && (
                             <div className="space-y-1">
-                              <span className="text-[10px] font-mono text-[#8C8270] uppercase">Novum Testamentum Graece:</span>
-                              <p className="font-serif italic text-amber-200/90 leading-relaxed">
+                              <span className="text-[10px] font-mono text-slate-600 uppercase font-bold">Novum Testamentum Graece:</span>
+                              <p className="font-serif italic text-slate-800 leading-relaxed">
                                 {reading.greekText}
                               </p>
                             </div>
@@ -926,17 +1127,17 @@ export const DailyReadingsAndPassageSelector: React.FC<DailyReadingsAndPassageSe
 
                           {reading.hebrewText && (
                             <div className="space-y-1">
-                              <span className="text-[10px] font-mono text-[#8C8270] uppercase">Biblia Hebraica Stuttgartensia:</span>
-                              <p className="font-serif italic text-amber-200/90 text-right leading-relaxed" dir="rtl">
+                              <span className="text-[10px] font-mono text-slate-600 uppercase font-bold">Biblia Hebraica Stuttgartensia:</span>
+                              <p className="font-serif italic text-slate-800 text-right leading-relaxed" dir="rtl">
                                 {reading.hebrewText}
                               </p>
                             </div>
                           )}
 
                           {reading.latinText && (
-                            <div className="space-y-1 pt-1 border-t border-[#25252D]">
-                              <span className="text-[10px] font-mono text-[#8C8270] uppercase">Biblia Sacra Vulgata (św. Hieronim):</span>
-                              <p className="font-serif italic text-stone-300 leading-relaxed">
+                            <div className="space-y-1 pt-1 border-t border-slate-200">
+                              <span className="text-[10px] font-mono text-slate-600 uppercase font-bold">Biblia Sacra Vulgata (św. Hieronim):</span>
+                              <p className="font-serif italic text-slate-700 leading-relaxed">
                                 {reading.latinText}
                               </p>
                             </div>
@@ -945,18 +1146,18 @@ export const DailyReadingsAndPassageSelector: React.FC<DailyReadingsAndPassageSe
                       )}
 
                       {/* Selectable Verses & Key Fragments in this Reading */}
-                      <div className="pt-3 space-y-2 border-t border-[#25252D]">
+                      <div className="pt-3 space-y-2 border-t border-slate-200">
                         <div className="flex items-center justify-between">
-                          <span className="text-[11px] font-sans uppercase tracking-wider text-[#C5A059] font-bold flex items-center gap-1.5">
-                            <Sparkles className="w-3.5 h-3.5 text-[#C5A059]" />
-                            Wybierz fragment / werset do skrutacji:
+                          <span className="text-[11px] font-sans uppercase tracking-wider text-emerald-800 font-bold flex items-center gap-1.5">
+                            <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
+                            {isPsalm ? 'Wybierz zwrotkę / werset:' : 'Wybierz fragment / werset:'}
                           </span>
                           <button
                             type="button"
                             onClick={() => setReadingToPickVerse(reading)}
-                            className="text-[11px] text-[#C5A059] hover:underline flex items-center gap-1 cursor-pointer font-medium"
+                            className="text-[11px] text-emerald-700 hover:text-emerald-900 hover:underline flex items-center gap-1 cursor-pointer font-bold"
                           >
-                            <span>Wszystkie wersety</span>
+                            <span>Wybierz konkretne zdanie</span>
                             <ArrowRight className="w-3 h-3" />
                           </button>
                         </div>
@@ -970,15 +1171,15 @@ export const DailyReadingsAndPassageSelector: React.FC<DailyReadingsAndPassageSe
                               reading.text, 
                               reading.theologicalTheme
                             )}
-                            className="px-2.5 py-1.5 rounded-lg text-xs bg-[#1C1C24] hover:bg-[#2A2A36] text-[#E0E0D6] border border-[#3D3524] hover:border-[#C5A059] transition-all flex items-center gap-1.5 cursor-pointer text-left shadow-sm"
+                            className="px-2.5 py-1.5 rounded-lg text-xs bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border border-emerald-200 transition-all flex items-center gap-1.5 cursor-pointer text-left shadow-xs font-medium"
                             title="Skrutuj całą perykopę"
                           >
-                            <BookOpen className="w-3.5 h-3.5 text-[#C5A059] shrink-0" />
-                            <span className="font-semibold font-mono text-[11px] text-[#C5A059]">Całość</span>
-                            <span className="text-[11px] text-[#8C8270]">({reading.siglum})</span>
+                            <BookOpen className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
+                            <span className="font-bold font-mono text-[11px]">Całość</span>
+                            <span className="text-[11px] text-emerald-800">({reading.siglum})</span>
                           </button>
 
-                          {reading.keyVerses && reading.keyVerses.map((kv, kIdx) => (
+                          {selectableVerses.slice(0, 4).map((kv, kIdx) => (
                             <button
                               key={kIdx}
                               type="button"
@@ -988,13 +1189,13 @@ export const DailyReadingsAndPassageSelector: React.FC<DailyReadingsAndPassageSe
                                 kv.text, 
                                 kv.theme
                               )}
-                              className="px-2.5 py-1.5 rounded-lg text-xs bg-[#171720] hover:bg-[#252535] text-[#E0E0D6] border border-[#2B2B38] hover:border-[#C5A059] transition-all flex items-center gap-1.5 cursor-pointer text-left group"
+                              className="px-2.5 py-1.5 rounded-lg text-xs bg-slate-50 hover:bg-emerald-50 text-slate-800 border border-slate-200 hover:border-emerald-300 transition-all flex items-center gap-1.5 cursor-pointer text-left group"
                               title={kv.text}
                             >
-                              <span className="font-mono font-bold text-[11px] text-[#C5A059] group-hover:text-amber-300">
+                              <span className="font-mono font-bold text-[11px] text-emerald-800 group-hover:text-emerald-900">
                                 {kv.siglum}
                               </span>
-                              <span className="text-[11px] text-[#A0A095] group-hover:text-white truncate max-w-[170px] sm:max-w-[210px]">
+                              <span className="text-[11px] text-slate-600 group-hover:text-slate-900 truncate max-w-[150px] sm:max-w-[190px]">
                                 {kv.label}
                               </span>
                             </button>
@@ -1003,37 +1204,37 @@ export const DailyReadingsAndPassageSelector: React.FC<DailyReadingsAndPassageSe
                           <button
                             type="button"
                             onClick={() => setReadingToPickVerse(reading)}
-                            className="px-2 py-1.5 rounded-lg text-[11px] bg-[#121217] hover:bg-[#1A1A22] text-[#8C8270] hover:text-[#C5A059] border border-[#2B2B38] hover:border-[#C5A059] transition-all flex items-center gap-1 cursor-pointer"
+                            className="px-2 py-1.5 rounded-lg text-[11px] bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 transition-all flex items-center gap-1 cursor-pointer font-medium"
                           >
-                            <span>+ Inny werset</span>
+                            <span>+ Wszystkie wersety</span>
                           </button>
                         </div>
                       </div>
 
                       {/* Theological Theme Annotation */}
                       {reading.theologicalTheme && (
-                        <div className="pt-2 text-xs text-[#8C8270] flex items-start gap-2">
-                          <span className="font-semibold text-[#C5A059] uppercase text-[10px] tracking-wider shrink-0 mt-0.5">
+                        <div className="pt-2 text-xs text-slate-600 flex items-start gap-2">
+                          <span className="font-bold text-emerald-800 uppercase text-[10px] tracking-wider shrink-0 mt-0.5">
                             Motyw:
                           </span>
-                          <span className="font-serif">{reading.theologicalTheme}</span>
+                          <span className="font-serif text-slate-700">{reading.theologicalTheme}</span>
                         </div>
                       )}
                     </div>
 
                     {/* Footer Launch Buttons: Odnośniki & Ojcowie Kościoła */}
-                    <div className="p-4 sm:p-5 bg-[#0E0E11] border-t border-[#3D3524] flex flex-col sm:flex-row gap-2.5">
+                    <div className="p-4 sm:p-5 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row gap-2.5">
                       <button
                         id={`start-scrutation-${reading.id}-btn`}
                         onClick={() => setReadingToPickVerse(reading)}
-                        className={`flex-1 py-3 px-4 rounded-xl text-xs font-sans uppercase tracking-wider font-bold flex items-center justify-center gap-2 transition-all duration-200 cursor-pointer shadow-lg hover:scale-[1.01] ${
+                        className={`flex-1 py-3 px-4 rounded-xl text-xs font-sans uppercase tracking-wider font-bold flex items-center justify-center gap-2 transition-all duration-200 cursor-pointer shadow-xs ${
                           isGospel
-                            ? 'bg-gradient-to-r from-[#C5A059] to-[#D4AF37] text-[#0F0F12] hover:brightness-110'
-                            : 'bg-[#C5A059] text-black hover:bg-[#E5C98B]'
+                            ? 'bg-emerald-700 text-white hover:bg-emerald-800'
+                            : 'bg-emerald-700 text-white hover:bg-emerald-800'
                         }`}
                       >
                         <BookOpen className="w-4 h-4 shrink-0" />
-                        <span>Skrutuj (Wybierz fragment / Odnośniki)</span>
+                        <span>Skrutuj (Wybierz werset / Odnośniki)</span>
                         <ArrowRight className="w-4 h-4 shrink-0" />
                       </button>
 
@@ -1041,9 +1242,9 @@ export const DailyReadingsAndPassageSelector: React.FC<DailyReadingsAndPassageSe
                         <button
                           id={`patristic-reading-${reading.id}-btn`}
                           onClick={() => onOpenPatristicForVerse(reading.siglum)}
-                          className="py-3 px-4 rounded-xl text-xs font-sans uppercase tracking-wider font-semibold flex items-center justify-center gap-2 bg-[#1C1C24] hover:bg-[#252530] text-[#E0E0D6] border border-[#3D3524] hover:border-[#C5A059] transition-all cursor-pointer"
+                          className="py-3 px-4 rounded-xl text-xs font-sans uppercase tracking-wider font-semibold flex items-center justify-center gap-2 bg-white hover:bg-slate-100 text-slate-800 border border-slate-300 transition-all cursor-pointer shadow-xs"
                         >
-                          <Scroll className="w-4 h-4 text-[#C5A059] shrink-0" />
+                          <Scroll className="w-4 h-4 text-emerald-700 shrink-0" />
                           <span>Ojcowie Kościoła</span>
                         </button>
                       )}
@@ -1062,34 +1263,34 @@ export const DailyReadingsAndPassageSelector: React.FC<DailyReadingsAndPassageSe
       {activeSubTab === 'passage' && (
         <div className="space-y-8">
           {/* Main Interactive Selector Card */}
-          <div className="bg-gradient-to-b from-[#18181E] to-[#121216] rounded-2xl p-6 sm:p-8 border border-[#3D3524] shadow-xl space-y-6">
-            <div className="flex items-center justify-between flex-wrap gap-2 border-b border-[#3D3524] pb-4">
-              <div className="flex items-center gap-2.5 text-[#C5A059]">
-                <Scroll className="w-5 h-5" />
-                <h2 className="font-display text-lg sm:text-2xl font-light text-[#E0E0D6]">
+          <div className="bg-white rounded-2xl p-6 sm:p-8 border border-slate-200 shadow-xs space-y-6">
+            <div className="flex items-center justify-between flex-wrap gap-2 border-b border-slate-200 pb-4">
+              <div className="flex items-center gap-2.5 text-emerald-800">
+                <Scroll className="w-5 h-5 text-emerald-700" />
+                <h2 className="font-serif text-lg sm:text-2xl font-bold text-slate-900">
                   Wyszukiwarka Perykop & Kanon 73 Ksiąg
                 </h2>
               </div>
-              <span className="text-xs text-[#8C8270] font-sans">
+              <span className="text-xs text-slate-600 font-sans">
                 Wpisz dowolne siglum lub wybierz księgę z listy
               </span>
             </div>
 
             {/* Quick Free Search Bar */}
             <div className="space-y-2">
-              <label className="block text-[11px] font-sans font-semibold uppercase tracking-widest text-[#C5A059]">
+              <label className="block text-[11px] font-sans font-bold uppercase tracking-widest text-emerald-800">
                 Szybkie wyszukiwanie siglum lub tematu:
               </label>
               <div className="flex items-center gap-3">
                 <div className="relative flex-1">
-                  <Search className="w-4 h-4 text-[#8C8270] absolute left-3.5 top-3.5" />
+                  <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
                   <input
                     id="search-passage-query-input"
                     type="text"
                     value={customSearchQuery}
                     onChange={(e) => setCustomSearchQuery(e.target.value)}
                     placeholder="np. «Rz 8, 28-39», «Hymn o miłości», «Iz 53», «Krzew gorejący»..."
-                    className="w-full pl-10 pr-4 py-3 rounded-xl bg-[#0F0F12] border border-[#3D3524] text-sm text-[#E0E0D6] placeholder-[#8C8270] focus:border-[#C5A059] focus:outline-none font-mono transition-colors"
+                    className="w-full pl-10 pr-4 py-3 rounded-xl bg-slate-50 border border-slate-300 text-sm text-slate-900 placeholder-slate-400 focus:bg-white focus:border-emerald-600 focus:outline-none font-mono transition-colors"
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
                         handleLookupPassage();
@@ -1101,7 +1302,7 @@ export const DailyReadingsAndPassageSelector: React.FC<DailyReadingsAndPassageSe
                   id="lookup-passage-btn"
                   onClick={() => handleLookupPassage()}
                   disabled={isLoadingPassage}
-                  className="px-6 py-3 rounded-xl bg-gradient-to-r from-[#C5A059] to-[#D4AF37] hover:brightness-110 disabled:opacity-50 text-[#0F0F12] font-sans font-bold text-xs uppercase tracking-widest flex items-center gap-2 transition-all cursor-pointer shadow-md shrink-0"
+                  className="px-6 py-3 rounded-xl bg-emerald-700 hover:bg-emerald-800 disabled:opacity-50 text-white font-sans font-bold text-xs uppercase tracking-widest flex items-center gap-2 transition-all cursor-pointer shadow-xs shrink-0"
                 >
                   {isLoadingPassage ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
@@ -1114,16 +1315,16 @@ export const DailyReadingsAndPassageSelector: React.FC<DailyReadingsAndPassageSe
             </div>
 
             {/* Fine-Tuned Bible Book, Chapter, Verse Inputs */}
-            <div className="p-5 rounded-xl bg-[#0E0E12] border border-[#272730] space-y-4">
-              <div className="flex items-center gap-2 text-xs font-sans uppercase tracking-wider text-[#8C8270] font-semibold">
-                <Layers className="w-3.5 h-3.5 text-[#C5A059]" />
+            <div className="p-5 rounded-xl bg-slate-50 border border-slate-200 space-y-4">
+              <div className="flex items-center gap-2 text-xs font-sans uppercase tracking-wider text-slate-700 font-bold">
+                <Layers className="w-3.5 h-3.5 text-emerald-600" />
                 <span>Ręczny selektor wg struktury kanonu:</span>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-12 gap-4">
                 {/* Book Select */}
                 <div className="sm:col-span-6 space-y-1.5">
-                  <label className="block text-[10px] font-sans font-semibold uppercase tracking-widest text-[#8C8270]">
+                  <label className="block text-[10px] font-sans font-bold uppercase tracking-widest text-slate-600">
                     Księga Biblijna:
                   </label>
                   <select
@@ -1133,7 +1334,7 @@ export const DailyReadingsAndPassageSelector: React.FC<DailyReadingsAndPassageSe
                       setSelectedBookSiglum(e.target.value);
                       setSelectedChapter(1);
                     }}
-                    className="w-full px-3.5 py-2.5 rounded-lg bg-[#141418] border border-[#3D3524] text-sm text-[#E0E0D6] focus:border-[#C5A059] focus:outline-none"
+                    className="w-full px-3.5 py-2.5 rounded-lg bg-white border border-slate-300 text-sm text-slate-800 focus:border-emerald-600 focus:outline-none"
                   >
                     <optgroup label="Nowy Testament (27)">
                       {BIBLE_BOOKS.filter(b => b.testament === 'NT').map(b => (
@@ -1154,14 +1355,14 @@ export const DailyReadingsAndPassageSelector: React.FC<DailyReadingsAndPassageSe
 
                 {/* Chapter input */}
                 <div className="sm:col-span-3 space-y-1.5">
-                  <label className="block text-[10px] font-sans font-semibold uppercase tracking-widest text-[#8C8270]">
+                  <label className="block text-[10px] font-sans font-bold uppercase tracking-widest text-slate-600">
                     Rozdział (1 – {currentBookInfo.chaptersCount}):
                   </label>
                   <div className="flex items-center gap-1">
                     <button
                       type="button"
                       onClick={() => setSelectedChapter(Math.max(1, selectedChapter - 1))}
-                      className="px-3 py-2 rounded-lg bg-[#141418] border border-[#3D3524] text-[#8C8270] hover:text-[#C5A059] cursor-pointer"
+                      className="px-3 py-2 rounded-lg bg-white border border-slate-300 text-slate-700 hover:bg-slate-100 cursor-pointer"
                     >
                       -
                     </button>
@@ -1172,12 +1373,12 @@ export const DailyReadingsAndPassageSelector: React.FC<DailyReadingsAndPassageSe
                       max={currentBookInfo.chaptersCount}
                       value={selectedChapter}
                       onChange={(e) => setSelectedChapter(Math.max(1, Math.min(currentBookInfo.chaptersCount, Number(e.target.value) || 1)))}
-                      className="w-full text-center py-2 rounded-lg bg-[#141418] border border-[#3D3524] text-sm text-[#E0E0D6] font-mono focus:border-[#C5A059] focus:outline-none"
+                      className="w-full text-center py-2 rounded-lg bg-white border border-slate-300 text-sm text-slate-800 font-mono focus:border-emerald-600 focus:outline-none"
                     />
                     <button
                       type="button"
                       onClick={() => setSelectedChapter(Math.min(currentBookInfo.chaptersCount, selectedChapter + 1))}
-                      className="px-3 py-2 rounded-lg bg-[#141418] border border-[#3D3524] text-[#8C8270] hover:text-[#C5A059] cursor-pointer"
+                      className="px-3 py-2 rounded-lg bg-white border border-slate-300 text-slate-700 hover:bg-slate-100 cursor-pointer"
                     >
                       +
                     </button>
@@ -1186,7 +1387,7 @@ export const DailyReadingsAndPassageSelector: React.FC<DailyReadingsAndPassageSe
 
                 {/* Verses input */}
                 <div className="sm:col-span-3 space-y-1.5">
-                  <label className="block text-[10px] font-sans font-semibold uppercase tracking-widest text-[#8C8270]">
+                  <label className="block text-[10px] font-sans font-bold uppercase tracking-widest text-slate-600">
                     Wersety (np. 1-14):
                   </label>
                   <input
@@ -1195,33 +1396,33 @@ export const DailyReadingsAndPassageSelector: React.FC<DailyReadingsAndPassageSe
                     value={versesInput}
                     onChange={(e) => setVersesInput(e.target.value)}
                     placeholder="np. 1-14 lub 29-34"
-                    className="w-full px-3.5 py-2 rounded-lg bg-[#141418] border border-[#3D3524] text-sm text-[#E0E0D6] font-mono focus:border-[#C5A059] focus:outline-none"
+                    className="w-full px-3.5 py-2 rounded-lg bg-white border border-slate-300 text-sm text-slate-800 font-mono focus:border-emerald-600 focus:outline-none"
                   />
                 </div>
               </div>
             </div>
 
             {passageError && (
-              <div className="p-4 bg-red-950/40 border border-red-800 text-red-300 text-xs rounded-xl">
+              <div className="p-4 bg-red-50 border border-red-200 text-red-900 text-xs rounded-xl">
                 {passageError}
               </div>
             )}
           </div>
 
-          {/* Passage Lookup Result Card (Illuminated Manuscript Style) */}
+          {/* Passage Lookup Result Card */}
           {passageLookupResult && (
-            <div className="p-6 sm:p-8 rounded-2xl bg-gradient-to-b from-[#1C1A17] to-[#121216] border-2 border-[#C5A059] shadow-2xl space-y-6 animate-fade-in">
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#3D3524] pb-5">
+            <div className="p-6 sm:p-8 rounded-2xl bg-white border border-emerald-300 shadow-md space-y-6 animate-fade-in">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 pb-5">
                 <div>
                   <div className="flex items-center gap-2 mb-1.5">
-                    <span className="px-3 py-1 rounded-md bg-[#0F0F12] text-[#C5A059] border border-[#C5A059]/40 text-xs font-mono font-bold">
+                    <span className="px-3 py-1 rounded-md bg-emerald-50 text-emerald-900 border border-emerald-300 text-xs font-mono font-bold">
                       {passageLookupResult.siglum}
                     </span>
-                    <span className="text-xs font-sans text-[#A39B8B]">
+                    <span className="text-xs font-sans text-slate-600">
                       {passageLookupResult.bookFullName} ({passageLookupResult.testament === 'NT' ? 'Nowy Testament' : 'Stary Testament'})
                     </span>
                   </div>
-                  <h3 className="font-display text-2xl sm:text-3xl font-light text-[#E0E0D6]">
+                  <h3 className="font-serif text-2xl sm:text-3xl font-bold text-slate-900">
                     {passageLookupResult.pericopeTitle}
                   </h3>
                 </div>
@@ -1229,7 +1430,7 @@ export const DailyReadingsAndPassageSelector: React.FC<DailyReadingsAndPassageSe
                 <button
                   id="start-scrutation-from-lookup-btn"
                   onClick={() => startScrutationFromLookup(passageLookupResult)}
-                  className="px-6 py-3 rounded-xl bg-gradient-to-r from-[#C5A059] to-[#D4AF37] hover:brightness-110 text-[#0F0F12] text-xs font-sans uppercase tracking-widest font-bold flex items-center gap-2 transition-all cursor-pointer shadow-lg self-start md:self-center"
+                  className="px-6 py-3 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-sans uppercase tracking-widest font-bold flex items-center gap-2 transition-all cursor-pointer shadow-xs self-start md:self-center"
                 >
                   <Sparkles className="w-4 h-4" />
                   <span>Rozpocznij Skrutację z tego Fragmentu</span>
@@ -1238,23 +1439,23 @@ export const DailyReadingsAndPassageSelector: React.FC<DailyReadingsAndPassageSe
               </div>
 
               {/* Full Text */}
-              <div className="p-6 bg-[#0B0B0E] rounded-xl border border-[#3D3524] space-y-3">
+              <div className="p-6 bg-slate-50 rounded-2xl border border-slate-200 shadow-xs space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-sans uppercase tracking-[0.2em] text-[#C5A059] font-bold flex items-center gap-1.5">
-                    <Quote className="w-3.5 h-3.5" />
+                  <span className="text-[10px] font-sans uppercase tracking-[0.2em] text-emerald-800 font-bold flex items-center gap-1.5">
+                    <Quote className="w-3.5 h-3.5 text-emerald-600" />
                     Tekst Pisma Świętego (Biblia Tysiąclecia / Jerozolimska)
                   </span>
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => handleSpeakText(passageLookupResult.siglum, passageLookupResult.text)}
-                      className="text-xs text-[#8C8270] hover:text-[#C5A059] flex items-center gap-1 cursor-pointer"
+                      className="text-xs text-slate-600 hover:text-emerald-700 flex items-center gap-1 cursor-pointer font-medium"
                     >
                       <Volume2 className="w-3.5 h-3.5" />
                       <span>Czytaj</span>
                     </button>
                     <button
                       onClick={() => handleCopyText(passageLookupResult.siglum, passageLookupResult.text)}
-                      className="text-xs text-[#8C8270] hover:text-[#C5A059] flex items-center gap-1 cursor-pointer"
+                      className="text-xs text-slate-600 hover:text-emerald-700 flex items-center gap-1 cursor-pointer font-medium"
                     >
                       <Copy className="w-3.5 h-3.5" />
                       <span>Kopiuj</span>
@@ -1262,29 +1463,29 @@ export const DailyReadingsAndPassageSelector: React.FC<DailyReadingsAndPassageSe
                   </div>
                 </div>
 
-                <p className="font-scripture text-base sm:text-lg text-[#E0E0D6] leading-relaxed whitespace-pre-line italic">
+                <p className="font-scripture text-base sm:text-lg text-slate-900 leading-relaxed whitespace-pre-line italic font-medium">
                   «{passageLookupResult.text}»
                 </p>
               </div>
 
               {/* Theological theme, suggested paths and keywords */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 text-xs text-[#8C8270]">
-                <div className="space-y-1">
-                  <span className="font-sans font-semibold text-[#C5A059] uppercase text-[10px] tracking-wider block">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 text-xs text-slate-600">
+                <div className="space-y-1 p-3.5 rounded-xl bg-slate-50 border border-slate-200">
+                  <span className="font-sans font-bold text-emerald-800 uppercase text-[10px] tracking-wider block">
                     Kontekst teologiczny i motyw:
                   </span>
-                  <p className="font-serif text-[#E0E0D6] leading-relaxed">
+                  <p className="font-serif text-slate-800 leading-relaxed">
                     {passageLookupResult.theologicalTheme}
                   </p>
                 </div>
                 {passageLookupResult.keyWords && passageLookupResult.keyWords.length > 0 && (
-                  <div className="space-y-1">
-                    <span className="font-sans font-semibold text-[#C5A059] uppercase text-[10px] tracking-wider block">
+                  <div className="space-y-1 p-3.5 rounded-xl bg-slate-50 border border-slate-200">
+                    <span className="font-sans font-bold text-emerald-800 uppercase text-[10px] tracking-wider block">
                       Kluczowe pojęcia do tropienia powiązań:
                     </span>
                     <div className="flex flex-wrap gap-1.5 pt-1">
                       {passageLookupResult.keyWords.map((kw, i) => (
-                        <span key={i} className="px-2.5 py-1 bg-[#0F0F12] border border-[#3D3524] text-[#E0E0D6] rounded-md text-[11px] font-sans font-medium">
+                        <span key={i} className="px-2.5 py-1 bg-white border border-slate-200 text-slate-800 rounded-md text-[11px] font-sans font-medium">
                           {kw}
                         </span>
                       ))}
@@ -1299,10 +1500,10 @@ export const DailyReadingsAndPassageSelector: React.FC<DailyReadingsAndPassageSe
           <div className="space-y-5">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
-                <h3 className="font-display text-xl sm:text-2xl font-light text-[#E0E0D6]">
+                <h3 className="font-serif text-xl sm:text-2xl font-bold text-slate-900">
                   Katalog Sławnych Fragmentów i Perykop
                 </h3>
-                <p className="text-xs font-serif text-[#8C8270]">
+                <p className="text-xs font-sans text-slate-600">
                   Wybierz kluczowy fragment biblijny, aby załadować pełen werset i rozpocząć drogę wersetów
                 </p>
               </div>
@@ -1315,8 +1516,8 @@ export const DailyReadingsAndPassageSelector: React.FC<DailyReadingsAndPassageSe
                     onClick={() => setPericopeCategoryFilter(cat)}
                     className={`px-3 py-1 rounded-lg text-xs font-sans uppercase tracking-wider font-semibold transition-colors cursor-pointer ${
                       pericopeCategoryFilter === cat
-                        ? 'bg-[#C5A059] text-[#0F0F12]'
-                        : 'bg-[#141418] border border-[#3D3524] text-[#8C8270] hover:text-[#E0E0D6]'
+                        ? 'bg-emerald-700 text-white font-bold'
+                        : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'
                     }`}
                   >
                     {cat}
@@ -1332,34 +1533,34 @@ export const DailyReadingsAndPassageSelector: React.FC<DailyReadingsAndPassageSe
                   onClick={() => {
                     handleLookupPassage(p.siglum);
                   }}
-                  className="p-5 rounded-xl bg-[#141418] border border-[#3D3524] hover:border-[#C5A059] transition-all duration-200 cursor-pointer flex flex-col justify-between space-y-4 group hover:bg-[#18181E] shadow-sm"
+                  className="p-5 rounded-xl bg-white border border-slate-200 hover:border-emerald-400 hover:bg-emerald-50/20 transition-all duration-200 cursor-pointer flex flex-col justify-between space-y-4 group shadow-xs"
                 >
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <span className="font-mono text-xs font-bold text-[#C5A059] px-2.5 py-0.5 bg-[#0F0F12] rounded border border-[#3D3524]">
+                      <span className="font-mono text-xs font-bold text-emerald-800 px-2.5 py-0.5 bg-emerald-50 rounded border border-emerald-200">
                         {p.siglum}
                       </span>
-                      <span className="text-[10px] font-sans font-bold uppercase tracking-wider text-[#8C8270] px-2 py-0.5 rounded bg-[#0F0F12]">
+                      <span className="text-[10px] font-sans font-bold uppercase tracking-wider text-slate-600 px-2 py-0.5 rounded bg-slate-100">
                         {p.category}
                       </span>
                     </div>
 
-                    <h4 className="font-display text-base font-light text-[#E0E0D6] group-hover:text-[#C5A059] transition-colors">
+                    <h4 className="font-serif text-base font-bold text-slate-900 group-hover:text-emerald-900 transition-colors">
                       {p.title}
                     </h4>
 
                     {p.verseExcerpt && (
-                      <p className="font-scripture text-xs text-[#A39B8B] italic line-clamp-2">
+                      <p className="font-scripture text-xs text-slate-600 italic line-clamp-2">
                         «{p.verseExcerpt}»
                       </p>
                     )}
 
-                    <p className="text-[11px] font-serif text-[#8C8270]">
+                    <p className="text-[11px] font-sans text-slate-500">
                       {p.theme}
                     </p>
                   </div>
 
-                  <div className="pt-3 border-t border-[#3D3524]/60 flex items-center justify-between text-[11px] text-[#C5A059] font-sans font-semibold uppercase tracking-wider">
+                  <div className="pt-3 border-t border-slate-200 flex items-center justify-between text-[11px] text-emerald-700 font-sans font-bold uppercase tracking-wider">
                     <span>Załaduj i skrutuj</span>
                     <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                   </div>
@@ -1367,6 +1568,279 @@ export const DailyReadingsAndPassageSelector: React.FC<DailyReadingsAndPassageSe
               ))}
             </div>
           </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* SUBTAB 3: LOSOWANIE CYTATU Z CAŁEGO PISMA ŚWIĘTEGO (SORS BIBLICA) */}
+      {/* ========================================================================= */}
+      {activeSubTab === 'random' && (
+        <div className="space-y-6">
+          {/* Top Filter and Randomizer Bar */}
+          <div className="bg-white rounded-2xl p-5 sm:p-7 border border-slate-200 shadow-xs space-y-6">
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 pb-5 border-b border-slate-200">
+              <div className="space-y-1">
+                <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-800 text-[10px] font-sans uppercase tracking-widest font-bold">
+                  <Dice5 className="w-3 h-3 text-emerald-600" />
+                  <span>Sors Biblica • Boża Opatrzność</span>
+                </div>
+                <h3 className="font-serif text-xl sm:text-2xl text-slate-900 font-bold">
+                  Losowanie Słowa z <span className="text-emerald-800 italic font-normal">Całego Pisma Świętego</span>
+                </h3>
+                <p className="text-xs sm:text-sm font-sans text-slate-600">
+                  Wylosuj natchnione Słowo z kanonu 73 ksiąg biblijnych i wejdź w głąb jego odnośników.
+                </p>
+              </div>
+            </div>
+
+            {/* Filter controls */}
+            <div className="space-y-4">
+              {/* Testament Filters */}
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-xs font-sans text-slate-700 uppercase tracking-wider font-bold mr-1">
+                  Kanon:
+                </span>
+                {[
+                  { key: 'ALL', label: 'Całe Pismo Święte (ST + NT)' },
+                  { key: 'ST', label: 'Stary Testament (ST)' },
+                  { key: 'NT', label: 'Nowy Testament (NT)' }
+                ].map((item) => (
+                  <button
+                    key={item.key}
+                    type="button"
+                    onClick={() => {
+                      setRandomTestamentFilter(item.key as any);
+                      handleDrawRandomQuote(randomCategoryFilter, item.key as any);
+                    }}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-sans uppercase tracking-wider transition-all cursor-pointer ${
+                      randomTestamentFilter === item.key
+                        ? 'bg-emerald-700 text-white font-bold shadow-xs'
+                        : 'bg-slate-50 border border-slate-200 text-slate-700 hover:bg-slate-100'
+                    }`}
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Category Filter Chips */}
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span className="text-xs font-sans text-slate-700 uppercase tracking-wider font-bold mr-1">
+                  Tradycja:
+                </span>
+                {[
+                  'Wszystkie',
+                  'Ewangelie',
+                  'Mądrość i Psalmy',
+                  'Prorocy',
+                  'Dzieje i Listy Apostolskie',
+                  'Pięcioksiąg i Historia',
+                  'Apokalipsa'
+                ].map((cat) => (
+                  <button
+                    key={cat}
+                    type="button"
+                    onClick={() => {
+                      setRandomCategoryFilter(cat);
+                      handleDrawRandomQuote(cat, randomTestamentFilter);
+                    }}
+                    className={`px-2.5 py-1 rounded-md text-xs font-sans transition-all cursor-pointer ${
+                      randomCategoryFilter === cat
+                        ? 'bg-emerald-100 text-emerald-900 border border-emerald-300 font-bold'
+                        : 'bg-slate-50 border border-slate-200 text-slate-700 hover:bg-slate-100'
+                    }`}
+                  >
+                    {cat}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Big Draw Button */}
+            <div className="pt-2">
+              <button
+                id="draw-random-quote-btn"
+                type="button"
+                onClick={() => handleDrawRandomQuote()}
+                disabled={isDrawingRandom}
+                className="w-full py-4 px-6 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-sans font-bold text-sm sm:text-base uppercase tracking-widest transition-all duration-200 flex items-center justify-center gap-3 shadow-md cursor-pointer disabled:opacity-75"
+              >
+                {isDrawingRandom ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin text-white" />
+                    <span>Otwieranie Pisma Świętego...</span>
+                  </>
+                ) : (
+                  <>
+                    <Dice5 className="w-5 h-5 text-white" />
+                    <span>Wylosuj Słowo z Pisma Świętego</span>
+                    <Sparkles className="w-4 h-4 text-white" />
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+
+          {/* Current Random Quote Card */}
+          {currentRandomQuote && (
+            <div className="bg-white rounded-2xl border border-emerald-300 p-6 sm:p-8 space-y-6 shadow-md relative overflow-hidden">
+              {/* Quote Header */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-200">
+                <div className="flex items-center gap-2.5 flex-wrap">
+                  <span className="font-mono text-base sm:text-lg font-bold text-emerald-900 px-3 py-1 bg-emerald-50 rounded-lg border border-emerald-200">
+                    {currentRandomQuote.siglum}
+                  </span>
+                  <span className="text-xs font-sans font-semibold text-slate-700 px-2.5 py-1 rounded bg-slate-100 border border-slate-200">
+                    {currentRandomQuote.bookName}
+                  </span>
+                  <span className="text-[10px] font-sans font-bold uppercase tracking-wider text-emerald-800 px-2.5 py-1 rounded bg-emerald-50 border border-emerald-200">
+                    {currentRandomQuote.category}
+                  </span>
+                  <span className="text-[10px] font-sans font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-700">
+                    {currentRandomQuote.testament === 'NT' ? 'Nowy Testament' : 'Stary Testament'}
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => handleSpeakText(currentRandomQuote.siglum, currentRandomQuote.text)}
+                    className="p-2 rounded-lg bg-white border border-slate-300 text-slate-700 hover:text-emerald-700 hover:bg-slate-50 transition-colors cursor-pointer"
+                    title="Czytaj na głos"
+                  >
+                    <Volume2 className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => handleCopyText(currentRandomQuote.siglum, currentRandomQuote.text)}
+                    className="p-2 rounded-lg bg-white border border-slate-300 text-slate-700 hover:text-emerald-700 hover:bg-slate-50 transition-colors cursor-pointer"
+                    title="Kopiuj cytat"
+                  >
+                    {copiedSiglum === currentRandomQuote.siglum ? (
+                      <Check className="w-4 h-4 text-emerald-600" />
+                    ) : (
+                      <Copy className="w-4 h-4" />
+                    )}
+                  </button>
+                  {onOpenPatristicForVerse && (
+                    <button
+                      onClick={() => onOpenPatristicForVerse(currentRandomQuote.siglum)}
+                      className="px-3 py-1.5 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-300 text-xs font-sans text-slate-800 transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs"
+                      title="Zobacz komentarze Ojców Kościoła"
+                    >
+                      <BookMarked className="w-3.5 h-3.5 text-emerald-700" />
+                      <span className="hidden sm:inline">Ojcowie Kościoła</span>
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Title & Scripture Text */}
+              <div className="space-y-4">
+                <h3 className="font-serif text-xl sm:text-2xl font-bold text-slate-900 leading-tight">
+                  {currentRandomQuote.title}
+                </h3>
+
+                <div className="p-5 sm:p-7 rounded-2xl bg-slate-50 border border-slate-200 shadow-xs relative">
+                  <Quote className="absolute top-4 left-4 w-7 h-7 text-emerald-600/20 pointer-events-none" />
+                  <p className="font-scripture text-lg sm:text-xl text-slate-900 leading-relaxed italic pl-6 sm:pl-8 font-medium">
+                    «{currentRandomQuote.text}»
+                  </p>
+                </div>
+              </div>
+
+              {/* Theological Context */}
+              {currentRandomQuote.theologicalContext && (
+                <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 space-y-1.5 text-xs sm:text-sm shadow-xs">
+                  <div className="flex items-center gap-1.5 text-emerald-900 font-sans font-bold text-xs uppercase tracking-wider">
+                    <Compass className="w-3.5 h-3.5 text-emerald-700" />
+                    <span>Sens duchowy & egzystencjalny:</span>
+                  </div>
+                  <p className="font-serif text-slate-800 leading-relaxed">
+                    {currentRandomQuote.theologicalContext}
+                  </p>
+                </div>
+              )}
+
+              {/* Suggested Cross-References */}
+              {currentRandomQuote.crossReferencesPreview && currentRandomQuote.crossReferencesPreview.length > 0 && (
+                <div className="space-y-2.5 pt-2">
+                  <div className="flex items-center gap-2 text-xs font-sans font-bold uppercase tracking-wider text-slate-700">
+                    <Layers className="w-3.5 h-3.5 text-emerald-600" />
+                    <span>Drogowskazy do skrutacji (Miejsca paralelne):</span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    {currentRandomQuote.crossReferencesPreview.map((cr, idx) => (
+                      <div
+                        key={idx}
+                        className="p-3.5 rounded-xl bg-white border border-slate-200 space-y-1 shadow-xs hover:border-emerald-300 transition-colors"
+                      >
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="font-mono font-bold text-emerald-800">{cr.siglum}</span>
+                          <span className="text-[10px] text-slate-500 italic">{cr.relation}</span>
+                        </div>
+                        <p className="text-xs font-scripture text-slate-800 italic line-clamp-2">
+                          «{cr.text}»
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Primary Call to Action */}
+              <div className="pt-4 flex flex-col sm:flex-row gap-3">
+                <button
+                  id="start-scrutation-from-random-btn"
+                  type="button"
+                  onClick={() => startScrutationFromRandomQuote(currentRandomQuote)}
+                  className="flex-1 py-3.5 px-6 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-sans font-bold text-xs sm:text-sm uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-xs cursor-pointer"
+                >
+                  <Flame className="w-4 h-4 text-white" />
+                  <span>Rozpocznij Skrutację tego Słowa</span>
+                  <ArrowRight className="w-4 h-4 text-white" />
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleDrawRandomQuote()}
+                  className="py-3 px-5 rounded-xl bg-white hover:bg-slate-100 border border-slate-300 text-slate-700 text-xs font-sans font-semibold uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer shadow-xs"
+                >
+                  <RefreshCw className="w-3.5 h-3.5" />
+                  <span>Losuj inne Słowo</span>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* History of Drawn Quotes */}
+          {drawHistory.length > 1 && (
+            <div className="space-y-3 pt-4 border-t border-slate-200">
+              <div className="flex items-center justify-between text-xs text-slate-600 uppercase tracking-wider font-bold">
+                <span>Historia losowań w tej sesji:</span>
+                <span className="text-[10px]">{drawHistory.length} wersetów</span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                {drawHistory.map((item) => (
+                  <div
+                    key={item.id}
+                    onClick={() => setCurrentRandomQuote(item)}
+                    className={`p-3 rounded-xl border transition-all cursor-pointer space-y-1 ${
+                      currentRandomQuote?.id === item.id
+                        ? 'bg-emerald-50 border-emerald-400'
+                        : 'bg-white border-slate-200 hover:border-slate-300'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="font-mono font-bold text-emerald-800">{item.siglum}</span>
+                      <span className="text-[10px] text-slate-500 uppercase">{item.category}</span>
+                    </div>
+                    <p className="text-xs font-serif text-slate-800 truncate">
+                      {item.title}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

@@ -399,20 +399,74 @@ const WEEKDAY_READING_CYCLES = [
     firstReading: {
       siglum: '1 Tes 4, 13-18',
       intro: 'Czytanie z Pierwszego Listu Świętego Pawła Apostoła do Tesaloniczan',
-      text: 'Nie chcemy, bracia, waszego trwania w niewiedzy co do tych, którzy umierają, abyście się nie smucili jak wszyscy ci, którzy nie mają nadziei. Jeśli bowiem wierzymy, że Jezus zmarł i zmartwychwstał, to i tych, którzy umarli w Jezusie, Bóg wyprowadzi wraz z Nim... Przeto pocieszajcie się wzajemnie tymi słowami.',
-      theme: 'Nadzieja zmartwychwstania i pociecha w wierze'
+      text: 'Nie chcemy, bracia, waszego trwania w niewiedzy co do tych, którzy umierają, abyście się nie smucili jak wszyscy ci, którzy nie mają nadziei. Jeśli bowiem wierzymy, że Jezus zmarł i zmartwychwstał, to i tych, którzy umarli w Jezusie, Bóg wyprowadzi wraz z Nim. To bowiem głosimy wam jako słowo Pańskie, że my, żywi, pozostawieni na przyjście Pana, nie wyprzedzimy tych, którzy pomarli. Sam bowiem Pan zstąpi z nieba na hasło i na głos archanioła, i na dźwięk trąby Bożej, a zmarli w Chrystusie powstaną pierwsi. Potem my, żywi i pozostawieni, wraz z nimi będziemy porwani w powietrze, na obłoki, naprzeciw Pana, i w ten sposób zawsze będziemy z Panem. Przeto pocieszajcie się wzajemnie tymi słowami.',
+      theme: 'Nadzieja zmartwychwstania i pociecha w wierze',
+      keyVerses: [
+        {
+          siglum: '1 Tes 4, 13-14',
+          label: 'Nie smućcie się jak ci, którzy nie mają nadziei',
+          text: 'Nie chcemy, bracia, waszego trwania w niewiedzy co do tych, którzy umierają, abyście się nie smucili jak wszyscy ci, którzy nie mają nadziei. Jeśli bowiem wierzymy, że Jezus zmarł i zmartwychwstał, to i tych, którzy umarli w Jezusie, Bóg wyprowadzi wraz z Nim.',
+          theme: 'Zmartwychwstanie w Chrystusie'
+        },
+        {
+          siglum: '1 Tes 4, 17-18',
+          label: 'W ten sposób zawsze będziemy z Panem',
+          text: 'Potem my, żywi i pozostawieni, wraz z nimi będziemy porwani w powietrze, na obłoki, naprzeciw Pana, i w ten sposób zawsze będziemy z Panem. Przeto pocieszajcie się wzajemnie tymi słowami.',
+          theme: 'Pociecha wiecznej obecności z Panem'
+        }
+      ]
     },
     psalm: {
       siglum: 'Ps 96 (95), 1 i 3. 4-5. 11-12. 13',
       response: 'Pan Bóg nadchodzi, aby sądzić ziemię',
-      text: 'Śpiewajcie Panu pieśń nową, śpiewaj Panu, cała ziemio!\nGłoście Jego chwałę wśród wszystkich narodów, rozgłaszajcie Jego cuda pośród wszystkich ludów.',
-      theme: 'Ogłaszanie chwały Bożej'
+      text: 'Śpiewajcie Panu pieśń nową,\nśpiewaj Panu, cała ziemio!\nGłoście Jego chwałę wśród wszystkich narodów,\nrozgłaszajcie Jego cuda pośród wszystkich ludów.\n\nWielki jest Pan i godzien wszelkiej chwały,\nbudzi większą grozę niż wszyscy bogowie.\nBo wszyscy bogowie pogan są ułudą,\nPan zaś stworzył niebiosa.\n\nNiech się radują niebiosa i ziemia weseli,\nniech szumi morze i to, co je napełnia.\nNiech się cieszą pola i wszystko, co na nich rośnie,\nniech ze szczęścia szumią wszystkie drzewa leśne\n\nPrzed obliczem Pana, który nadchodzi,\nktóry nadchodzi, aby sądzić ziemię.\nOn będzie sądził świat sprawiedliwie,\na narody według swej prawdy.',
+      theme: 'Radość stworzenia i sprawiedliwy sąd Boży',
+      keyVerses: [
+        {
+          siglum: 'Ps 96, 1. 3',
+          label: 'Zwrotka 1: Śpiewajcie Panu pieśń nową',
+          text: 'Śpiewajcie Panu pieśń nową, śpiewaj Panu, cała ziemio! Głoście Jego chwałę wśród wszystkich narodów, rozgłaszajcie Jego cuda pośród wszystkich ludów.',
+          theme: 'Głoszenie cudów Bożych'
+        },
+        {
+          siglum: 'Ps 96, 4-5',
+          label: 'Zwrotka 2: Wielki jest Pan i godzien wszelkiej chwały',
+          text: 'Wielki jest Pan i godzien wszelkiej chwały, budzi większą grozę niż wszyscy bogowie. Bo wszyscy bogowie pogan są ułudą, Pan zaś stworzył niebiosa.',
+          theme: 'Wszechmoc Stwórcy'
+        },
+        {
+          siglum: 'Ps 96, 11-12',
+          label: 'Zwrotka 3: Niech się radują niebiosa i ziemia',
+          text: 'Niech się radują niebiosa i ziemia weseli, niech szumi morze i to, co je napełnia. Niech się cieszą pola i wszystko, co na nich rośnie.',
+          theme: 'Kosmiczne uwielbienie Boga'
+        },
+        {
+          siglum: 'Ps 96, 13',
+          label: 'Zwrotka 4: Pan nadchodzi, aby sądzić ziemię',
+          text: 'Przed obliczem Pana, który nadchodzi, który nadchodzi, aby sądzić ziemię. On będzie sądził świat sprawiedliwie, a narody według swej prawdy.',
+          theme: 'Sąd Boży w prawdzie i sprawiedliwości'
+        }
+      ]
     },
     gospel: {
       siglum: 'Łk 4, 16-30',
       intro: 'Słowa Ewangelii według Świętego Łukasza',
-      text: 'Jezus przyszedł do Nazaretu, gdzie się wychował... Rozwinąwszy księgę proroka Izajasza, rzekł: «Duch Pański spoczywa na Mnie, ponieważ Mnie namaścił, abym ubogim niósł dobrą nowinę... Dziś spełniły się te słowa Pisma, któreście słyszeli».',
-      theme: 'Namaszczenie Duchem Świętym i orędzie wyzwolenia'
+      text: 'Jezus przyszedł do Nazaretu, gdzie się wychował. W dzień szabatu udał się swoim zwyczajem do synagogi i powstał, aby czytać. Podano Mu księgę proroka Izajasza. Rozwinąwszy księgę, natrafił na miejsce, gdzie było napisane: «Duch Pański spoczywa na Mnie, ponieważ Mnie namaścił, abym ubogim niósł dobrą nowinę, więźniom głosił wolność, a niewidomym przejrzenie, abym uciśnionych odsyłał wolnymi, abym obwoływał rok łaski od Pana». Zwinąwszy księgę oddał ją słudze i usiadł; a oczy wszystkich w synagodze były w Nim utkwione. Począł więc mówić do nich: «Dziś spełniły się te słowa Pisma, któreście słyszeli».',
+      theme: 'Namaszczenie Duchem Świętym i orędzie wyzwolenia',
+      keyVerses: [
+        {
+          siglum: 'Łk 4, 18-19',
+          label: 'Duch Pański spoczywa na Mnie',
+          text: '«Duch Pański spoczywa na Mnie, ponieważ Mnie namaścił, abym ubogim niósł dobrą nowinę, więźniom głosił wolność, a niewidomym przejrzenie, abym uciśnionych odsyłał wolnymi, abym obwoływał rok łaski od Pana».',
+          theme: 'Mesjańska misja Jezusa'
+        },
+        {
+          siglum: 'Łk 4, 21',
+          label: 'Dziś spełniły się te słowa Pisma',
+          text: 'Począł więc mówić do nich: «Dziś spełniły się te słowa Pisma, któreście słyszeli».',
+          theme: 'Wypełnienie obietnic Bożych'
+        }
+      ]
     }
   },
   {
@@ -420,20 +474,86 @@ const WEEKDAY_READING_CYCLES = [
     firstReading: {
       siglum: '1 Kor 2, 10b-16',
       intro: 'Czytanie z Pierwszego Listu Świętego Pawła Apostoła do Koryntian',
-      text: 'Duch przenika wszystko, nawet głębokości Boga samego. Kto bowiem z ludzi wie, co kryje się w człowieku, jeśli nie duch, który w nim jest? Podobnie i tego, co Boskie, nie poznał nikt, tylko Duch Boży. Myśmy zaś nie otrzymali ducha świata, lecz Ducha, który jest z Boga, abyśmy poznali dary podarowane nam przez Boga.',
-      theme: 'Mądrość Ducha Świętego objawiająca tajemnice Boże'
+      text: 'Duch przenika wszystko, nawet głębokości Boga samego. Kto bowiem z ludzi wie, co kryje się w człowieku, jeśli nie duch, który w nim jest? Podobnie i tego, co Boskie, nie poznał nikt, tylko Duch Boży.\nMyśmy zaś nie otrzymali ducha świata, lecz Ducha, który jest z Boga, abyśmy poznali dary podarowane nam przez Boga. A głosimy to nie uczonymi słowami ludzkiej mądrości, lecz pouczeni przez Ducha, przedkładając duchowe sprawy ludziom duchowym.\nCzłowiek zmysłowy bowiem nie pojmuje tego, co jest z Bożego Ducha. Dla niego to głupstwo i nie może tego poznać, ponieważ to trzeba badać duchem. Człowiek zaś duchowy rozsądza wszystko, sam zaś przez nikogo nie jest sądzony. «Któż bowiem poznał myśl Pana, aby mógł Go pouczać?» My zaś mamy myśl Chrystusową.',
+      theme: 'Mądrość Ducha Świętego objawiająca tajemnice Boże',
+      keyVerses: [
+        {
+          siglum: '1 Kor 2, 10b-12',
+          label: 'Duch przenika głębokości Boga samego',
+          text: 'Duch przenika wszystko, nawet głębokości Boga samego... Myśmy zaś nie otrzymali ducha świata, lecz Ducha, który jest z Boga, abyśmy poznali dary podarowane nam przez Boga.',
+          theme: 'Objawienie przez Ducha Świętego'
+        },
+        {
+          siglum: '1 Kor 2, 14',
+          label: 'Człowiek zmysłowy a sprawy Ducha',
+          text: 'Człowiek zmysłowy bowiem nie pojmuje tego, co jest z Bożego Ducha. Dla niego to głupstwo i nie może tego poznać, ponieważ to trzeba badać duchem.',
+          theme: 'Rozeznawanie duchowe'
+        },
+        {
+          siglum: '1 Kor 2, 16',
+          label: 'My zaś mamy myśl Chrystusową',
+          text: '«Któż bowiem poznał myśl Pana, aby mógł Go pouczać?» My zaś mamy myśl Chrystusową.',
+          theme: 'Posiadanie umysłu Chrystusa'
+        }
+      ]
     },
     psalm: {
       siglum: 'Ps 145 (144), 8-9. 10-11. 12-13ab. 13cd-14',
       response: 'Pan jest łaskawy dla wszystkich swych dzieł',
-      text: 'Pan jest łagodny i miłosierny, nieskory do gniewu i bardzo łaskawy.\nPan jest dobry dla wszystkich, a Jego miłosierdzie nad wszystkim, co stworzył.',
-      theme: 'Nieskończona łaskawość i miłosierdzie Pana'
+      text: 'Pan jest łagodny i miłosierny,\nnieskory do gniewu i bardzo łaskawy.\nPan jest dobry dla wszystkich,\na Jego miłosierdzie nad wszystkim, co stworzył.\n\nNiech Cię wielbią, Panie, wszystkie Twoje dzieła\ni niech Cię błogosławią Twoi święci.\nNiech mówią o chwale Twojego królestwa\ni niech głoszą Twoją potęgę.\n\nAby synom ludzkim oznajmić Twoją potęgę\ni wspaniałość chwały Twojego królestwa.\nKrólestwo Twoje królestwem wszystkich wieków,\nTwoje panowanie trwa przez wszystkie pokolenia.\n\nPan jest wierny we wszystkich swoich słowach\ni we wszystkich swoich dziełach święty.\nPan podtrzymuje wszystkich, którzy upadają,\ni podnosi wszystkich zgnębionych.',
+      theme: 'Nieskończona łaskawość, królestwo i miłosierdzie Pana',
+      keyVerses: [
+        {
+          siglum: 'Ps 145, 8-9',
+          label: 'Zwrotka 1: Pan jest łagodny i miłosierny',
+          text: 'Pan jest łagodny i miłosierny, nieskory do gniewu i bardzo łaskawy. Pan jest dobry dla wszystkich, a Jego miłosierdzie nad wszystkim, co stworzył.',
+          theme: 'Nieskończone miłosierdzie Boga'
+        },
+        {
+          siglum: 'Ps 145, 10-11',
+          label: 'Zwrotka 2: Niech Cię wielbią wszystkie dzieła',
+          text: 'Niech Cię wielbią, Panie, wszystkie Twoje dzieła i niech Cię błogosławią Twoi święci. Niech mówią o chwale Twojego królestwa i niech głoszą Twoją potęgę.',
+          theme: 'Uwielbienie Królestwa Bożego'
+        },
+        {
+          siglum: 'Ps 145, 12-13ab',
+          label: 'Zwrotka 3: Królestwo Twoje królestwem wieków',
+          text: 'Aby synom ludzkim oznajmić Twoją potęgę i wspaniałość chwały Twojego królestwa. Królestwo Twoje królestwem wszystkich wieków, Twoje panowanie trwa przez wszystkie pokolenia.',
+          theme: 'Wiecznotrwałe panowanie Boga'
+        },
+        {
+          siglum: 'Ps 145, 13cd-14',
+          label: 'Zwrotka 4: Pan podnosi wszystkich zgnębionych',
+          text: 'Pan jest wierny we wszystkich swoich słowach i we wszystkich swoich dziełach święty. Pan podtrzymuje wszystkich, którzy upadają, i podnosi wszystkich zgnębionych.',
+          theme: 'Wierność Boga i ratunek dla upadających'
+        }
+      ]
     },
     gospel: {
       siglum: 'Łk 4, 31-37',
       intro: 'Słowa Ewangelii według Świętego Łukasza',
-      text: 'Jezus zeszedł do Kafarnaum, miasta w Galilei, i uczył ich w szabat. Zdumiewali się Jego nauką, gdyż słowo Jego było pełne mocy. A był w synagodze człowiek, który miał w sobie ducha nieczystego... Jezus rozkazał mu surowo: «Milcz i wyjdź z niego!»... I zdumienie ogarnęło wszystkich, i mówili: «Cóż to za słowo, że z władzą i mocą rozkazuje duchom nieczystym, a wychodzą?»',
-      theme: 'Władza i moc Słowa Chrystusa nad złymi duchami'
+      text: 'Jezus zeszedł do Kafarnaum, miasta w Galilei, i uczył ich w szabat. Zdumiewali się Jego nauką, gdyż słowo Jego było pełne mocy.\nA był w synagodze człowiek, który miał w sobie ducha nieczystego. Zaczął on krzyczeć wniebogłosy: «Och, czego chcesz od nas, Jezusie Nazarejczyku? Przyszedłeś nas zgubić? Wiem, kim jesteś: Święty Boży».\nJezus rozkazał mu surowo: «Milcz i wyjdź z niego!» Wtedy zły duch rzucił go na środek i wyszedł z niego, nie wyrządzając mu żadnej szkody.\nI zdumienie ogarnęło wszystkich, i mówili nawzajem do siebie: «Cóż to za słowo, że z władzą i mocą rozkazuje duchom nieczystym, a wychodzą?» I wieść o Nim rozchodziła się wszędzie po całej okolicy.',
+      theme: 'Władza i moc Słowa Chrystusa nad złymi duchami',
+      keyVerses: [
+        {
+          siglum: 'Łk 4, 32',
+          label: 'Słowo Jego było pełne mocy',
+          text: 'Zdumiewali się Jego nauką, gdyż słowo Jego było pełne mocy.',
+          theme: 'Moc i autorytet Słowa Bożego'
+        },
+        {
+          siglum: 'Łk 4, 34-35',
+          label: 'Milcz i wyjdź z niego!',
+          text: 'Jezus rozkazał mu surowo: «Milcz i wyjdź z niego!» Wtedy zły duch rzucił go na środek i wyszedł z niego, nie wyrządzając mu żadnej szkody.',
+          theme: 'Zwycięstwo Chrystusa nad złem'
+        },
+        {
+          siglum: 'Łk 4, 36',
+          label: 'Cóż to za słowo, że z mocą rozkazuje',
+          text: 'I zdumienie ogarnęło wszystkich, i mówili nawzajem do siebie: «Cóż to za słowo, że z władzą i mocą rozkazuje duchom nieczystym, a wychodzą?»',
+          theme: 'Zdumienie wobec Bożej władzy'
+        }
+      ]
     }
   },
   {
@@ -441,20 +561,68 @@ const WEEKDAY_READING_CYCLES = [
     firstReading: {
       siglum: '1 Kor 3, 1-9',
       intro: 'Czytanie z Pierwszego Listu Świętego Pawła Apostoła do Koryntian',
-      text: 'Ja nie mogłem, bracia, przemawiać do was jako do ludzi duchowych, lecz jako do cielesnych, jak do niemowląt w Chrystusie... Ja siałem, Apollos podlewał, lecz Bóg dał wzrost. Otóż nic nie znaczy ten, który sieje, ani ten, który podlewa, tylko Ten, który daje wzrost – Bóg. Jesteśmy bowiem pomocnikami Boga, wy zaś jesteście Bożą rolą, Bożą budowlą.',
-      theme: 'Bóg jako jedyny dawca wzrostu w Kościele'
+      text: 'Ja nie mogłem, bracia, przemawiać do was jako do ludzi duchowych, lecz jako do cielesnych, jak do niemowląt w Chrystusie. Mleko wam dałem, a nie pokarm stały, boście jeszcze nie mogli znieść. A zresztą i teraz nie możecie, bo jeszcze jesteście cieleśni... Ja siałem, Apollos podlewał, lecz Bóg dał wzrost. Otóż nic nie znaczy ten, który sieje, ani ten, który podlewa, tylko Ten, który daje wzrost – Bóg. Jesteśmy bowiem pomocnikami Boga, wy zaś jesteście Bożą rolą, Bożą budowlą.',
+      theme: 'Bóg jako jedyny dawca wzrostu w Kościele',
+      keyVerses: [
+        {
+          siglum: '1 Kor 3, 6-7',
+          label: 'Bóg daje wzrost',
+          text: 'Ja siałem, Apollos podlewał, lecz Bóg dał wzrost. Otóż nic nie znaczy ten, który sieje, ani ten, który podlewa, tylko Ten, który daje wzrost – Bóg.',
+          theme: 'Łaska i działanie Boże'
+        },
+        {
+          siglum: '1 Kor 3, 9',
+          label: 'Jesteśmy pomocnikami Boga',
+          text: 'Jesteśmy bowiem pomocnikami Boga, wy zaś jesteście Bożą rolą, Bożą budowlą.',
+          theme: 'Współpraca z łaską Bożą'
+        }
+      ]
     },
     psalm: {
       siglum: 'Ps 33 (32), 12-13. 14-15. 20-21',
       response: 'Błogosławiony lud wybrany przez Pana',
-      text: 'Błogosławiony lud, którego Bogiem jest Pan, naród, który On wybrał na dziedzictwo dla siebie.\nPan spogląda z nieba, widzi wszystkich synów ludzkich.',
-      theme: 'Opatrzność Boża nad wybranymi'
+      text: 'Błogosławiony lud, którego Bogiem jest Pan,\nnaród, który On wybrał na dziedzictwo dla siebie.\nPan spogląda z nieba,\nwidzi wszystkich synów ludzkich.\n\nZe swego tronu przypatruje się wszystkim,\nktórzy zamieszkują ziemię:\nOn, który ukształtował serce każdego z nich,\nOn, który zważa na wszystkie ich czyny.\n\nDusza nasza wyczekuje Pana,\nOn jest naszą pomocą i tarczą.\nW Nim przeto raduje się nasze serce,\nufamy Jego świętemu imieniu.',
+      theme: 'Opatrzność Boża nad wybranymi i ufność serca',
+      keyVerses: [
+        {
+          siglum: 'Ps 33, 12-13',
+          label: 'Zwrotka 1: Błogosławiony lud',
+          text: 'Błogosławiony lud, którego Bogiem jest Pan, naród, który On wybrał na dziedzictwo dla siebie. Pan spogląda z nieba, widzi wszystkich synów ludzkich.',
+          theme: 'Wybranie i spojrzenie Boga'
+        },
+        {
+          siglum: 'Ps 33, 14-15',
+          label: 'Zwrotka 2: On ukształtował serce każdego',
+          text: 'Ze swego tronu przypatruje się wszystkim, którzy zamieszkują ziemię: On, który ukształtował serce każdego z nich, On, który zważa na wszystkie ich czyny.',
+          theme: 'Bóg przenikający serca'
+        },
+        {
+          siglum: 'Ps 33, 20-21',
+          label: 'Zwrotka 3: Dusza nasza wyczekuje Pana',
+          text: 'Dusza nasza wyczekuje Pana, On jest naszą pomocą i tarczą. W Nim przeto raduje się nasze serce, ufamy Jego świętemu imieniu.',
+          theme: 'Ufność i radość w Panu'
+        }
+      ]
     },
     gospel: {
       siglum: 'Łk 4, 38-44',
       intro: 'Słowa Ewangelii według Świętego Łukasza',
-      text: 'Po opuszczeniu synagogi Jezus przyszedł do domu Szymona. A wysoka gorączka trawiła teściową Szymona. I prosili Go za nią. On, stanąwszy nad nią, rozkazał gorączce, i opuściła ją... O zachodzie słońca wszyscy, którzy mieli cierpiących na rozmaite choroby, przynosili ich do Niego. On zaś na każdego z nich kładł ręce i uzdrawiał ich.',
-      theme: 'Uzdrowienia o zachodzie słońca i modlitwa na miejscu pustynnym'
+      text: 'Po opuszczeniu synagogi Jezus przyszedł do domu Szymona. A wysoka gorączka trawiła teściową Szymona. I prosili Go za nią. On, stanąwszy nad nią, rozkazał gorączce, i opuściła ją. Zaraz też wstała i usługiwała im.\nO zachodzie słońca wszyscy, którzy mieli cierpiących na rozmaite choroby, przynosili ich do Niego. On zaś na każdego z nich kładł ręce i uzdrawiał ich... Z nastaniem dnia wyszedł i udał się na miejsce pustynne. A tłumy szukały Go, przyszły do Niego i chciały Go zatrzymać, żeby nie odchodził od nich. Lecz On rzekł do nich: «Także innym miastom muszę głosić Dobrą Nowinę o królestwie Bożym, bo na to zostałem posłany».',
+      theme: 'Uzdrowienia o zachodzie słońca i modlitwa na miejscu pustynnym',
+      keyVerses: [
+        {
+          siglum: 'Łk 4, 39',
+          label: 'Rozkazał gorączce i wstała, by usługiwać',
+          text: 'On, stanąwszy nad nią, rozkazał gorączce, i opuściła ją. Zaraz też wstała i usługiwała im.',
+          theme: 'Uzdrowienie ku służbie'
+        },
+        {
+          siglum: 'Łk 4, 43',
+          label: 'Muszę głosić Dobrą Nowinę',
+          text: 'Lecz On rzekł do nich: «Także innym miastom muszę głosić Dobrą Nowinę o królestwie Bożym, bo na to zostałem posłany».',
+          theme: 'Powszechność misji ewangelizacyjnej'
+        }
+      ]
     }
   },
   {
@@ -463,19 +631,61 @@ const WEEKDAY_READING_CYCLES = [
       siglum: '1 Kor 3, 18-23',
       intro: 'Czytanie z Pierwszego Listu Świętego Pawła Apostoła do Koryntian',
       text: 'Niechaj się nikt nie łudzi! Jeśli ktoś spośród was mniema, że jest mądry na tym świecie, niech się stanie głupim, by stał się mądrym. Mądrość bowiem tego świata jest głupstwem u Boga... Wszystko bowiem jest wasze: czy to Paweł, czy Apollos, czy Kefas, czy świat, czy życie, czy śmierć, czy teraźniejszość, czy przyszłość; wszystko jest wasze, wy zaś Chrystusa, a Chrystus – Boga.',
-      theme: 'Przynależność do Chrystusa ponad mądrością świata'
+      theme: 'Przynależność do Chrystusa ponad mądrością świata',
+      keyVerses: [
+        {
+          siglum: '1 Kor 3, 21b-23',
+          label: 'Wszystko jest wasze, wy zaś Chrystusa',
+          text: 'Wszystko bowiem jest wasze: czy to Paweł, czy Apollos, czy Kefas, czy świat, czy życie, czy śmierć... wszystko jest wasze, wy zaś Chrystusa, a Chrystus – Boga.',
+          theme: 'Pełnia dziedzictwa w Chrystusie'
+        }
+      ]
     },
     psalm: {
       siglum: 'Ps 24 (23), 1-2. 3-4ab. 5-6',
       response: 'Do Pana należy ziemia i wszystko, co ją napełnia',
-      text: 'Do Pana należy ziemia i to, co ją napełnia, świat i jego mieszkańcy.\nAlbowiem On go na morzach osadził i utwierdził ponad rzekami.',
-      theme: 'Wielkość Stwórcy i czystość wchodzących na górę Pana'
+      text: 'Do Pana należy ziemia i to, co ją napełnia,\nświat i jego mieszkańcy.\nAlbowiem On go na morzach osadził\ni utwierdził ponad rzekami.\n\nKto wstąpi na górę Pana,\nkto stanie w Jego świętym miejscu?\nCzłowiek rąk nieskalanych i czystego serca,\nktóry nie skłonił swej duszy ku marnościom.\n\nOn otrzyma błogosławieństwo od Pana,\ni zapłatę od Boga, swego Zbawcy.\nOto pokolenie tych, którzy Go szukają,\nktórzy szukają oblicza Boga Jakubowego.',
+      theme: 'Wielkość Stwórcy i czystość wchodzących na górę Pana',
+      keyVerses: [
+        {
+          siglum: 'Ps 24, 1-2',
+          label: 'Zwrotka 1: Do Pana należy ziemia',
+          text: 'Do Pana należy ziemia i to, co ją napełnia, świat i jego mieszkańcy. Albowiem On go na morzach osadził i utwierdził ponad rzekami.',
+          theme: 'Stworzenie należy do Boga'
+        },
+        {
+          siglum: 'Ps 24, 3-4ab',
+          label: 'Zwrotka 2: Człowiek rąk nieskalanych i czystego serca',
+          text: 'Kto wstąpi na górę Pana, kto stanie w Jego świętym miejscu? Człowiek rąk nieskalanych i czystego serca, który nie skłonił swej duszy ku marnościom.',
+          theme: 'Czystość serca i obecność Boża'
+        },
+        {
+          siglum: 'Ps 24, 5-6',
+          label: 'Zwrotka 3: Pokolenie szukających oblicza Boga',
+          text: 'On otrzyma błogosławieństwo od Pana, i zapłatę od Boga, swego Zbawcy. Oto pokolenie tych, którzy Go szukają, którzy szukają oblicza Boga Jakubowego.',
+          theme: 'Szukanie Bożego Oblicza'
+        }
+      ]
     },
     gospel: {
       siglum: 'Łk 5, 1-11',
       intro: 'Słowa Ewangelii według Świętego Łukasza',
       text: 'Pewnego razu – gdy tłum cisnął się do Jezusa, aby słuchać słowa Bożego, a On stał nad jeziorem Genezaret... rzekł do Szymona: «Wypłyń na głębię i zarzućcie sieci na połów!» A Szymon odpowiedział: «Mistrzu, całą noc pracowaliśmy i niceśmy nie ułowili. Lecz na Twoje słowo zarzucę sieci». Skoro to uczynili, zagarnęli tak wielkie mnóstwo ryb, że sieci ich zaczynały się rwać... Jezus rzekł do Szymona: «Nie bój się, odtąd ludzi będziesz łowił». I przyciągnąwszy łodzie do brzegu, zostawili wszystko i poszli za Nim.',
-      theme: 'Duc in altum: Posłuszeństwo Słowu i cudowny obfity połów'
+      theme: 'Duc in altum: Posłuszeństwo Słowu i cudowny obfity połów',
+      keyVerses: [
+        {
+          siglum: 'Łk 5, 4-5',
+          label: 'Wypłyń na głębię (Duc in altum)',
+          text: 'Rzekł do Szymona: «Wypłyń na głębię i zarzućcie sieci na połów!» A Szymon odpowiedział: «Mistrzu, całą noc pracowaliśmy i niceśmy nie ułowili. Lecz na Twoje słowo zarzucę sieci».',
+          theme: 'Posłuszeństwo Słowu wbrew logice'
+        },
+        {
+          siglum: 'Łk 5, 10-11',
+          label: 'Nie bój się, odtąd ludzi będziesz łowił',
+          text: 'Jezus rzekł do Szymona: «Nie bój się, odtąd ludzi będziesz łowił». I przyciągnąwszy łodzie do brzegu, zostawili wszystko i poszli za Nim.',
+          theme: 'Radykalne powołanie apostolskie'
+        }
+      ]
     }
   },
   {
@@ -484,19 +694,73 @@ const WEEKDAY_READING_CYCLES = [
       siglum: '1 Kor 4, 1-5',
       intro: 'Czytanie z Pierwszego Listu Świętego Pawła Apostoła do Koryntian',
       text: 'Niechaj uważają nas ludzie za sługi Chrystusa i za szafarzy tajemnic Bożych! A od szafarzy już tutaj się żąda, aby każdy z nich był wierny. Mnie zaś najmniej zależy na tym, czy będę sądzony przez was, czy przez jakikolwiek trybunał ludzki... Panem, który mnie sądzi, jest Pan. Przeto nie sądźcie przedwcześnie, dopóki nie przyjdzie Pan, który rozjaśni to, co w ciemnościach ukryte.',
-      theme: 'Wierność w posłudze szafarza i sprawiedliwy sąd Boży'
+      theme: 'Wierność w posłudze szafarza i sprawiedliwy sąd Boży',
+      keyVerses: [
+        {
+          siglum: '1 Kor 4, 1-2',
+          label: 'Słudzy Chrystusa i szafarze tajemnic',
+          text: 'Niechaj uważają nas ludzie za sługi Chrystusa i za szafarzy tajemnic Bożych! A od szafarzy już tutaj się żąda, aby każdy z nich był wierny.',
+          theme: 'Wierność w powołaniu'
+        },
+        {
+          siglum: '1 Kor 4, 4b-5',
+          label: 'Panem, który mnie sądzi, jest Pan',
+          text: 'Panem, który mnie sądzi, jest Pan. Przeto nie sądźcie przedwcześnie, dopóki nie przyjdzie Pan, który rozjaśni to, co w ciemnościach ukryte, i ujawni zamiary serc.',
+          theme: 'Sprawiedliwy sąd Boży'
+        }
+      ]
     },
     psalm: {
       siglum: 'Ps 37 (36), 3-4. 5-6. 27-28. 39-40',
       response: 'Zbawienie prawych pochodzi od Pana',
-      text: 'Miej ufność w Panu i postępuj dobrze, mieszkaj w ziemi i zachowaj wierność.\nRaduj się w Panu, a On spełni pragnienia twego serca.\nPowierz Panu swoją drogę i zaufaj Mu: On sam będzie działał.',
-      theme: 'Ufność w sprawiedliwość i ocalenie od Pana'
+      text: 'Miej ufność w Panu i postępuj dobrze,\nmieszkaj w ziemi i zachowaj wierność.\nRaduj się w Panu,\na On spełni pragnienia twego serca.\n\nPowierz Panu swoją drogę i zaufaj Mu:\nOn sam będzie działał.\nOn sprawi, że twoja sprawiedliwość zajaśnieje jak światło,\na twoje prawo jak południe.\n\nOdstąp od złego, czyń dobro,\nabyś mógł przetrwać na wieki.\nAlbowiem Pan miłuje sprawiedliwość\ni nie opuszcza swych świętych.\n\nZbawienie prawych pochodzi od Pana,\nOn ich ucieczką w czasie utrapienia.\nPan ich wspomaga i wyzwala,\nwyzwala od występnych i ratuje, bo uciekają się do Niego.',
+      theme: 'Ufność w sprawiedliwość i ocalenie od Pana',
+      keyVerses: [
+        {
+          siglum: 'Ps 37, 3-4',
+          label: 'Zwrotka 1: Raduj się w Panu, a On spełni pragnienia',
+          text: 'Miej ufność w Panu i postępuj dobrze, mieszkaj w ziemi i zachowaj wierność. Raduj się w Panu, a On spełni pragnienia twego serca.',
+          theme: 'Radość i ufność w Bogu'
+        },
+        {
+          siglum: 'Ps 37, 5-6',
+          label: 'Zwrotka 2: Powierz Panu swoją drogę',
+          text: 'Powierz Panu swoją drogę i zaufaj Mu: On sam będzie działał. On sprawi, że twoja sprawiedliwość zajaśnieje jak światło.',
+          theme: 'Zawierzenie drogi życia Bogu'
+        },
+        {
+          siglum: 'Ps 37, 27-28',
+          label: 'Zwrotka 3: Pan miłuje sprawiedliwość',
+          text: 'Odstąp od złego, czyń dobro, abyś mógł przetrwać na wieki. Albowiem Pan miłuje sprawiedliwość i nie opuszcza swych świętych.',
+          theme: 'Wierność przymierzu dobra'
+        },
+        {
+          siglum: 'Ps 37, 39-40',
+          label: 'Zwrotka 4: Zbawienie prawych pochodzi od Pana',
+          text: 'Zbawienie prawych pochodzi od Pana, On ich ucieczką w czasie utrapienia. Pan ich wspomaga i wyzwala, wyzwala od występnych i ratuje, bo uciekają się do Niego.',
+          theme: 'Ocalenie w Bogu'
+        }
+      ]
     },
     gospel: {
       siglum: 'Łk 5, 33-39',
       intro: 'Słowa Ewangelii według Świętego Łukasza',
       text: 'Faryzeusze i uczeni w Piśmie rzekli do Jezusa: «Uczniowie Jana poszczą często i modły odprawiają, tak samo uczniowie faryzeuszów; Twoi zaś jedzą i piją». Jezus rzekł do nich: «Czy możecie gości weselnych nakłonić do postu, dopóki pan młody jest z nimi? Lecz przyjdzie czas, kiedy zabiorą im pana młodego, i wtedy, w owe dni, będą pościć»... «Nikt nie wlewa młodego wina do starych bukłaków; w przeciwnym razie młode wino rozerwie bukłaki... Lecz młode wino należy lać do nowych bukłaków».',
-      theme: 'Nowość Ewangelii, Oblubieniec pośród nas i nowe bukłaki'
+      theme: 'Nowość Ewangelii, Oblubieniec pośród nas i nowe bukłaki',
+      keyVerses: [
+        {
+          siglum: 'Łk 5, 34-35',
+          label: 'Oblubieniec jest z nimi',
+          text: '«Czy możecie gości weselnych nakłonić do postu, dopóki pan młody jest z nimi? Lecz przyjdzie czas, kiedy zabiorą im pana młodego, i wtedy będą pościć».',
+          theme: 'Obecność Chrystusa Oblubieńca'
+        },
+        {
+          siglum: 'Łk 5, 38',
+          label: 'Młode wino do nowych bukłaków',
+          text: '«Lecz młode wino należy lać do nowych bukłaków».',
+          theme: 'Nowe życie Ewangelii'
+        }
+      ]
     }
   },
   {
@@ -505,19 +769,61 @@ const WEEKDAY_READING_CYCLES = [
       siglum: '1 Kor 4, 6b-15',
       intro: 'Czytanie z Pierwszego Listu Świętego Pawła Apostoła do Koryntian',
       text: 'Cóż masz, czego byś nie otrzymał? A jeśliś otrzymał, to czemu się chełpisz, tak jakbyś nie otrzymał?... Aż do tej chwili łakniemy i cierpimy pragnienie, brak nam odzieży, jesteśmy policzkowani i bezdomni... Błogosławimy, gdy nam złorzeczą; znosimy, gdy nas prześladują; pocieszamy, gdy nas potępiają... Nie piszę tego, żeby was zawstydzić, lecz aby was napomnieć jako moje dzieci najdroższe. Choćbyście mieli bowiem dziesiątki tysięcy wychowawców w Chrystusie, nie macie wielu ojców; ja to bowiem przez Ewangelię zrodziłem was w Chrystusie Jezusie.',
-      theme: 'Duchowe ojcostwo przez Ewangelię i pokora apostolska'
+      theme: 'Duchowe ojcostwo przez Ewangelię i pokora apostolska',
+      keyVerses: [
+        {
+          siglum: '1 Kor 4, 7',
+          label: 'Cóż masz, czego byś nie otrzymał?',
+          text: 'Cóż masz, czego byś nie otrzymał? A jeśliś otrzymał, to czemu się chełpisz, tak jakbyś nie otrzymał?',
+          theme: 'Pokora i darmowość łaski'
+        },
+        {
+          siglum: '1 Kor 4, 15',
+          label: 'Zrodziłem was w Chrystusie przez Ewangelię',
+          text: 'Choćbyście mieli bowiem dziesiątki tysięcy wychowawców w Chrystusie, nie macie wielu ojców; ja to bowiem przez Ewangelię zrodziłem was w Chrystusie Jezusie.',
+          theme: 'Ojcostwo duchowe'
+        }
+      ]
     },
     psalm: {
       siglum: 'Ps 145 (144), 17-18. 19-20. 21',
       response: 'Pan jest blisko wszystkich, którzy Go wzywają',
-      text: 'Pan jest sprawiedliwy na wszystkich swych drogach i łaskawy we wszystkich swoich dziełach.\nPan jest blisko wszystkich, którzy Go wzywają, wszystkich, którzy Go wzywają szczerze.',
-      theme: 'Bliskość Boga wobec modlących się w prawdzie'
+      text: 'Pan jest sprawiedliwy na wszystkich swych drogach\ni łaskawy we wszystkich swoich dziełach.\nPan jest blisko wszystkich, którzy Go wzywają,\nwszystkich, którzy Go wzywają szczerze.\n\nSpełnia wolę tych, którzy się Go boją,\nusłyszy ich wołanie i przyjdzie im z pomocą.\nPan strzeże wszystkich, którzy Go miłują,\nlecz zniszczy wszystkich występnych.\n\nNiech usta moje głoszą chwałę Pana,\na Jego święte imię niech wielbi wszystko, co żyje,\nzawsze i na wieki.',
+      theme: 'Bliskość Boga wobec modlących się w prawdzie',
+      keyVerses: [
+        {
+          siglum: 'Ps 145, 17-18',
+          label: 'Zwrotka 1: Pan jest blisko wzywających Go szczerze',
+          text: 'Pan jest sprawiedliwy na wszystkich swych drogach i łaskawy we wszystkich swoich dziełach. Pan jest blisko wszystkich, którzy Go wzywają, wszystkich, którzy Go wzywają szczerze.',
+          theme: 'Szczere wołanie do Boga'
+        },
+        {
+          siglum: 'Ps 145, 19-20',
+          label: 'Zwrotka 2: Pan strzeże tych, którzy Go miłują',
+          text: 'Spełnia wolę tych, którzy się Go boją, usłyszy ich wołanie i przyjdzie im z pomocą. Pan strzeże wszystkich, którzy Go miłują.',
+          theme: 'Boża ochrona i wysłuchanie modlitwy'
+        },
+        {
+          siglum: 'Ps 145, 21',
+          label: 'Zwrotka 3: Niech usta moje głoszą chwałę Pana',
+          text: 'Niech usta moje głoszą chwałę Pana, a Jego święte imię niech wielbi wszystko, co żyje, zawsze i na wieki.',
+          theme: 'Wieczne uwielbienie Imienia Pańskiego'
+        }
+      ]
     },
     gospel: {
       siglum: 'Łk 6, 1-5',
       intro: 'Słowa Ewangelii według Świętego Łukasza',
       text: 'W pewien szabat Jezus przechodził wśród zbóż, a uczniowie Jego zrywali kłosy i jedli, wykruszając ziarna rękami. Niektórzy zaś z faryzeuszów mówili: «Czemu czynicie to, czego nie wolno czynić w szabat?» Wtedy Jezus odpowiedział im: «Nawet tegoście nie czytali, co uczynił Dawid, gdy poczuł głód, on i jego towarzysze? Jak wszedł do domu Bożego i wziąwszy chleby pokładne, sam jadł i dał swoim ludziom?...» I dodał: «Syn Człowieczy jest Panem także szabatu».',
-      theme: 'Chrystus Panem szabatu i pierwszeństwo miłości'
+      theme: 'Chrystus Panem szabatu i pierwszeństwo miłości',
+      keyVerses: [
+        {
+          siglum: 'Łk 6, 5',
+          label: 'Syn Człowieczy jest Panem szabatu',
+          text: 'I dodał: «Syn Człowieczy jest Panem także szabatu».',
+          theme: 'Boski autorytet Jezusa i wolność dzieci Bożych'
+        }
+      ]
     }
   }
 ];
@@ -526,8 +832,29 @@ const WEEKDAY_READING_CYCLES = [
  * Returns complete, guaranteed daily liturgical readings for any given date.
  */
 export function getGuaranteedDailyReadings(dateInput: string | Date): DailyLiturgicalReadings {
-  const d = typeof dateInput === 'string' ? new Date(dateInput) : dateInput;
-  const dateStr = d.toISOString().slice(0, 10);
+  let d: Date;
+  let dateStr: string;
+
+  if (typeof dateInput === 'string') {
+    const parts = dateInput.slice(0, 10).split('-').map(Number);
+    if (parts.length === 3 && !isNaN(parts[0]) && !isNaN(parts[1]) && !isNaN(parts[2])) {
+      d = new Date(parts[0], parts[1] - 1, parts[2], 12, 0, 0);
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const dayNum = String(d.getDate()).padStart(2, '0');
+      dateStr = `${y}-${m}-${dayNum}`;
+    } else {
+      d = new Date(dateInput);
+      dateStr = d.toISOString().slice(0, 10);
+    }
+  } else {
+    d = dateInput;
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const dayNum = String(d.getDate()).padStart(2, '0');
+    dateStr = `${y}-${m}-${dayNum}`;
+  }
+
   const month = d.getMonth() + 1; // 1-12
   const day = d.getDate();        // 1-31
   const dayOfWeek = d.getDay();   // 0 = Sunday, 1 = Monday ... 6 = Saturday
@@ -625,7 +952,8 @@ export function getGuaranteedDailyReadings(dateInput: string | Date): DailyLitur
         siglum: wdData.firstReading.siglum,
         liturgicalIntroduction: wdData.firstReading.intro,
         text: wdData.firstReading.text,
-        theologicalTheme: wdData.firstReading.theme
+        theologicalTheme: wdData.firstReading.theme,
+        keyVerses: wdData.firstReading.keyVerses
       },
       {
         id: `rdg_${dateStr}_psalm`,
@@ -634,7 +962,8 @@ export function getGuaranteedDailyReadings(dateInput: string | Date): DailyLitur
         siglum: wdData.psalm.siglum,
         psalmResponse: wdData.psalm.response,
         text: wdData.psalm.text,
-        theologicalTheme: wdData.psalm.theme
+        theologicalTheme: wdData.psalm.theme,
+        keyVerses: wdData.psalm.keyVerses
       },
       {
         id: `rdg_${dateStr}_gospel`,
@@ -643,7 +972,8 @@ export function getGuaranteedDailyReadings(dateInput: string | Date): DailyLitur
         siglum: wdData.gospel.siglum,
         liturgicalIntroduction: wdData.gospel.intro,
         text: wdData.gospel.text,
-        theologicalTheme: wdData.gospel.theme
+        theologicalTheme: wdData.gospel.theme,
+        keyVerses: wdData.gospel.keyVerses
       }
     ]
   };

@@ -1,10 +1,10 @@
 @import "tailwindcss";
 
 @layer base {
-  body {
+  html, body {
+    background-color: #FFFFFF;
+    color: #0F172A;
     font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
-    background-color: #0F0F12;
-    color: #E0E0D6;
   }
 }
 
@@ -16,19 +16,242 @@
   font-family: 'Newsreader', Georgia, serif;
 }
 
-/* Geometric Balance scrollbars */
+/* ========================================================================= */
+/* COMPREHENSIVE LIGHT THEME OVERRIDES (BLACK/DARK TO CRISP WHITE & SLATE)   */
+/* ========================================================================= */
+
+/* Pure White Background Overrides */
+.bg-\[\#0F0F12\],
+.bg-\[\#0E0E11\],
+.bg-\[\#0D0D10\],
+.bg-\[\#0B0B0E\],
+.bg-\[\#141418\],
+.bg-\[\#141419\],
+.bg-\[\#141417\],
+.bg-\[\#121216\],
+.bg-\[\#131317\],
+.bg-\[\#16161C\],
+.bg-stone-950,
+.bg-zinc-950,
+.bg-slate-950 {
+  background-color: #FFFFFF !important;
+}
+
+/* Soft Slate/Light Gray Card & Surface Overrides */
+.bg-\[\#18181E\],
+.bg-\[\#1A1A22\],
+.bg-\[\#1C1C24\],
+.bg-\[\#1C1A17\],
+.bg-\[\#1E1E26\],
+.bg-\[\#1E1E24\],
+.bg-\[\#1E1E28\],
+.bg-\[\#1F1F26\],
+.bg-\[\#171720\],
+.bg-\[\#1a1a1e\],
+.bg-\[\#1F1E24\],
+.bg-\[\#191920\],
+.bg-\[\#1B1B22\],
+.bg-\[\#22222A\],
+.bg-\[\#20202A\],
+.bg-\[\#22222a\],
+.bg-stone-900,
+.bg-zinc-900 {
+  background-color: #F8FAFC !important;
+}
+
+/* Inputs & Subtle Panel Overrides */
+.bg-\[\#0C0C0F\],
+.bg-\[\#101014\],
+.bg-\[\#0a0a0d\],
+.bg-\[\#0e0e12\] {
+  background-color: #F1F5F9 !important;
+}
+
+/* Hover States & Active Surface Overrides */
+.hover\:bg-\[\#1E1E26\]:hover,
+.hover\:bg-\[\#1E1E28\]:hover,
+.hover\:bg-\[\#18181E\]:hover,
+.hover\:bg-\[\#1A1A22\]:hover,
+.hover\:bg-\[\#20202A\]:hover,
+.hover\:bg-\[\#2A2A38\]:hover,
+.hover\:bg-\[\#252530\]:hover,
+.hover\:bg-\[\#282834\]:hover,
+.hover\:bg-\[\#141417\]:hover,
+.hover\:bg-\[\#1F1E24\]:hover {
+  background-color: #EEF2F6 !important;
+}
+
+.bg-\[\#2A2A38\],
+.bg-\[\#282834\],
+.bg-\[\#252530\],
+.bg-\[\#252535\],
+.bg-\[\#2C2C3A\],
+.bg-\[\#2F2F3D\] {
+  background-color: #E2E8F0 !important;
+}
+
+/* Modal Backdrops & Overlays: Calm blurred translucent scrim */
+.bg-black\/85,
+.bg-black\/80,
+.bg-black\/75,
+.bg-black\/70,
+.bg-black\/60,
+.bg-black\/50,
+.bg-black\/40,
+.bg-black\/90,
+.bg-black\/30 {
+  background-color: rgba(15, 23, 42, 0.45) !important;
+  backdrop-filter: blur(8px) !important;
+}
+
+/* Border Overrides for Clean Separation */
+.border-\[\#3D3524\],
+.border-\[\#272730\],
+.border-\[\#2D2D3A\],
+.border-\[\#2B2B38\],
+.border-\[\#25252D\],
+.border-\[\#22222C\],
+.border-\[\#4A3E26\],
+.border-\[\#333340\],
+.border-\[\#1F1E24\],
+.border-stone-800,
+.border-stone-700,
+.border-zinc-800,
+.border-slate-800 {
+  border-color: #E2E8F0 !important;
+}
+
+/* Text Colors: Dark high-contrast slate & charcoal */
+.text-\[\#E0E0D6\],
+.text-\[\#E5E5DC\],
+.text-\[\#F2EDE4\],
+.text-\[\#D4D4C8\],
+.text-\[\#D0C8B8\],
+.text-\[\#C0C0B4\],
+.text-stone-100,
+.text-stone-200,
+.text-stone-300,
+.text-zinc-100,
+.text-zinc-200,
+.text-zinc-300 {
+  color: #0F172A !important;
+}
+
+.text-\[\#A39B8B\],
+.text-\[\#A0A095\],
+.text-\[\#8C8270\],
+.text-\[\#7A7260\],
+.text-\[\#666655\],
+.text-stone-400,
+.text-stone-500,
+.text-zinc-400,
+.text-zinc-500 {
+  color: #334155 !important;
+}
+
+/* Backgrounds: Ensure all dark variants become white/light-slate */
+.bg-\[\#181820\],
+.bg-\[\#181820\]\/80,
+.bg-\[\#181820\]\/90,
+.bg-\[\#1F1F28\],
+.bg-\[\#2E281C\],
+.bg-\[\#191922\],
+.bg-\[\#0E0E12\],
+.bg-\[\#0B0B0E\] {
+  background-color: #F8FAFC !important;
+}
+
+/* Specific Quote container styling */
+.font-scripture {
+  color: #0F172A !important;
+}
+
+/* Emerald Primary Accents & Gold/Amber Replacements */
+.text-\[\#C5A059\],
+.text-amber-200,
+.text-amber-300,
+.text-amber-400 {
+  color: #059669 !important;
+}
+
+.bg-\[\#C5A059\] {
+  background-color: #059669 !important;
+  color: #FFFFFF !important;
+}
+
+.hover\:bg-\[\#C5A059\]:hover,
+.hover\:bg-\[\#b08e4c\]:hover,
+.hover\:bg-\[\#d8b56e\]:hover,
+.hover\:bg-\[\#E5C98B\]:hover {
+  background-color: #047857 !important;
+  color: #FFFFFF !important;
+}
+
+.border-\[\#C5A059\],
+.border-\[\#C5A059\]\/60,
+.border-\[\#C5A059\]\/40 {
+  border-color: #10B981 !important;
+}
+
+.bg-\[\#C5A059\]\/20,
+.bg-\[\#C5A059\]\/10 {
+  background-color: #ECFDF5 !important;
+  color: #065F46 !important;
+}
+
+/* Gradient Background Overrides */
+.from-\[\#1E1E28\],
+.from-\[\#18181E\],
+.from-\[\#141418\],
+.from-\[\#141419\],
+.from-\[\#1A1A22\] {
+  --tw-gradient-from: #FFFFFF !important;
+  --tw-gradient-to: #F8FAFC !important;
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
+}
+
+.to-\[\#141419\],
+.to-\[\#0F0F12\],
+.to-\[\#0C0C0F\],
+.to-\[\#101014\] {
+  --tw-gradient-to: #F1F5F9 !important;
+}
+
+/* Badges & Chips */
+.bg-black\/40,
+.bg-black\/50,
+.bg-black\/60 {
+  background-color: #F1F5F9 !important;
+  color: #0F172A !important;
+}
+
+/* Headings in Light theme */
+h1.text-white,
+h2.text-white,
+h3.text-white,
+h4.text-white,
+.font-display.text-white {
+  color: #0F172A !important;
+}
+
+/* Specific card titles that have text-white */
+.group:hover .group-hover\:text-white {
+  color: #0F172A !important;
+}
+
+/* Scrollbars */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #141417;
+  background: #F1F5F9;
 }
 ::-webkit-scrollbar-thumb {
-  background: #3D3524;
+  background: #CBD5E1;
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #C5A059;
+  background: #059669;
 }
 

@@ -156,3 +156,20 @@ export interface ScriptureLookupResult {
   suggestedScrutationTheme: string;
 }
 
+export interface RandomScriptureQuote {
+  id: string;
+  siglum: string;
+  bookName: string;
+  testament: 'ST' | 'NT';
+  category: 'Pięcioksiąg i Historia' | 'Mądrość i Psalmy' | 'Prorocy' | 'Ewangelie' | 'Dzieje i Listy Apostolskie' | 'Apokalipsa';
+  title: string;
+  text: string;
+  theologicalContext: string;
+  crossReferencesPreview?: {
+    siglum: string;
+    relation: string;
+    text: string;
+    testament: 'ST' | 'NT';
+  }[];
+}
+
