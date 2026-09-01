@@ -777,63 +777,66 @@ export const DailyReadingsAndPassageSelector: React.FC<DailyReadingsAndPassageSe
       )}
 
       {/* Editorial Header Banner */}
-      <div className="relative p-8 sm:p-10 rounded-2xl bg-white border border-slate-200 shadow-sm text-center space-y-4">
-        <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-[11px] font-sans uppercase tracking-[0.2em] font-bold">
+      <div className="relative p-6 sm:p-8 rounded-3xl bg-white border border-slate-200 shadow-sm text-center space-y-4">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-[11px] font-sans font-semibold tracking-wide">
           <CalendarDays className="w-3.5 h-3.5 text-emerald-600" />
           <span>Liturgia Słowa & Kanon Pisma</span>
         </div>
 
-        <h1 className="font-serif text-2xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-slate-900">
+        <h1 className="font-serif text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-slate-900">
           Źródło Słowa do <span className="text-emerald-800 font-normal italic">Skrutacji</span>
         </h1>
 
-        <p className="text-sm sm:text-base font-sans text-slate-600 max-w-2xl mx-auto leading-relaxed">
-          Wybierz dzisiejsze czytanie mszalne z Lekcjonarza Kościoła lub odszukaj dowolną perykopę ze Starego bądź Nowego Testamentu, aby natychmiast rozpocząć drogę odnośników biblijnych.
+        <p className="text-xs sm:text-sm font-sans text-slate-600 max-w-2xl mx-auto leading-relaxed">
+          Wybierz czytanie mszalne z Lekcjonarza Kościoła lub odszukaj perykopę z Pisma Świętego, aby wejść w drogę odnośników biblijnych.
         </p>
 
-        {/* Liturgical Tab Switcher */}
-        <div className="pt-4 flex justify-center">
-          <div className="inline-flex p-1.5 bg-slate-100 border border-slate-200 rounded-xl max-w-xl w-full shadow-inner">
+        {/* Liturgical Tab Switcher - Compact Segmented Control */}
+        <div className="pt-2 flex justify-center">
+          <div className="inline-flex items-center p-1 bg-slate-100/90 border border-slate-200 rounded-2xl shadow-inner gap-1 max-w-full overflow-x-auto">
             <button
               id="subtab-daily-btn"
+              type="button"
               onClick={() => setActiveSubTab('daily')}
-              className={`flex-1 py-3 px-3 sm:px-5 rounded-lg text-xs font-sans uppercase tracking-wider font-semibold transition-all flex items-center justify-center gap-2 cursor-pointer ${
+              className={`py-2 px-3 sm:px-4 rounded-xl text-xs font-sans font-semibold transition-all flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap ${
                 activeSubTab === 'daily'
-                  ? 'bg-white text-emerald-900 border border-slate-200 shadow-sm font-bold'
-                  : 'text-slate-600 hover:text-slate-900'
+                  ? 'bg-white text-emerald-950 border border-slate-200/80 shadow-xs font-bold'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'
               }`}
             >
-              <CalendarDays className="w-4 h-4 shrink-0 text-emerald-600" />
-              <span>Czytania z Dnia</span>
+              <CalendarDays className="w-3.5 h-3.5 shrink-0 text-emerald-600" />
+              <span>Czytania z dnia</span>
             </button>
             <button
               id="subtab-passage-btn"
+              type="button"
               onClick={() => setActiveSubTab('passage')}
-              className={`flex-1 py-3 px-3 sm:px-5 rounded-lg text-xs font-sans uppercase tracking-wider font-semibold transition-all flex items-center justify-center gap-2 cursor-pointer ${
+              className={`py-2 px-3 sm:px-4 rounded-xl text-xs font-sans font-semibold transition-all flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap ${
                 activeSubTab === 'passage'
-                  ? 'bg-white text-emerald-900 border border-slate-200 shadow-sm font-bold'
-                  : 'text-slate-600 hover:text-slate-900'
+                  ? 'bg-white text-emerald-950 border border-slate-200/80 shadow-xs font-bold'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'
               }`}
             >
-              <Scroll className="w-4 h-4 shrink-0 text-emerald-600" />
-              <span>Wybór Fragmentu</span>
+              <Scroll className="w-3.5 h-3.5 shrink-0 text-emerald-600" />
+              <span>Wybór perykopy</span>
             </button>
             <button
               id="subtab-random-btn"
+              type="button"
               onClick={() => {
                 setActiveSubTab('random');
                 if (!currentRandomQuote) {
                   handleDrawRandomQuote();
                 }
               }}
-              className={`flex-1 py-3 px-3 sm:px-5 rounded-lg text-xs font-sans uppercase tracking-wider font-semibold transition-all flex items-center justify-center gap-2 cursor-pointer ${
+              className={`py-2 px-3 sm:px-4 rounded-xl text-xs font-sans font-semibold transition-all flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap ${
                 activeSubTab === 'random'
-                  ? 'bg-white text-emerald-900 border border-slate-200 shadow-sm font-bold'
-                  : 'text-slate-600 hover:text-slate-900'
+                  ? 'bg-white text-emerald-950 border border-slate-200/80 shadow-xs font-bold'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'
               }`}
             >
-              <Dice5 className="w-4 h-4 shrink-0 text-emerald-600" />
-              <span>Losuj Cytat</span>
+              <Dice5 className="w-3.5 h-3.5 shrink-0 text-emerald-600" />
+              <span>Losuj cytat</span>
             </button>
           </div>
         </div>
