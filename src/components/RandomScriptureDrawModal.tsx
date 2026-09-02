@@ -68,8 +68,17 @@ export const RandomScriptureDrawModal: React.FC<RandomScriptureDrawModalProps> =
     }, 450);
   };
 
+  const cleanQuoteText = (text: string): string => {
+    return text
+      .trim()
+      .replace(/^[«"„“”\s]+/, '')
+      .replace(/[»"„“”\s]+$/, '')
+      .trim();
+  };
+
   const handleCopyQuote = async () => {
-    const textToCopy = `„${currentQuote.text}”\n(${currentQuote.siglum} - ${currentQuote.bookName})\n\nKontekst: ${currentQuote.theologicalContext}\n\n— Z aplikacji Skrutacja Pisma Świętego`;
+    const cleaned = cleanQuoteText(currentQuote.text);
+    const textToCopy = `„${cleaned}”\n(${currentQuote.siglum} - ${currentQuote.bookName})\n\nKontekst: ${currentQuote.theologicalContext}\n\n— Z aplikacji Skrutacja Pisma Świętego`;
     try {
       await navigator.clipboard.writeText(textToCopy);
       setIsCopied(true);
@@ -81,18 +90,19 @@ export const RandomScriptureDrawModal: React.FC<RandomScriptureDrawModalProps> =
 
   const handleStartScrutation = () => {
     const isNT = currentQuote.testament === 'NT';
+    const cleaned = cleanQuoteText(currentQuote.text);
     const newSession: ScrutationSession = {
       id: 'session_draw_' + Date.now(),
       title: `Słowo Boże: ${currentQuote.siglum}`,
       theme: currentQuote.title,
       initialSiglum: currentQuote.siglum,
-      initialText: currentQuote.text,
+      initialText: cleaned,
       nodes: [
         {
           id: 'node_root',
           parentId: null,
           siglum: currentQuote.siglum,
-          text: currentQuote.text,
+          text: cleaned,
           testament: isNT ? 'NT' : 'ST',
           crossReferenceReason: 'Natchnione Słowo wyjściowe z losowania',
           order: 0,
@@ -110,7 +120,7 @@ export const RandomScriptureDrawModal: React.FC<RandomScriptureDrawModalProps> =
       prayerNotes: {
         statio: 'Panie, wierzę, że to Słowo jest dziś skierowane osobiście do mojego serca.',
         invocatio: 'Duchu Święty, otwórz moje oczy, abym ujrzał cud Twojego Prawa.',
-        lectio: currentQuote.text,
+        lectio: cleaned,
         meditatio: currentQuote.theologicalContext,
         oratio: '',
         contemplatio: '',
@@ -137,31 +147,27 @@ export const RandomScriptureDrawModal: React.FC<RandomScriptureDrawModalProps> =
   );
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 overflow-y-auto bg-slate-950/85 backdrop-blur-md animate-fade-in">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 overflow-y-auto bg-slate-900/60 backdrop-blur-sm animate-fade-in">
       {/* Click outside backdrop */}
       <div className="fixed inset-0" onClick={onClose} />
 
-      <div className="relative w-full max-w-2xl bg-gradient-to-b from-[#1C1712] via-[#16120E] to-[#0D0B08] text-amber-50 rounded-3xl border-2 border-amber-500/40 shadow-2xl overflow-hidden z-10 my-auto">
-        {/* Decorative Golden Ornaments & Ambient Light */}
-        <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-amber-600 via-amber-300 to-amber-600" />
-        <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-96 h-48 bg-amber-500/15 blur-3xl rounded-full pointer-events-none" />
-
-        {/* Top Header */}
-        <div className="p-4 sm:p-6 border-b border-amber-900/40 flex items-center justify-between relative z-10">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-amber-500 to-amber-700 p-0.5 shadow-md flex items-center justify-center text-slate-950 font-bold">
-              <Scroll className="w-4 h-4 text-amber-950" />
+      <div className="relative w-full max-w-2xl bg-white text-slate-900 rounded-3xl border border-slate-200 shadow-2xl overflow-hidden z-10 my-auto flex flex-col max-h-[90vh]">
+        {/* Top Header - Pure Crisp Light theme with Emerald and Gold accents */}
+        <div className="bg-white border-b border-slate-200 p-4 sm:p-5 flex items-center justify-between relative z-10">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-emerald-700 text-white p-2 shadow-sm flex items-center justify-center font-bold">
+              <Scroll className="w-5 h-5 text-amber-300" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="font-serif text-lg sm:text-xl font-bold text-amber-100 tracking-wide flex items-center gap-2">
+                <h2 className="font-serif text-lg sm:text-xl font-bold text-slate-900 tracking-wide flex items-center gap-2">
                   Losowanie Słowa Bożego
                 </h2>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-sans font-bold bg-amber-500/20 text-amber-300 border border-amber-400/30 uppercase tracking-wider">
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-sans font-bold bg-amber-100 text-amber-900 border border-amber-300 uppercase tracking-wider">
                   Rhema
                 </span>
               </div>
-              <p className="text-xs text-amber-200/70 font-sans">
+              <p className="text-xs text-slate-500 font-sans mt-0.5">
                 Natchnione Słowo na ten moment Twojego życia
               </p>
             </div>
@@ -170,7 +176,7 @@ export const RandomScriptureDrawModal: React.FC<RandomScriptureDrawModalProps> =
           <button
             type="button"
             onClick={onClose}
-            className="p-2 rounded-full bg-white/5 hover:bg-white/10 text-amber-200/80 hover:text-white transition-all cursor-pointer"
+            className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900 transition-all cursor-pointer"
             title="Zamknij"
           >
             <X className="w-5 h-5" />
@@ -178,7 +184,7 @@ export const RandomScriptureDrawModal: React.FC<RandomScriptureDrawModalProps> =
         </div>
 
         {/* Card Body with 3D Opening / Flipping Animation */}
-        <div className="p-5 sm:p-8 space-y-6 max-h-[75vh] overflow-y-auto custom-scrollbar">
+        <div className="p-4 sm:p-6 space-y-5 overflow-y-auto custom-scrollbar bg-slate-50">
           <AnimatePresence mode="wait">
             {isOpening ? (
               <motion.div
@@ -193,76 +199,68 @@ export const RandomScriptureDrawModal: React.FC<RandomScriptureDrawModalProps> =
                 <motion.div
                   animate={{ rotate: [0, 5, -5, 0], scale: [0.95, 1.05, 1] }}
                   transition={{ duration: 1.2, repeat: Infinity, ease: 'easeInOut' }}
-                  className="w-20 h-20 rounded-2xl bg-gradient-to-br from-amber-400 via-yellow-500 to-amber-600 p-1 shadow-[0_0_35px_rgba(245,158,11,0.4)] flex items-center justify-center"
+                  className="w-20 h-20 rounded-2xl bg-gradient-to-br from-amber-400 via-yellow-500 to-amber-600 p-1 shadow-md flex items-center justify-center"
                 >
-                  <div className="w-full h-full rounded-xl bg-slate-950 flex items-center justify-center">
-                    <Sparkles className="w-9 h-9 text-amber-400 animate-spin" style={{ animationDuration: '4s' }} />
+                  <div className="w-full h-full rounded-xl bg-white flex items-center justify-center">
+                    <Sparkles className="w-9 h-9 text-amber-500 animate-spin" style={{ animationDuration: '4s' }} />
                   </div>
                 </motion.div>
-                <p className="font-serif italic text-base text-amber-200 animate-pulse text-center">
+                <p className="font-serif italic text-base text-emerald-900 font-semibold animate-pulse text-center">
                   Otwieranie natchnionego Słowa Pisma...
                 </p>
               </motion.div>
             ) : (
               <motion.div
                 key={currentQuote.id}
-                initial={{ opacity: 0, y: 20, scale: 0.96 }}
+                initial={{ opacity: 0, y: 15, scale: 0.98 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
-                transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
-                className="space-y-6"
+                transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+                className="space-y-5"
               >
                 {/* Visual Sacred Card / Pergamin */}
-                <div className="relative rounded-2xl bg-gradient-to-b from-[#251F19] to-[#1A1510] p-6 sm:p-8 border border-amber-500/30 shadow-xl overflow-hidden space-y-5">
-                  {/* Subtle watermarked cross in background */}
-                  <div className="absolute right-4 bottom-4 opacity-5 pointer-events-none">
-                    <svg className="w-48 h-48 text-amber-400 fill-current" viewBox="0 0 100 100">
-                      <rect x="42" y="10" width="16" height="80" rx="3" />
-                      <rect x="15" y="30" width="70" height="16" rx="3" />
-                    </svg>
-                  </div>
-
+                <div className="relative rounded-2xl bg-white p-5 sm:p-7 border border-slate-200 shadow-sm overflow-hidden space-y-5">
                   {/* 1. Prominent Siglum & Testament Badge */}
-                  <div className="flex items-center justify-between flex-wrap gap-2.5 pb-4 border-b border-amber-500/20">
-                    <div className="flex items-center gap-2">
-                      <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-amber-500/20 text-amber-300 border border-amber-400/50 font-mono text-base sm:text-lg font-bold shadow-inner">
-                        <Flame className="w-4 h-4 text-amber-400 fill-amber-400" />
+                  <div className="flex items-center justify-between flex-wrap gap-2.5 pb-4 border-b border-slate-100">
+                    <div className="flex items-center gap-2.5">
+                      <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-amber-50 text-amber-950 border border-amber-300 font-mono text-base sm:text-lg font-bold shadow-xs">
+                        <Flame className="w-4 h-4 text-amber-600 fill-amber-600" />
                         {currentQuote.siglum}
                       </span>
-                      <span className="text-xs font-sans text-amber-200/70 font-semibold">
+                      <span className="text-xs font-sans text-slate-600 font-semibold">
                         • {currentQuote.bookName}
                       </span>
                     </div>
 
                     <div className="flex items-center gap-1.5">
-                      <span className="px-2.5 py-1 rounded-lg text-xs font-sans font-bold bg-white/5 text-amber-200 border border-amber-500/20">
+                      <span className="px-2.5 py-1 rounded-lg text-xs font-sans font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
                         {currentQuote.testament === 'NT' ? 'Nowy Testament' : 'Stary Testament'}
                       </span>
                     </div>
                   </div>
 
                   {/* 2. Main Bible Verse Text */}
-                  <div className="space-y-2">
-                    <h3 className="font-sans text-xs uppercase tracking-wider text-amber-400/80 font-bold">
+                  <div className="space-y-2.5">
+                    <h3 className="font-sans text-xs uppercase tracking-wider text-emerald-800 font-bold">
                       {currentQuote.title}
                     </h3>
-                    <div className="font-scripture text-lg sm:text-2xl text-amber-50 leading-relaxed sm:leading-loose tracking-wide italic border-l-3 border-amber-400 pl-4 py-1">
-                      {currentQuote.text}
+                    <div className="font-serif text-2xl sm:text-3xl text-slate-950 leading-relaxed sm:leading-relaxed tracking-wide italic border-l-4 sm:border-l-[6px] border-emerald-600 pl-5 sm:pl-7 pr-3 py-4 sm:py-5 bg-emerald-50/70 rounded-r-2xl shadow-xs">
+                      „{cleanQuoteText(currentQuote.text)}”
                     </div>
                   </div>
 
                   {/* 3. Szerszy Kontekst Biblijny i Teologiczny */}
-                  <div className="pt-4 border-t border-amber-500/20 space-y-3 bg-amber-950/20 -mx-6 -mb-6 sm:-mx-8 sm:-mb-8 p-5 sm:p-6 rounded-b-2xl border-b border-amber-500/10">
+                  <div className="pt-4 border-t border-slate-100 space-y-3 bg-[#FAF8F5] -mx-5 -mb-5 sm:-mx-7 sm:-mb-7 p-5 sm:p-6 rounded-b-2xl border-b border-slate-200">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <BookOpen className="w-4 h-4 text-amber-400" />
-                        <h4 className="text-xs font-sans font-bold uppercase tracking-wider text-amber-300">
+                        <BookOpen className="w-4 h-4 text-emerald-700" />
+                        <h4 className="text-xs font-sans font-bold uppercase tracking-wider text-emerald-950">
                           Szerszy kontekst biblijny i teologiczny
                         </h4>
                       </div>
                       <button
                         type="button"
                         onClick={() => setShowFullContext(!showFullContext)}
-                        className="text-[11px] font-sans text-amber-400 hover:text-amber-300 underline cursor-pointer"
+                        className="text-xs font-sans text-emerald-800 hover:text-emerald-950 font-semibold underline cursor-pointer"
                       >
                         {showFullContext ? 'Zwiń' : 'Rozwiń'}
                       </button>
@@ -272,36 +270,38 @@ export const RandomScriptureDrawModal: React.FC<RandomScriptureDrawModalProps> =
                       <motion.div
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: 'auto' }}
-                        className="space-y-3 text-xs sm:text-sm text-amber-100/90 leading-relaxed font-sans"
+                        className="space-y-3 text-xs sm:text-sm text-slate-800 leading-relaxed font-sans"
                       >
-                        <p className="bg-black/20 p-3.5 rounded-xl border border-amber-500/20">
-                          <strong className="text-amber-300 block mb-1 font-serif text-sm">
+                        <div className="bg-white p-4 rounded-xl border border-amber-200/80 shadow-xs">
+                          <strong className="text-emerald-900 block mb-1 font-serif text-sm font-bold">
                             Tło perykopy i orędzie teologiczne:
                           </strong>
-                          {currentQuote.theologicalContext}
-                        </p>
+                          <p className="text-slate-800">
+                            {currentQuote.theologicalContext}
+                          </p>
+                        </div>
 
-                        <p className="text-amber-200/80 italic">
+                        <p className="text-slate-700 italic px-1">
                           {broaderContextText}
                         </p>
 
                         {/* Parallel Verses Preview */}
                         {currentQuote.crossReferencesPreview && currentQuote.crossReferencesPreview.length > 0 && (
                           <div className="pt-2">
-                            <span className="text-[11px] font-bold text-amber-400 block mb-1.5 uppercase tracking-wide">
-                              Powiązane wersety (odnośniki):
+                            <span className="text-[11px] font-bold text-emerald-900 block mb-2 uppercase tracking-wide">
+                              Powiązane wersety (odnośniki w skrutacji):
                             </span>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                               {currentQuote.crossReferencesPreview.map((cr, idx) => (
                                 <div
                                   key={idx}
-                                  className="p-2.5 rounded-lg bg-black/30 border border-amber-500/20 space-y-1"
+                                  className="p-3 rounded-xl bg-white border border-slate-200 shadow-xs space-y-1 hover:border-emerald-300 transition-colors"
                                 >
                                   <div className="flex items-center justify-between text-xs">
-                                    <span className="font-mono font-bold text-amber-300">{cr.siglum}</span>
-                                    <span className="text-[10px] text-amber-400/80">{cr.relation}</span>
+                                    <span className="font-mono font-bold text-emerald-800">{cr.siglum}</span>
+                                    <span className="text-[10px] text-amber-900 font-semibold bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">{cr.relation}</span>
                                   </div>
-                                  <p className="text-[11px] text-amber-100/80 italic line-clamp-2">
+                                  <p className="text-[11px] text-slate-700 italic line-clamp-2">
                                     «{cr.text}»
                                   </p>
                                 </div>
@@ -315,24 +315,24 @@ export const RandomScriptureDrawModal: React.FC<RandomScriptureDrawModalProps> =
                 </div>
 
                 {/* Bottom Action Bar */}
-                <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-2">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-1">
                   <div className="flex items-center gap-2">
                     <button
                       type="button"
                       onClick={handleDrawNew}
-                      className="flex-1 sm:flex-initial px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/15 text-amber-200 hover:text-white text-xs font-sans font-bold border border-amber-500/30 flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-95 shadow-xs"
+                      className="flex-1 sm:flex-initial px-4 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-800 text-xs font-sans font-bold border border-slate-300 flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-95 shadow-xs"
                     >
-                      <RotateCw className="w-4 h-4 text-amber-400" />
+                      <RotateCw className="w-4 h-4 text-emerald-700" />
                       <span>Losuj inne Słowo</span>
                     </button>
 
                     <button
                       type="button"
                       onClick={handleCopyQuote}
-                      className="px-3.5 py-2.5 rounded-xl bg-white/10 hover:bg-white/15 text-amber-200 hover:text-white text-xs font-sans font-bold border border-amber-500/30 flex items-center justify-center gap-1.5 transition-all cursor-pointer active:scale-95 shadow-xs"
+                      className="px-3.5 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-800 text-xs font-sans font-bold border border-slate-300 flex items-center justify-center gap-1.5 transition-all cursor-pointer active:scale-95 shadow-xs"
                       title="Kopiuj werset z odnośnikami"
                     >
-                      {isCopied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4 text-amber-400" />}
+                      {isCopied ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4 text-slate-600" />}
                       <span className="hidden sm:inline">{isCopied ? 'Skopiowano!' : 'Kopiuj'}</span>
                     </button>
                   </div>
@@ -340,7 +340,7 @@ export const RandomScriptureDrawModal: React.FC<RandomScriptureDrawModalProps> =
                   <button
                     type="button"
                     onClick={handleStartScrutation}
-                    className="px-6 py-3 rounded-xl bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 text-xs sm:text-sm font-sans font-extrabold flex items-center justify-center gap-2 transition-all shadow-lg hover:shadow-amber-500/25 cursor-pointer active:scale-95"
+                    className="px-6 py-3 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs sm:text-sm font-sans font-bold flex items-center justify-center gap-2 transition-all shadow-md hover:shadow-emerald-700/20 cursor-pointer active:scale-95"
                   >
                     <span>Rozpocznij skrutację tego Słowa</span>
                     <ArrowRight className="w-4 h-4" />

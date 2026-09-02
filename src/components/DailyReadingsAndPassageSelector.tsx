@@ -2227,10 +2227,10 @@ export const DailyReadingsAndPassageSelector: React.FC<DailyReadingsAndPassageSe
                   {currentRandomQuote.title}
                 </h3>
 
-                <div className="p-5 sm:p-7 rounded-2xl bg-slate-50 border border-slate-200 shadow-xs relative">
+                <div className="p-5 sm:p-7 rounded-2xl bg-emerald-50/50 border border-emerald-200 shadow-xs relative">
                   <Quote className="absolute top-4 left-4 w-7 h-7 text-emerald-600/20 pointer-events-none" />
-                  <p className="font-scripture text-lg sm:text-xl text-slate-900 leading-relaxed italic pl-6 sm:pl-8 font-medium">
-                    «{currentRandomQuote.text}»
+                  <p className="font-serif text-xl sm:text-2xl text-slate-950 leading-relaxed italic pl-6 sm:pl-8 font-medium">
+                    „{currentRandomQuote.text.trim().replace(/^[«"„“”\s]+/, '').replace(/[»"„“”\s]+$/, '').trim()}”
                   </p>
                 </div>
               </div>

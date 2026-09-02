@@ -1,10 +1,10 @@
 import React from 'react';
-import { BookOpen, Compass, BookmarkCheck, Library, Flame, Sparkles, CalendarDays, Droplets, Leaf, Network, Scroll, Users, Smartphone, Download, RotateCcw, BellRing, Bell, Church } from 'lucide-react';
+import { BookOpen, Compass, BookmarkCheck, Library, Flame, Sparkles, CalendarDays, Droplets, Leaf, Network, Scroll, Smartphone, Download, RotateCcw, BellRing, Bell, Church } from 'lucide-react';
 import { ScrutationReminderSettings } from '../types';
 
 interface HeaderProps {
-  activeTab: 'simple' | 'daily' | 'workspace' | 'tree' | 'patristic' | 'jewish' | 'community' | 'journal' | 'guide' | 'themes' | 'books' | 'breviary';
-  setActiveTab: (tab: 'simple' | 'daily' | 'workspace' | 'tree' | 'patristic' | 'jewish' | 'community' | 'journal' | 'guide' | 'themes' | 'books' | 'breviary') => void;
+  activeTab: 'simple' | 'daily' | 'workspace' | 'tree' | 'patristic' | 'jewish' | 'journal' | 'guide' | 'themes' | 'books' | 'breviary';
+  setActiveTab: (tab: 'simple' | 'daily' | 'workspace' | 'tree' | 'patristic' | 'jewish' | 'journal' | 'guide' | 'themes' | 'books' | 'breviary') => void;
   hasActiveSession: boolean;
   onReplayIntro?: () => void;
   onOpenResetModal?: () => void;
@@ -12,6 +12,8 @@ interface HeaderProps {
   onOpenInstallModal: (platform: 'ios' | 'android') => void;
   onOpenDrawWordModal?: () => void;
   reminderSettings: ScrutationReminderSettings;
+  isPrayerToolsOpen?: boolean;
+  onTogglePrayerTools?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({ 
@@ -23,7 +25,9 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenReminderModal,
   onOpenInstallModal,
   onOpenDrawWordModal,
-  reminderSettings
+  reminderSettings,
+  isPrayerToolsOpen,
+  onTogglePrayerTools
 }) => {
 
   return (
@@ -91,11 +95,29 @@ export const Header: React.FC<HeaderProps> = ({
                 type="button"
                 id="replay-intro-btn"
                 onClick={onReplayIntro}
-                title="W świetle Ducha Świętego — otwórz intro"
-                className="h-7 px-2 rounded-lg bg-white hover:bg-amber-50 border border-amber-300/80 text-amber-900 font-sans font-bold text-[11px] flex items-center gap-1 shadow-xs transition-all cursor-pointer active:scale-95 group"
+                title="Ekran startowy i wybór drogi modlitwy"
+                className="h-7 px-2.5 rounded-lg bg-white hover:bg-amber-50 border border-amber-300/80 text-amber-900 font-sans font-bold text-[11px] flex items-center gap-1 shadow-xs transition-all cursor-pointer active:scale-95 group"
               >
                 <Sparkles className="w-3.5 h-3.5 text-amber-500 group-hover:text-amber-600 animate-pulse" />
-                <span className="hidden md:inline">Duch Święty</span>
+                <span>START</span>
+              </button>
+            )}
+
+            {/* Prayer Tools Button (Dzwony monastyczne, Autoscroll, Blokada wygaszania ekranu) */}
+            {onTogglePrayerTools && (
+              <button
+                type="button"
+                id="header-prayer-tools-btn"
+                onClick={onTogglePrayerTools}
+                title="Przybornik Modlitewny: Dzwony monastyczne, Auto-scroll, Blokada wygaszania ekranu"
+                className={`h-7 px-2.5 rounded-lg border font-sans font-bold text-[11px] flex items-center gap-1.5 shadow-xs transition-all cursor-pointer active:scale-95 ${
+                  isPrayerToolsOpen
+                    ? 'bg-amber-500 text-slate-950 border-amber-400 font-extrabold shadow-sm'
+                    : 'bg-amber-50 hover:bg-amber-100 text-amber-950 border-amber-300'
+                }`}
+              >
+                <Bell className="w-3.5 h-3.5 text-amber-700 shrink-0" />
+                <span>Przybornik</span>
               </button>
             )}
 
@@ -257,20 +279,6 @@ export const Header: React.FC<HeaderProps> = ({
             >
               <Droplets className="w-3.5 h-3.5 text-sky-600" />
               <span>Ojcowie</span>
-            </button>
-
-            <button
-              id="nav-community-btn"
-              onClick={() => setActiveTab('community')}
-              className={`py-1.5 px-2.5 text-xs transition-all rounded-xl flex items-center gap-1.5 cursor-pointer font-medium whitespace-nowrap ${
-                activeTab === 'community'
-                  ? 'text-emerald-900 bg-emerald-100/80 border border-emerald-300 font-bold shadow-xs'
-                  : 'hover:text-slate-900 hover:bg-slate-100/80'
-              }`}
-              title="Wspólnotowe dzielenie słowem i krąg biblijny"
-            >
-              <Users className="w-3.5 h-3.5 text-emerald-600" />
-              <span>Wspólnota</span>
             </button>
 
             <button

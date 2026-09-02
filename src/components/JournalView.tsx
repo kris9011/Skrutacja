@@ -118,9 +118,16 @@ export const JournalView: React.FC<JournalViewProps> = ({
             >
               <div className="space-y-3">
                 <div className="flex items-center justify-between gap-2">
-                  <span className="px-2.5 py-0.5 text-xs font-mono font-bold rounded-md bg-emerald-50 text-emerald-800 border border-emerald-200">
-                    {s.initialSiglum}
-                  </span>
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="px-2.5 py-0.5 text-xs font-mono font-bold rounded-md bg-emerald-50 text-emerald-800 border border-emerald-200">
+                      {s.initialSiglum}
+                    </span>
+                    {s.entryType === 'breviary' && (
+                      <span className="px-2 py-0.5 text-[10px] font-sans font-bold rounded-md bg-amber-100 text-amber-900 border border-amber-300">
+                        Brewiarz
+                      </span>
+                    )}
+                  </div>
                   <div className="flex items-center gap-1.5 text-slate-400 text-xs">
                     <Calendar className="w-3.5 h-3.5" />
                     <span>{formatDateTime(s.createdAt)}</span>
@@ -130,6 +137,12 @@ export const JournalView: React.FC<JournalViewProps> = ({
                 <h3 className="font-serif text-lg font-bold text-slate-900 group-hover:text-emerald-800 transition-colors">
                   {s.title}
                 </h3>
+
+                {s.sourceContext && (
+                  <p className="text-xs font-sans text-amber-800 italic">
+                    {s.sourceContext}
+                  </p>
+                )}
 
                 {/* Słowo Życia badge if present */}
                 {s.prayerNotes.wordOfLife && (

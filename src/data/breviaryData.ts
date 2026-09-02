@@ -39,7 +39,9 @@ export const BREVIARY_OFFICE_SAMPLE: BreviaryDayOffice = {
           title: 'Wezwanie do chwalenia Boga',
           latinTitle: 'Venite, exsultemus Domino',
           antiphon: 'Wielbijmy Pana, Boga naszego, albowiem wielkie jest Jego miłosierdzie.',
-          commentary: 'Psalm 95 jest tradycyjnym zaproszeniem do wejścia w Bożą obecność i do zatwardzania serca na Jego głos.',
+          commentary: 'Psalm 95 jest tradycyjnym zaproszeniem do wejścia w Bożą obecność i do niez zatwardzania serca na Jego głos.',
+          christologicalKey: 'Chrystus jest Dobrym Pasterzem, który wzywa swój lud, by wsłuchał się w Jego głos i wszedł do wiecznego odpoczynku Ojca (por. Hbr 3, 7-15).',
+          gregorianTone: 'Ton IV',
           text: `Przyjdźcie, radośnie śpiewajmy Panu, *
 wznośmy okrzyki ku chwale Skały naszego zbawienia.
 Stańmy przed obliczem Jego z dziękczynieniem, *
@@ -199,6 +201,8 @@ bo jestem gościem u Ciebie, przechodniem jak wszyscy moi przodkowie.`,
           latinTitle: 'Deus, Deus meus, ad te de luce vigilo',
           antiphon: 'Boże mój, Ciebie szukam od świtu, * Ciebie pragnie moja dusza.',
           commentary: 'Psalm mistycznej miłości i tęsknoty za Bogiem o brzasku dnia.',
+          christologicalKey: 'Chrystus o świcie w zmartwychwstaniu gasi pragnienie ludzkości i otwiera źródła wody żywej Ducha Świętego (J 7, 37-39).',
+          gregorianTone: 'Ton II',
           text: `Boże, mój Boże, szukam Ciebie od świtu, *
 Ciebie pragnie moja dusza,
 za Tobą tęskni moje ciało, *
@@ -229,6 +233,8 @@ a Twoja prawica mnie podtrzymuje.`,
           latinTitle: 'Benedicite, omnia opera Domini, Domino',
           antiphon: 'Błogosławcie Pana, wszystkie dzieła Pańskie, * Chwalcie Go i wywyższajcie na wieki.',
           category: 'canticle_st',
+          christologicalKey: 'Młodzieńcy w piecu ognistym są figurą Chrystusa schodzącego do piekieł i uwalniającego całe stworzenie z więzów zepsucia.',
+          gregorianTone: 'Ton VIII G',
           text: `Błogosławcie Pana, wszystkie dzieła Pańskie, *
 chwalcie Go i wywyższajcie na wieki!
 Błogosławcie Pana, aniołowie Pańscy, *
@@ -258,6 +264,8 @@ chwalmy Go i wywyższajmy na wieki!`,
           title: 'Śpiewajcie Panu pieśń nową',
           latinTitle: 'Cantate Domino canticum novum',
           antiphon: 'Niech święci cieszą się w chwale, * Niechaj weselą się na swych łożach.',
+          christologicalKey: 'Pieśń nowa to pieśń odkupionych krwią Baranka, świętujących ostateczne zwycięstwo nad grzechem i śmiercią (Ap 14, 3).',
+          gregorianTone: 'Ton VII',
           text: `Śpiewajcie Panu pieśń nową, *
 głoście Jego chwałę w zgromadzeniu świętych!
 Niech Izrael się cieszy swoim Stwórcą, *
@@ -630,6 +638,8 @@ i ludziom prawego serca!`,
           latinTitle: 'De profundis clamavi ad te, Domine',
           antiphon: 'U Pana jest zmiłowanie * I obfite u Niego odkupienie.',
           commentary: 'Jeden z najgłębszych psalmów pokutnych, prośba o przebaczenie win i zaufanie Bożej litości.',
+          christologicalKey: 'Chrystus na krzyżu woła z otchłani opuszczenia w imieniu całej grzesznej ludzkości, wyjednując odkupienie Krwią Przymierza.',
+          gregorianTone: 'Ton II',
           text: `Z głębokości wołam do Ciebie, Panie, *
 Panie, wysłuchaj głosu mego!
 Nakłoń swoje uszy *
@@ -658,6 +668,8 @@ ze wszystkich jego grzechów.`,
           title: 'Hymn dziękczynienia za ocalenie',
           latinTitle: 'Confitebor tibi, Domine, in toto corde meo',
           antiphon: 'Będę Cię sławił z całego serca, Panie, * Bo usłyszałeś słowa ust moich.',
+          christologicalKey: 'Dziękczynienie Chrystusa i Kościoła za zwycięstwo nad wrogami zbawienia i wysłuchanie modlitwy w Wieczerniku.',
+          gregorianTone: 'Ton V',
           text: `Będę Cię sławił z całego serca, Panie, *
 bo usłyszałeś słowa ust moich.
 Będę śpiewał Ci wobec aniołów, *
@@ -684,6 +696,8 @@ wyniosłego zaś z daleka poznaje.`,
           latinTitle: 'Christus Iesus, cum in forma Dei esset',
           antiphon: 'Bóg wywyższył Chrystusa i dał Mu Imię, * Które jest ponad wszelkie imię.',
           category: 'canticle_nt',
+          christologicalKey: 'Szczyt chrystologii Pawłowej: posłuszeństwo aż do śmierci na krzyżu staje się źródłem kosmicznego panowania Zmartwychwstałego Pana.',
+          gregorianTone: 'Ton III',
           text: `Chrystus Jezus, istniejąc w postaci Bożej, *
 nie skorzystał ze sposobności, aby na równi być z Bogiem,
 lecz ogołocił samego siebie, †
@@ -804,6 +818,8 @@ Abrahamowi i jego potomstwu na wieki.`
           latinTitle: 'Qui habitat in adiutorio Altissimi',
           antiphon: 'Okryje cię swymi piórami * I schronisz się pod Jego skrzydła.',
           commentary: 'Jeden z najpiękniejszych psalmów opieki Bożej – uwalnia od lęku nocy i ciemności.',
+          christologicalKey: 'Psalm kuszenia Chrystusa na pustyni i Jego ostatecznego zwycięstwa nad szatanem, wężem i bazyliszkiem (Łk 4, 10-11).',
+          gregorianTone: 'Ton VIII',
           text: `Kto przebywa w pieczy Najwyższego *
 i w cieniu Wszechmocnego mieszka,
 mówi do Pana: «Ucieczko moja i Twierdzo, *
@@ -848,6 +864,8 @@ i ukażę mu moje zbawienie».`,
           title: 'Nocna modlitwa w świątyni',
           latinTitle: 'Ecce nunc benedicite Dominum',
           antiphon: 'Błogosławcie Pana w czasie nocy.',
+          christologicalKey: 'Chrystus czuwający na modlitwie nocnej w Ogrójcu i nieustannie wstawiający się za nami w niebieskim sanktuarium.',
+          gregorianTone: 'Ton II',
           text: `Oto błogosławcie Pana, *
 wszyscy słudzy Pańscy,
 którzy stoicie w domu Pańskim *
@@ -856,7 +874,7 @@ w czasie nocy.
 Wznoście wasze ręce ku Miejscu Świętemu *
 i błogosławcie Pana!
 Niechaj cię Pan błogosławi z Syjonu, *
-Ten, który stworzył niebo i ziemię!`,
+Ten, który stworzył niebo i ziemię.`,
           gloryBe: true
         }
       ],

@@ -15,16 +15,16 @@ import { DailyReadingsAndPassageSelector } from './components/DailyReadingsAndPa
 import { PatristicView } from './components/PatristicView';
 import { ScrutationTreeView } from './components/ScrutationTreeView';
 import { JewishTraditionView } from './components/JewishTraditionView';
-import { CommunityWordSharingView } from './components/CommunityWordSharingView';
 import { BreviaryView } from './components/BreviaryView';
 import { RandomScriptureDrawModal } from './components/RandomScriptureDrawModal';
 import { IntroSplash, IntroChoice } from './components/IntroSplash';
 import { ResetAppModal } from './components/ResetAppModal';
 import { DailyReminderModal } from './components/DailyReminderModal';
 import { InstallAppModal } from './components/InstallAppModal';
+import { PrayerToolsBar } from './components/PrayerToolsBar';
 import { ScrutationSession, BiblicalThemePreset, ScrutationReminderSettings, BreviaryAudience } from './types';
 import { THEME_PRESETS } from './data/biblicalData';
-import { CheckCircle2, Flame, BookOpen, CalendarDays, Sparkles, BookmarkCheck, Network, Scroll, Users, RotateCcw, Church } from 'lucide-react';
+import { CheckCircle2, Flame, BookOpen, CalendarDays, Sparkles, BookmarkCheck, Network, Scroll, RotateCcw, Church } from 'lucide-react';
 import { initNotificationScheduler, getStoredReminderSettings } from './utils/notificationService';
 
 const LOCAL_STORAGE_ACTIVE_SESSION = 'scrutatio_active_session_v1';
@@ -35,7 +35,7 @@ export default function App() {
     // Only show intro splash once per browser session or on reload
     return true;
   });
-  const [activeTab, setActiveTab] = useState<'simple' | 'daily' | 'workspace' | 'tree' | 'patristic' | 'jewish' | 'community' | 'journal' | 'guide' | 'themes' | 'books' | 'breviary'>('daily');
+  const [activeTab, setActiveTab] = useState<'simple' | 'daily' | 'workspace' | 'tree' | 'patristic' | 'jewish' | 'journal' | 'guide' | 'themes' | 'books' | 'breviary'>('daily');
   const [breviaryAudience, setBreviaryAudience] = useState<BreviaryAudience>('lay');
   const [isDrawWordModalOpen, setIsDrawWordModalOpen] = useState<boolean>(false);
   const [activeSession, setActiveSession] = useState<ScrutationSession | null>(null);
@@ -48,6 +48,7 @@ export default function App() {
   const [installModalOpen, setInstallModalOpen] = useState<boolean>(false);
   const [installPlatform, setInstallPlatform] = useState<'ios' | 'android'>('ios');
   const [reminderSettings, setReminderSettings] = useState<ScrutationReminderSettings>(getStoredReminderSettings);
+  const [isPrayerToolsOpen, setIsPrayerToolsOpen] = useState<boolean>(false);
 
   // Load from localStorage on mount & initialize daily reminder scheduler
   useEffect(() => {
@@ -282,6 +283,14 @@ export default function App() {
         }}
         onOpenDrawWordModal={() => setIsDrawWordModalOpen(true)}
         reminderSettings={reminderSettings}
+        isPrayerToolsOpen={isPrayerToolsOpen}
+        onTogglePrayerTools={() => setIsPrayerToolsOpen((prev) => !prev)}
+      />
+
+      {/* Global Prayer Tools Bar (Dzwony Monastyczne, Auto-scroll, Ekran bez wygaszania) */}
+      <PrayerToolsBar
+        isOpen={isPrayerToolsOpen}
+        onClose={() => setIsPrayerToolsOpen(false)}
       />
 
       {/* Main View Router */}
@@ -408,18 +417,6 @@ export default function App() {
           </div>
         )}
 
-        {activeTab === 'community' && (
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
-            <CommunityWordSharingView
-              currentSession={activeSession}
-              onLoadSessionToWorkspace={(sess) => {
-                handleUpdateSession(sess);
-                setActiveTab('tree');
-              }}
-            />
-          </div>
-        )}
-
         {activeTab === 'patristic' && (
           <div className="p-4 sm:p-8">
             <PatristicView
@@ -496,6 +493,48 @@ export default function App() {
         {activeTab === 'breviary' && (
           <BreviaryView
             initialAudience={breviaryAudience}
+            onSaveVerseToJournal={(sig, txt, contextNote) => {
+              const isNT = sig.startsWith('Mt') || sig.startsWith('Mk') || sig.startsWith('Łk') || sig.startsWith('J') || sig.startsWith('Dz') || sig.startsWith('Rz') || sig.startsWith('1 Kor') || sig.startsWith('2 Kor') || sig.startsWith('Ga') || sig.startsWith('Ef') || sig.startsWith('Flp') || sig.startsWith('Kol') || sig.startsWith('1 Tes') || sig.startsWith('2 Tes') || sig.startsWith('1 Tm') || sig.startsWith('2 Tm') || sig.startsWith('Tt') || sig.startsWith('Flm') || sig.startsWith('Hbr') || sig.startsWith('Jk') || sig.startsWith('1 P') || sig.startsWith('2 P') || sig.startsWith('1 J') || sig.startsWith('2 J') || sig.startsWith('3 J') || sig.startsWith('Jud') || sig.startsWith('Ap');
+              const newSession: ScrutationSession = {
+                id: 'session_' + Date.now(),
+                title: `${sig} • Liturgia Godzin`,
+                theme: 'Brewiarz / Psałterz',
+                initialSiglum: sig,
+                initialText: txt,
+                entryType: 'breviary',
+                sourceContext: contextNote || 'Modlitwa Brewiarzowa',
+                nodes: [
+                  {
+                    id: 'node_root',
+                    parentId: null,
+                    siglum: sig,
+                    text: txt,
+                    testament: isNT ? 'NT' : 'ST',
+                    crossReferenceReason: contextNote || 'Zapisano z Liturgii Godzin',
+                    order: 0,
+                    isExpanded: true,
+                    createdAt: Date.now()
+                  }
+                ],
+                activeStep: 0,
+                prayerNotes: {
+                  statio: '',
+                  invocatio: '',
+                  lectio: txt,
+                  meditatio: '',
+                  oratio: '',
+                  contemplatio: '',
+                  actio: '',
+                  wordOfLife: sig
+                },
+                durationSeconds: 0,
+                isCompleted: true,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+              };
+              handleSaveToJournal(newSession);
+              showToast(`Zapisano werset ${sig} w Dzienniku Duchowym`);
+            }}
             onStartScrutationWithVerse={(sig, txt) => {
               const isNT = sig.startsWith('Mt') || sig.startsWith('Mk') || sig.startsWith('Łk') || sig.startsWith('J') || sig.startsWith('Dz') || sig.startsWith('Rz') || sig.startsWith('1 Kor') || sig.startsWith('2 Kor') || sig.startsWith('Ga') || sig.startsWith('Ef') || sig.startsWith('Flp') || sig.startsWith('Kol') || sig.startsWith('1 Tes') || sig.startsWith('2 Tes') || sig.startsWith('1 Tm') || sig.startsWith('2 Tm') || sig.startsWith('Tt') || sig.startsWith('Flm') || sig.startsWith('Hbr') || sig.startsWith('Jk') || sig.startsWith('1 P') || sig.startsWith('2 P') || sig.startsWith('1 J') || sig.startsWith('2 J') || sig.startsWith('3 J') || sig.startsWith('Jud') || sig.startsWith('Ap');
               const newSession: ScrutationSession = {
@@ -504,6 +543,8 @@ export default function App() {
                 theme: 'Liturgia Godzin',
                 initialSiglum: sig,
                 initialText: txt,
+                entryType: 'breviary',
+                sourceContext: 'Liturgia Godzin',
                 nodes: [
                   {
                     id: 'node_root',
@@ -604,17 +645,6 @@ export default function App() {
         >
           <Scroll className="w-4 h-4 mb-0.5" />
           <span className="text-[9px] uppercase">Tora</span>
-        </button>
-
-        <button
-          id="mobile-nav-community"
-          onClick={() => setActiveTab('community')}
-          className={`flex flex-col items-center justify-center min-h-[44px] px-1.5 rounded-lg transition-colors cursor-pointer shrink-0 ${
-            activeTab === 'community' ? 'text-emerald-700 font-bold' : 'text-slate-500'
-          }`}
-        >
-          <Users className="w-4 h-4 mb-0.5" />
-          <span className="text-[9px] uppercase">Wspólnota</span>
         </button>
 
         <button

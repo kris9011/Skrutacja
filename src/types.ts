@@ -30,12 +30,16 @@ export interface ScrutationNode {
   }[];
 }
 
+export type JournalEntryType = 'scrutation' | 'breviary' | 'rhema_draw' | 'reading';
+
 export interface ScrutationSession {
   id: string;
   title: string;
   theme: string;
   initialSiglum: string;
   initialText: string;
+  entryType?: JournalEntryType; // Typ wpisu w Dzienniku Duchowym
+  sourceContext?: string; // np. "Jutrznia (Liturgia Godzin)", "Losowanie Rhema", "Ewangelia z dnia"
   nodes: ScrutationNode[];
   activeStep: number; // 0: Statio/Invocatio, 1: Lectio, 2: Scrutatio, 3: Meditatio, 4: Oratio, 5: Contemplatio, 6: Actio
   prayerNotes: {
@@ -201,6 +205,8 @@ export interface BreviaryPsalmItem {
   gloryBe?: boolean;
   category?: 'psalm' | 'canticle_st' | 'canticle_nt';
   commentary?: string; // Wskazówka medytacyjna
+  christologicalKey?: string; // Klucz chrystologiczny (np. "Chrystus modli się w Ogrójcu", "Triumf Zmartwychwstałego")
+  gregorianTone?: string; // Sugerowany ton gregoriański lub monastyczny (np. "Ton II", "Ton VIII G")
 }
 
 export interface BreviaryReading {
