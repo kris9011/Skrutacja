@@ -370,6 +370,109 @@ Dla każdego Ojca Kościoła podaj:
   }
 });
 
+// API: Biblical and Liturgical Commentary for a Specific Passage/Reading (Egzegeza i Komentarz Duchowy)
+app.post('/api/scrutation/passage-commentary', async (req, res) => {
+  const { siglum, text, label, liturgicalContext } = req.body;
+  if (!siglum) {
+    return res.status(400).json({ error: 'Siglum jest wymagane' });
+  }
+
+  try {
+    const ai = getGeminiClient();
+    if (!ai) {
+      // Meaningful default theological commentary
+      return res.json({
+        source: 'local-tradition',
+        siglum,
+        title: `Komentarz do ${label ? `${label} (${siglum})` : siglum}`,
+        historicalLiteraryContext: `Fragment z księgi ${siglum.split(' ')[0]} wpisuje się w zbawczą historię Przymierza. Ukazuje wierność Boga, który przemawia do swojego ludu pośród konkretnych realiów historycznych i prowadzi ku pełni objawienia w Chrystusie.`,
+        theologicalMessage: `Słowo to wzywa do żywej wiary i nawrócenia serca. W centrum orędzia znajduje się miłość Boża, która uprzedza ludzkie wysiłki i uzdalnia do odpowiedzi posłuszeństwa wiary.`,
+        spiritualSense: {
+          literal: `Dosłowne znaczenie tekstu odnosi się do konkretnego wydarzenia i dialogu Boga z człowiekiem, zapisanego pod natchnieniem Ducha Świętego.`,
+          allegorical: `W świetle Chrystusa fragment ten zapowiada tajemnicę Paschy, zbawienia i nowego Ludu Bożego – Kościoła.`,
+          moral: `Wskazuje drogę prawego postępowania: czystości intencji, miłości bliźniego i zaufania Bożej Opatrzności w próbie.`,
+          anagogical: `Otwiera perspektywę eschatologiczną – kieruje serce ku wiecznemu odpocznieniu i uczcie w Królestwie Niebieskim.`
+        },
+        meditationPoints: [
+          'Co w tym fragmencie najbardziej porusza moje serce w tej chwili życia?',
+          'Do jakiego konkretnego kroku wiary lub przebaczenia wzywa mnie Pan?',
+          'Jak ten tekst łączy się z moją dzisiejszą modlitwą i sakramentami?'
+        ],
+        prayer: `Panie Jezu Chryste, Twoje Słowo jest pochodnią dla moich stóp i światłem na mojej ścieżce. Otwórz moje serce, abym nie tylko słuchał Twego głosu, ale wypełniał go każdego dnia. Amen.`
+      });
+    }
+
+    const prompt = `Jesteś wybitnym katolickim biblistą, profesorem egzegezy i teologii duchowości.
+Przygotuj głęboki, wierny Tradycji Kościoła i pomocny w modlitwie osobistej (Lectio Divina) komentarz do fragmentu Pisma Świętego:
+Siglum: "${siglum}"
+Etykieta liturgiczna: "${label || 'Czytanie biblijne'}"
+Kontekst dnia: "${liturgicalContext || ''}"
+Tekst polski: "${text || ''}"
+
+Twoim zadaniem jest dostarczyć w języku polskim:
+1. Tytuł komentarza (zwięzły, teologiczny)
+2. Kontekst historyczno-literacki perykopy (gdzie w księdze się znajduje, do kogo skierowana, motyw)
+3. Główne orędzie teologiczne fragmentu
+4. 4 Zmysły Pisma Świętego (zgodnie z Katechizmem Kościoła Katolickiego: sens dosłowny, alegoryczny, moralny, anagogiczny)
+5. Krótkie punkty do osobistej medytacji i rachunku sumienia (3 pytania)
+6. Zakończenie modlitewne (krótka modlitwa serca inspirowana tym tekstem)`;
+
+    const schema = {
+      type: Type.OBJECT,
+      properties: {
+        siglum: { type: Type.STRING },
+        title: { type: Type.STRING },
+        historicalLiteraryContext: { type: Type.STRING },
+        theologicalMessage: { type: Type.STRING },
+        spiritualSense: {
+          type: Type.OBJECT,
+          properties: {
+            literal: { type: Type.STRING },
+            allegorical: { type: Type.STRING },
+            moral: { type: Type.STRING },
+            anagogical: { type: Type.STRING }
+          },
+          required: ['literal', 'allegorical', 'moral', 'anagogical']
+        },
+        meditationPoints: {
+          type: Type.ARRAY,
+          items: { type: Type.STRING }
+        },
+        prayer: { type: Type.STRING }
+      },
+      required: ['siglum', 'title', 'historicalLiteraryContext', 'theologicalMessage', 'spiritualSense', 'meditationPoints', 'prayer']
+    };
+
+    const parsed = await generateContentWithFallback(ai, { prompt, schema });
+    res.json({
+      source: 'gemini',
+      siglum,
+      ...parsed
+    });
+  } catch (error) {
+    console.warn('Gemini passage commentary fallback:', error);
+    res.json({
+      source: 'fallback',
+      siglum,
+      title: `Komentarz do ${siglum}`,
+      historicalLiteraryContext: `Fragment z księgi ${siglum.split(' ')[0]} ukazuje działanie Boga w historii zbawienia.`,
+      theologicalMessage: `Słowo Boże jest żywe i skuteczne, przynosi światło prawdy i uzdrowienie serca.`,
+      spiritualSense: {
+        literal: `Dosłowne znaczenie wskazuje na przymierze Boga ze swoim ludem.`,
+        allegorical: `W Chrystusie wypełniają się wszystkie zapowiedzi Pism.`,
+        moral: `Wzywa do wierności przykazaniom miłości Boga i bliźniego.`,
+        anagogical: `Przypomina o wiecznym przeznaczeniu człowieka do chwały Bożej.`
+      },
+      meditationPoints: [
+        'Jak to Słowo odpowiada na moje obecne trudności lub pytania?',
+        'W jaki sposób Bóg objawia tu swoją miłosierną miłość?',
+        'Do jakiej przemiany myślenia zaprasza mnie dzisiaj Duch Święty?'
+      ],
+      prayer: `Niech Twoje Słowo, Panie, zamieszka we mnie w obfitości, aby rodziło owoce wiary, nadziei i miłości. Amen.`
+    });
+  }
+});
+
 
 // API: Daily Liturgical Readings (Czytania z dnia / Liturgia Słowa)
 app.post('/api/scrutation/daily-readings', async (req, res) => {

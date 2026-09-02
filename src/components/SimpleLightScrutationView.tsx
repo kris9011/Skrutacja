@@ -9,6 +9,8 @@ import { BIBLE_BOOKS } from '../data/biblicalData';
 import { getGuaranteedDailyReadings } from '../data/liturgicalCalendarFallback';
 import { getGuaranteedCrossReferences } from '../data/crossReferenceDatabase';
 import { getGuaranteedPatristicData } from '../data/patristicDatabase';
+import { PassageCommentaryModal } from './PassageCommentaryModal';
+import { PatristicPassageModal } from './PatristicPassageModal';
 import { 
   BookOpen, 
   Sparkles, 
@@ -37,7 +39,9 @@ import {
   Share2,
   ExternalLink,
   BookCheck,
-  MousePointerClick
+  MousePointerClick,
+  MessageSquareQuote,
+  Scroll
 } from 'lucide-react';
 
 interface SimpleLightScrutationViewProps {
@@ -98,10 +102,24 @@ export const SimpleLightScrutationView: React.FC<SimpleLightScrutationViewProps>
   const [copiedSiglum, setCopiedSiglum] = useState<string | null>(null);
   const [speakingSiglum, setSpeakingSiglum] = useState<string | null>(null);
 
-  // Modal for Church Fathers (Ojcowie Kościoła)
+  // Modal for Church Fathers and Biblical Commentary
   const [patristicModalVerse, setPatristicModalVerse] = useState<{
     siglum: string;
     text: string;
+  } | null>(null);
+
+  const [commentaryModalTarget, setCommentaryModalTarget] = useState<{
+    siglum: string;
+    text: string;
+    label?: string;
+    theologicalTheme?: string;
+    liturgicalContext?: string;
+  } | null>(null);
+
+  const [patristicModalTarget, setPatristicModalTarget] = useState<{
+    siglum: string;
+    text: string;
+    label?: string;
   } | null>(null);
 
   // Load daily readings whenever selectedDate changes
@@ -655,8 +673,40 @@ export const SimpleLightScrutationView: React.FC<SimpleLightScrutationViewProps>
                       </span>
                     </div>
 
-                    {/* Audio TTS and Copy Buttons */}
-                    <div className="flex items-center gap-2">
+                    {/* Audio TTS, Copy, Commentary and Patristic Buttons */}
+                    <div className="flex items-center gap-2 flex-wrap justify-end">
+                      <button
+                        type="button"
+                        id={`simple-top-commentary-${currentSelectedReading.id}-btn`}
+                        onClick={() => setCommentaryModalTarget({
+                          siglum: currentSelectedReading.siglum,
+                          text: currentSelectedReading.text,
+                          label: currentSelectedReading.label,
+                          theologicalTheme: currentSelectedReading.theologicalTheme,
+                          liturgicalContext: `${dailyReadings.liturgicalCelebration} • ${dailyReadings.formattedDate}`
+                        })}
+                        className="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-sans font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-xs active:scale-95"
+                        title="Otwórz komentarz biblijno-liturgiczny do tego czytania"
+                      >
+                        <MessageSquareQuote className="w-3.5 h-3.5" />
+                        <span>Komentarz</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        id={`simple-top-patristic-${currentSelectedReading.id}-btn`}
+                        onClick={() => setPatristicModalTarget({
+                          siglum: currentSelectedReading.siglum,
+                          text: currentSelectedReading.text,
+                          label: currentSelectedReading.label
+                        })}
+                        className="px-3 py-1.5 rounded-xl bg-sky-700 hover:bg-sky-800 text-white text-xs font-sans font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-xs active:scale-95"
+                        title="Komentarze Ojców Kościoła"
+                      >
+                        <Scroll className="w-3.5 h-3.5" />
+                        <span>Ojcowie Kościoła</span>
+                      </button>
+
                       <button
                         onClick={() => handleSpeakText(currentSelectedReading.siglum, currentSelectedReading.text)}
                         className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-emerald-50 text-slate-700 hover:text-emerald-800 border border-slate-200 text-xs font-medium flex items-center gap-1.5 transition-colors cursor-pointer"
@@ -667,7 +717,7 @@ export const SimpleLightScrutationView: React.FC<SimpleLightScrutationViewProps>
                         ) : (
                           <Volume2 className="w-3.5 h-3.5 text-slate-600" />
                         )}
-                        <span>{speakingSiglum === currentSelectedReading.siglum ? 'Zatrzymaj' : 'Posłuchaj'}</span>
+                        <span className="hidden sm:inline">{speakingSiglum === currentSelectedReading.siglum ? 'Zatrzymaj' : 'Posłuchaj'}</span>
                       </button>
 
                       <button
@@ -680,15 +730,46 @@ export const SimpleLightScrutationView: React.FC<SimpleLightScrutationViewProps>
                         ) : (
                           <Copy className="w-3.5 h-3.5 text-slate-600" />
                         )}
-                        <span>{copiedSiglum === currentSelectedReading.siglum ? 'Skopiowano' : 'Kopiuj'}</span>
+                        <span className="hidden sm:inline">{copiedSiglum === currentSelectedReading.siglum ? 'Skopiowano' : 'Kopiuj'}</span>
                       </button>
+                    </div>
+                  </div>
 
+                  {/* Prominent High-Visibility Action Bar for Commentary & Church Fathers */}
+                  <div className="p-3 sm:p-4 rounded-2xl bg-gradient-to-r from-amber-50 via-amber-100/70 to-sky-50 border-2 border-amber-300 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                    <div className="flex items-center gap-2 text-amber-950 font-sans font-bold text-xs sm:text-sm">
+                      <Sparkles className="w-4 h-4 text-amber-600 shrink-0 animate-pulse" />
+                      <span>Komentarze i Tradycja Kościoła do czytania ({currentSelectedReading.siglum}):</span>
+                    </div>
+                    <div className="flex items-center gap-2 w-full sm:w-auto flex-wrap">
                       <button
-                        onClick={() => setPatristicModalVerse({ siglum: currentSelectedReading.siglum, text: currentSelectedReading.text })}
-                        className="px-3 py-1.5 rounded-xl bg-sky-50 hover:bg-sky-100 text-sky-800 border border-sky-200 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
-                        title="Komentarze Ojców Kościoła"
+                        type="button"
+                        id={`simple-banner-commentary-${currentSelectedReading.id}-btn`}
+                        onClick={() => setCommentaryModalTarget({
+                          siglum: currentSelectedReading.siglum,
+                          text: currentSelectedReading.text,
+                          label: currentSelectedReading.label,
+                          theologicalTheme: currentSelectedReading.theologicalTheme,
+                          liturgicalContext: `${dailyReadings.liturgicalCelebration} • ${dailyReadings.formattedDate}`
+                        })}
+                        className="flex-1 sm:flex-none px-4 py-2.5 rounded-xl text-xs font-sans uppercase tracking-wider font-bold bg-amber-600 hover:bg-amber-700 text-white shadow-xs flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-95"
+                        title="Otwórz komentarz biblijno-liturgiczny do tego czytania"
                       >
-                        <Sparkles className="w-3.5 h-3.5 text-sky-600" />
+                        <MessageSquareQuote className="w-4 h-4" />
+                        <span>Komentarz biblijny</span>
+                      </button>
+                      <button
+                        type="button"
+                        id={`simple-banner-patristic-${currentSelectedReading.id}-btn`}
+                        onClick={() => setPatristicModalTarget({
+                          siglum: currentSelectedReading.siglum,
+                          text: currentSelectedReading.text,
+                          label: currentSelectedReading.label
+                        })}
+                        className="flex-1 sm:flex-none px-4 py-2.5 rounded-xl text-xs font-sans uppercase tracking-wider font-bold bg-sky-700 hover:bg-sky-800 text-white shadow-xs flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-95"
+                        title="Otwórz komentarze Ojców Kościoła"
+                      >
+                        <Scroll className="w-4 h-4" />
                         <span>Ojcowie Kościoła</span>
                       </button>
                     </div>
@@ -879,7 +960,7 @@ export const SimpleLightScrutationView: React.FC<SimpleLightScrutationViewProps>
                           : 'bg-white border-slate-200'
                       }`}
                     >
-                      <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-3">
+                      <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-slate-100 mb-3">
                         <div className="flex items-center gap-2">
                           <span className="font-mono font-bold text-base text-emerald-900 bg-emerald-100 px-2.5 py-0.5 rounded-lg">
                             {reading.siglum}
@@ -888,16 +969,46 @@ export const SimpleLightScrutationView: React.FC<SimpleLightScrutationViewProps>
                             {reading.label}
                           </span>
                         </div>
-                        <button
-                          onClick={() => handleSelectDailyReading(reading)}
-                          className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                            selectedReadingId === reading.id
-                              ? 'bg-emerald-600 text-white'
-                              : 'bg-slate-100 hover:bg-emerald-100 text-slate-700'
-                          }`}
-                        >
-                          {selectedReadingId === reading.id ? 'Wybrane do skrutacji' : 'Wybierz ten tekst'}
-                        </button>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <button
+                            type="button"
+                            onClick={() => setCommentaryModalTarget({
+                              siglum: reading.siglum,
+                              text: reading.text,
+                              label: reading.label,
+                              theologicalTheme: reading.theologicalTheme,
+                              liturgicalContext: `${dailyReadings.liturgicalCelebration} • ${dailyReadings.formattedDate}`
+                            })}
+                            className="px-2.5 py-1 rounded-lg text-xs font-sans font-bold bg-amber-500 hover:bg-amber-600 text-white flex items-center gap-1 cursor-pointer transition-all shadow-2xs"
+                            title="Otwórz komentarz biblijny do tego czytania"
+                          >
+                            <MessageSquareQuote className="w-3.5 h-3.5" />
+                            <span>Komentarz</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setPatristicModalTarget({
+                              siglum: reading.siglum,
+                              text: reading.text,
+                              label: reading.label
+                            })}
+                            className="px-2.5 py-1 rounded-lg text-xs font-sans font-bold bg-sky-700 hover:bg-sky-800 text-white flex items-center gap-1 cursor-pointer transition-all shadow-2xs"
+                            title="Otwórz komentarze Ojców Kościoła"
+                          >
+                            <Scroll className="w-3.5 h-3.5" />
+                            <span>Ojcowie</span>
+                          </button>
+                          <button
+                            onClick={() => handleSelectDailyReading(reading)}
+                            className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                              selectedReadingId === reading.id
+                                ? 'bg-emerald-600 text-white'
+                                : 'bg-slate-100 hover:bg-emerald-100 text-slate-700'
+                            }`}
+                          >
+                            {selectedReadingId === reading.id ? 'Wybrane do skrutacji' : 'Wybierz ten tekst'}
+                          </button>
+                        </div>
                       </div>
 
                       {reading.liturgicalIntroduction && (
@@ -1261,6 +1372,43 @@ export const SimpleLightScrutationView: React.FC<SimpleLightScrutationViewProps>
           verseText={patristicModalVerse.text}
           onClose={() => setPatristicModalVerse(null)}
           onOpenFullPatristic={onOpenPatristicView}
+        />
+      )}
+
+      {/* Rich Biblical Commentary Modal */}
+      {commentaryModalTarget && (
+        <PassageCommentaryModal
+          isOpen={!!commentaryModalTarget}
+          siglum={commentaryModalTarget.siglum}
+          text={commentaryModalTarget.text}
+          label={commentaryModalTarget.label}
+          theologicalTheme={commentaryModalTarget.theologicalTheme}
+          liturgicalContext={commentaryModalTarget.liturgicalContext}
+          onClose={() => setCommentaryModalTarget(null)}
+          onOpenPatristics={(sig) => {
+            setCommentaryModalTarget(null);
+            setPatristicModalTarget({
+              siglum: sig,
+              text: commentaryModalTarget.text,
+              label: commentaryModalTarget.label
+            });
+          }}
+        />
+      )}
+
+      {/* Rich Patristic Commentary Modal */}
+      {patristicModalTarget && (
+        <PatristicPassageModal
+          isOpen={!!patristicModalTarget}
+          siglum={patristicModalTarget.siglum}
+          verseText={patristicModalTarget.text}
+          label={patristicModalTarget.label}
+          onOpenFullPatristicView={(sig) => {
+            if (onOpenPatristicView) {
+              onOpenPatristicView(sig);
+            }
+          }}
+          onClose={() => setPatristicModalTarget(null)}
         />
       )}
     </div>
