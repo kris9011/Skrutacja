@@ -47,7 +47,13 @@ export const Header: React.FC<HeaderProps> = ({
   return (
     <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md text-slate-900 border-b border-slate-200/90 shadow-xs transition-colors">
       {/* Top Scripture Edition Notice & Mobile App Shortcuts Strip */}
-      <div className="bg-emerald-50/80 border-b border-emerald-200/60 text-[11px] font-sans text-emerald-950 py-1.5 px-3 sm:px-6">
+      <div 
+        className="bg-emerald-50/95 border-b border-emerald-200/60 text-[11px] font-sans text-emerald-950 px-3 sm:px-6 transition-all"
+        style={{
+          paddingTop: 'max(env(safe-area-inset-top, 0px), 6px)',
+          paddingBottom: '6px'
+        }}
+      >
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-2">
           <div className="flex items-center gap-1.5 font-medium truncate text-[10px] sm:text-[11px]">
             <BookOpen className="w-3.5 h-3.5 text-emerald-700 shrink-0" />

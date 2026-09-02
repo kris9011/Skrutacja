@@ -252,7 +252,7 @@ export default function App() {
       />
 
       {/* Main View Router */}
-      <main className="flex-1 pb-16 md:pb-0">
+      <main className="flex-1 pb-28 md:pb-8">
         {activeTab === 'simple' && (
           <div className="bg-gradient-to-b from-sky-50/40 via-slate-50 to-emerald-50/30 min-h-screen text-slate-900 pb-16">
             <SimpleLightScrutationView
@@ -461,7 +461,13 @@ export default function App() {
       </main>
 
       {/* Mobile Sticky Bottom Navigation */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-white/95 backdrop-blur-md border-t border-slate-200 px-2 py-1 flex items-center justify-around shadow-lg">
+      <div 
+        className="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-white/95 backdrop-blur-md border-t border-slate-200 px-2 flex items-center justify-around shadow-lg transition-all"
+        style={{
+          paddingTop: '6px',
+          paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 8px)'
+        }}
+      >
         <button
           id="mobile-nav-daily"
           onClick={() => setActiveTab('daily')}
