@@ -18,10 +18,12 @@ import { JewishTraditionView } from './components/JewishTraditionView';
 import { CommunityWordSharingView } from './components/CommunityWordSharingView';
 import { IntroSplash } from './components/IntroSplash';
 import { ResetAppModal } from './components/ResetAppModal';
-import { ScrutationSession, BiblicalThemePreset } from './types';
+import { DailyReminderModal } from './components/DailyReminderModal';
+import { InstallAppModal } from './components/InstallAppModal';
+import { ScrutationSession, BiblicalThemePreset, ScrutationReminderSettings } from './types';
 import { THEME_PRESETS } from './data/biblicalData';
 import { CheckCircle2, Flame, BookOpen, CalendarDays, Sparkles, BookmarkCheck, Network, Scroll, Users, RotateCcw } from 'lucide-react';
-import { initNotificationScheduler } from './utils/notificationService';
+import { initNotificationScheduler, getStoredReminderSettings } from './utils/notificationService';
 
 const LOCAL_STORAGE_ACTIVE_SESSION = 'scrutatio_active_session_v1';
 const LOCAL_STORAGE_JOURNAL = 'scrutatio_journal_v1';
@@ -38,6 +40,10 @@ export default function App() {
   const [jewishSiglum, setJewishSiglum] = useState<string>('Rdz 22, 1-18');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [resetModalOpen, setResetModalOpen] = useState<boolean>(false);
+  const [reminderModalOpen, setReminderModalOpen] = useState<boolean>(false);
+  const [installModalOpen, setInstallModalOpen] = useState<boolean>(false);
+  const [installPlatform, setInstallPlatform] = useState<'ios' | 'android'>('ios');
+  const [reminderSettings, setReminderSettings] = useState<ScrutationReminderSettings>(getStoredReminderSettings);
 
   // Load from localStorage on mount & initialize daily reminder scheduler
   useEffect(() => {
@@ -249,6 +255,12 @@ export default function App() {
         hasActiveSession={Boolean(activeSession)}
         onReplayIntro={() => setShowIntro(true)}
         onOpenResetModal={() => setResetModalOpen(true)}
+        onOpenReminderModal={() => setReminderModalOpen(true)}
+        onOpenInstallModal={(platform) => {
+          setInstallPlatform(platform);
+          setInstallModalOpen(true);
+        }}
+        reminderSettings={reminderSettings}
       />
 
       {/* Main View Router */}
@@ -561,6 +573,22 @@ export default function App() {
         onResetAllData={handleResetAllData}
         hasActiveSession={Boolean(activeSession)}
         journalCount={journalSessions.length}
+      />
+
+      {/* Daily Reminder Modal */}
+      <DailyReminderModal
+        isOpen={reminderModalOpen}
+        onClose={() => setReminderModalOpen(false)}
+        onSettingsSaved={(newSettings) => {
+          setReminderSettings(newSettings);
+        }}
+      />
+
+      {/* Install App Modal */}
+      <InstallAppModal
+        isOpen={installModalOpen}
+        onClose={() => setInstallModalOpen(false)}
+        initialPlatform={installPlatform}
       />
 
       {/* Footer */}

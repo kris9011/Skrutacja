@@ -1,8 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { BookOpen, Compass, BookmarkCheck, Library, Flame, Sparkles, CalendarDays, Droplets, Leaf, Network, Scroll, Users, Smartphone, Download, RotateCcw, BellRing, Bell } from 'lucide-react';
-import { InstallAppModal } from './InstallAppModal';
-import { DailyReminderModal } from './DailyReminderModal';
-import { getStoredReminderSettings } from '../utils/notificationService';
 import { ScrutationReminderSettings } from '../types';
 
 interface HeaderProps {
@@ -11,7 +8,9 @@ interface HeaderProps {
   hasActiveSession: boolean;
   onReplayIntro?: () => void;
   onOpenResetModal?: () => void;
-  onOpenReminderModal?: () => void;
+  onOpenReminderModal: () => void;
+  onOpenInstallModal: (platform: 'ios' | 'android') => void;
+  reminderSettings: ScrutationReminderSettings;
 }
 
 export const Header: React.FC<HeaderProps> = ({ 
@@ -20,29 +19,10 @@ export const Header: React.FC<HeaderProps> = ({
   hasActiveSession, 
   onReplayIntro,
   onOpenResetModal,
-  onOpenReminderModal
+  onOpenReminderModal,
+  onOpenInstallModal,
+  reminderSettings
 }) => {
-  const [installModalOpen, setInstallModalOpen] = useState<boolean>(false);
-  const [installPlatform, setInstallPlatform] = useState<'ios' | 'android'>('ios');
-  const [reminderModalOpen, setReminderModalOpen] = useState<boolean>(false);
-  const [reminderSettings, setReminderSettings] = useState<ScrutationReminderSettings>(getStoredReminderSettings());
-
-  useEffect(() => {
-    setReminderSettings(getStoredReminderSettings());
-  }, [reminderModalOpen]);
-
-  const handleOpenInstall = (platform: 'ios' | 'android') => {
-    setInstallPlatform(platform);
-    setInstallModalOpen(true);
-  };
-
-  const handleOpenReminder = () => {
-    if (onOpenReminderModal) {
-      onOpenReminderModal();
-    } else {
-      setReminderModalOpen(true);
-    }
-  };
 
   return (
     <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md text-slate-900 border-b border-slate-200/90 shadow-xs transition-colors">
@@ -68,7 +48,7 @@ export const Header: React.FC<HeaderProps> = ({
             <button
               type="button"
               id="header-reminder-btn"
-              onClick={handleOpenReminder}
+              onClick={onOpenReminderModal}
               title={`Przypomnienie o skrutacji ${reminderSettings.enabled ? `(Włączone: ${reminderSettings.scheduledTime})` : '(Wyłączone)'}`}
               className={`h-7 px-2 sm:px-2.5 rounded-lg border text-[11px] font-sans font-bold flex items-center gap-1.5 shadow-xs transition-all cursor-pointer active:scale-95 group ${
                 reminderSettings.enabled
@@ -121,7 +101,7 @@ export const Header: React.FC<HeaderProps> = ({
             <button
               type="button"
               id="download-ios-btn"
-              onClick={() => handleOpenInstall('ios')}
+              onClick={() => onOpenInstallModal('ios')}
               title="Zainstaluj aplikację na iPhone / iPad (iOS)"
               className="h-7 px-2 sm:px-2.5 rounded-lg bg-white hover:bg-emerald-100/90 border border-emerald-300 text-slate-900 hover:text-emerald-950 font-sans font-bold text-[11px] flex items-center gap-1.5 shadow-xs transition-all cursor-pointer active:scale-95 group"
             >
@@ -135,7 +115,7 @@ export const Header: React.FC<HeaderProps> = ({
             <button
               type="button"
               id="download-android-btn"
-              onClick={() => handleOpenInstall('android')}
+              onClick={() => onOpenInstallModal('android')}
               title="Zainstaluj aplikację na telefon Android"
               className="h-7 px-2 sm:px-2.5 rounded-lg bg-white hover:bg-emerald-100/90 border border-emerald-300 text-slate-900 hover:text-emerald-950 font-sans font-bold text-[11px] flex items-center gap-1.5 shadow-xs transition-all cursor-pointer active:scale-95 group"
             >
@@ -279,22 +259,6 @@ export const Header: React.FC<HeaderProps> = ({
           </nav>
         </div>
       </div>
-
-      {/* Install App Modal */}
-      <InstallAppModal
-        isOpen={installModalOpen}
-        onClose={() => setInstallModalOpen(false)}
-        initialPlatform={installPlatform}
-      />
-
-      {/* Daily Reminder Settings Modal */}
-      <DailyReminderModal
-        isOpen={reminderModalOpen}
-        onClose={() => setReminderModalOpen(false)}
-        onSettingsSaved={(newSettings) => {
-          setReminderSettings(newSettings);
-        }}
-      />
     </header>
   );
 };
