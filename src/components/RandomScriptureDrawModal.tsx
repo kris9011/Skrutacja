@@ -13,10 +13,12 @@ import {
   Share2, 
   Bookmark,
   Scroll,
-  Feather
+  Feather,
+  Maximize2
 } from 'lucide-react';
 import { RANDOM_SCRIPTURE_QUOTES } from '../data/randomScriptureQuotes';
 import { RandomScriptureQuote, ScrutationSession } from '../types';
+import { FullScreenScriptureTextView } from './FullScreenScriptureTextView';
 
 interface RandomScriptureDrawModalProps {
   isOpen: boolean;
@@ -43,6 +45,7 @@ export const RandomScriptureDrawModal: React.FC<RandomScriptureDrawModalProps> =
   const [isOpening, setIsOpening] = useState<boolean>(true);
   const [isCopied, setIsCopied] = useState<boolean>(false);
   const [showFullContext, setShowFullContext] = useState<boolean>(true);
+  const [isFullScreen, setIsFullScreen] = useState<boolean>(false);
 
   // Trigger open animation when opened or quote changes
   useEffect(() => {
@@ -176,14 +179,26 @@ export const RandomScriptureDrawModal: React.FC<RandomScriptureDrawModalProps> =
             </div>
           </div>
 
-          <button
-            type="button"
-            onClick={onClose}
-            className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900 transition-all cursor-pointer"
-            title="Zamknij"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setIsFullScreen(true)}
+              className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-amber-400 via-amber-500 to-yellow-500 hover:from-amber-500 hover:to-yellow-600 text-slate-950 border border-amber-400 text-xs font-sans font-extrabold transition-all cursor-pointer shadow-sm active:scale-95"
+              title="Otwórz w trybie pełnego ekranu (sam tekst do kontemplacji)"
+            >
+              <Maximize2 className="w-4 h-4 text-slate-950" />
+              <span>Pełny ekran (sam tekst)</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={onClose}
+              className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900 transition-all cursor-pointer"
+              title="Zamknij"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
         {/* Card Body with 3D Opening / Flipping Animation */}
@@ -238,6 +253,15 @@ export const RandomScriptureDrawModal: React.FC<RandomScriptureDrawModalProps> =
                       <span className="px-2.5 py-1 rounded-lg text-xs font-sans font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
                         {currentQuote.testament === 'NT' ? 'Nowy Testament' : 'Stary Testament'}
                       </span>
+                      <button
+                        type="button"
+                        onClick={() => setIsFullScreen(true)}
+                        className="px-2.5 py-1 rounded-lg text-xs font-sans font-bold bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs"
+                        title="Otwórz sam tekst w trybie pełnego ekranu"
+                      >
+                        <Maximize2 className="w-3.5 h-3.5 text-amber-700" />
+                        <span className="hidden sm:inline">Tryb kontemplacji</span>
+                      </button>
                     </div>
                   </div>
 
@@ -245,11 +269,22 @@ export const RandomScriptureDrawModal: React.FC<RandomScriptureDrawModalProps> =
                   <div className="space-y-3.5">
                     {/* Zdanie powyżej cytatu - piękny cytat w złotych literach z cudzysłowem */}
                     <div className="space-y-1">
-                      <div className="flex items-center gap-1.5 text-amber-600">
-                        <Sparkles className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
-                        <span className="text-[10px] font-sans font-bold uppercase tracking-widest text-amber-700">
-                          Słowo Życia • Rhema
-                        </span>
+                      <div className="flex items-center justify-between gap-1.5">
+                        <div className="flex items-center gap-1.5 text-amber-600">
+                          <Sparkles className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+                          <span className="text-[10px] font-sans font-bold uppercase tracking-widest text-amber-700">
+                            Słowo Życia • Rhema
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setIsFullScreen(true)}
+                          className="inline-flex items-center gap-1 text-[11px] font-sans font-bold text-amber-900 bg-amber-100 hover:bg-amber-200 px-2.5 py-0.5 rounded-full border border-amber-300 cursor-pointer transition-colors shadow-xs"
+                          title="Kliknij, aby otworzyć sam tekst na pełnym ekranie"
+                        >
+                          <Maximize2 className="w-3 h-3" />
+                          <span>Pełny ekran (sam tekst)</span>
+                        </button>
                       </div>
                       <blockquote className="font-serif text-xl sm:text-2xl font-bold tracking-tight text-amber-800 sm:text-amber-900 leading-snug drop-shadow-xs">
                         „{cleanQuoteText(currentQuote.title)}”
@@ -351,6 +386,16 @@ export const RandomScriptureDrawModal: React.FC<RandomScriptureDrawModalProps> =
                       {isCopied ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4 text-slate-600" />}
                       <span className="hidden sm:inline">{isCopied ? 'Skopiowano!' : 'Kopiuj'}</span>
                     </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setIsFullScreen(true)}
+                      className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-500 hover:from-amber-500 hover:to-yellow-600 text-slate-950 text-xs font-sans font-extrabold border border-amber-400 flex items-center justify-center gap-1.5 transition-all cursor-pointer active:scale-95 shadow-sm"
+                      title="Tryb pełnego ekranu - sam tekst"
+                    >
+                      <Maximize2 className="w-4 h-4 text-slate-950" />
+                      <span>Pełny ekran</span>
+                    </button>
                   </div>
 
                   <button
@@ -367,6 +412,29 @@ export const RandomScriptureDrawModal: React.FC<RandomScriptureDrawModalProps> =
           </AnimatePresence>
         </div>
       </div>
+
+      {/* Full-screen pure scripture text contemplation mode */}
+      <FullScreenScriptureTextView
+        isOpen={isFullScreen}
+        onClose={() => setIsFullScreen(false)}
+        title={currentQuote.title}
+        text={currentQuote.text}
+        siglum={currentQuote.siglum}
+        bookName={currentQuote.bookName}
+        testament={currentQuote.testament}
+        theologicalContext={currentQuote.theologicalContext}
+        onNextWord={() => {
+          let nextIndex = Math.floor(Math.random() * RANDOM_SCRIPTURE_QUOTES.length);
+          if (RANDOM_SCRIPTURE_QUOTES[nextIndex].id === currentQuote.id && RANDOM_SCRIPTURE_QUOTES.length > 1) {
+            nextIndex = (nextIndex + 1) % RANDOM_SCRIPTURE_QUOTES.length;
+          }
+          setCurrentQuote(RANDOM_SCRIPTURE_QUOTES[nextIndex]);
+        }}
+        onStartScrutation={() => {
+          setIsFullScreen(false);
+          handleStartScrutation();
+        }}
+      />
     </div>
   );
 };

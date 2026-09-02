@@ -36,9 +36,11 @@ import {
   CheckCircle2,
   MousePointerClick,
   LayoutList,
-  LayoutGrid
+  LayoutGrid,
+  Maximize2
 } from 'lucide-react';
 import { BilingualScriptureReader } from './BilingualScriptureReader';
+import { FullScreenScriptureTextView } from './FullScreenScriptureTextView';
 
 interface DailyReadingsAndPassageSelectorProps {
   onStartScrutationWithPassage: (session: ScrutationSession) => void;
@@ -223,6 +225,7 @@ export const DailyReadingsAndPassageSelector: React.FC<DailyReadingsAndPassageSe
   const [currentRandomQuote, setCurrentRandomQuote] = useState<RandomScriptureQuote | null>(() => getRandomScriptureQuote());
   const [isDrawingRandom, setIsDrawingRandom] = useState<boolean>(false);
   const [drawHistory, setDrawHistory] = useState<RandomScriptureQuote[]>([]);
+  const [isFullScreenQuote, setIsFullScreenQuote] = useState<boolean>(false);
 
   // Current selected book info
   const currentBookInfo = BIBLE_BOOKS.find(b => b.siglum === selectedBookSiglum) || BIBLE_BOOKS[0];
@@ -2208,6 +2211,14 @@ export const DailyReadingsAndPassageSelector: React.FC<DailyReadingsAndPassageSe
                       <Copy className="w-4 h-4" />
                     )}
                   </button>
+                  <button
+                    onClick={() => setIsFullScreenQuote(true)}
+                    className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 border border-amber-400 text-xs font-sans text-slate-950 font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-sm active:scale-95"
+                    title="Otwórz sam tekst w trybie pełnego ekranu (kontemplacja)"
+                  >
+                    <Maximize2 className="w-3.5 h-3.5 text-slate-950" />
+                    <span>Pełny ekran</span>
+                  </button>
                   {onOpenPatristicForVerse && (
                     <button
                       onClick={() => onOpenPatristicForVerse(currentRandomQuote.siglum)}
@@ -2224,11 +2235,23 @@ export const DailyReadingsAndPassageSelector: React.FC<DailyReadingsAndPassageSe
               {/* Title & Scripture Text */}
               <div className="space-y-3.5">
                 <div className="space-y-1">
-                  <div className="flex items-center gap-1.5 text-amber-600">
-                    <Sparkles className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
-                    <span className="text-[10px] font-sans font-bold uppercase tracking-widest text-amber-700">
-                      Słowo Życia • Rhema
-                    </span>
+                  <div className="flex items-center justify-between gap-1.5">
+                    <div className="flex items-center gap-1.5 text-amber-600">
+                      <Sparkles className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+                      <span className="text-[10px] font-sans font-bold uppercase tracking-widest text-amber-700">
+                        Słowo Życia • Rhema
+                      </span>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => setIsFullScreenQuote(true)}
+                      className="inline-flex items-center gap-1 text-[11px] font-sans font-bold text-amber-800 hover:text-amber-950 bg-amber-100 hover:bg-amber-200/80 px-2.5 py-0.5 rounded-full border border-amber-300 cursor-pointer transition-colors"
+                      title="Kliknij, aby otworzyć sam tekst na pełnym ekranie"
+                    >
+                      <Maximize2 className="w-3 h-3" />
+                      <span>Pełny ekran (sam tekst)</span>
+                    </button>
                   </div>
                   <blockquote className="font-serif text-xl sm:text-2xl font-bold tracking-tight text-amber-800 sm:text-amber-900 leading-snug drop-shadow-xs">
                     „{currentRandomQuote.title.replace(/[«»]/g, '').trim().replace(/^[„"“”\s]+/, '').replace(/[„"“”\s]+$/, '').trim()}”
@@ -2285,6 +2308,15 @@ export const DailyReadingsAndPassageSelector: React.FC<DailyReadingsAndPassageSe
               {/* Primary Call to Action */}
               <div className="pt-4 flex flex-col sm:flex-row gap-3">
                 <button
+                  type="button"
+                  onClick={() => setIsFullScreenQuote(true)}
+                  className="py-3.5 px-6 rounded-xl bg-gradient-to-r from-amber-500 via-amber-600 to-yellow-600 hover:from-amber-600 hover:to-yellow-700 text-slate-950 font-sans font-bold text-xs sm:text-sm uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-md cursor-pointer active:scale-95 border border-amber-300"
+                >
+                  <Maximize2 className="w-4 h-4 text-slate-950" />
+                  <span>Pełny ekran (sam tekst)</span>
+                </button>
+
+                <button
                   id="start-scrutation-from-random-btn"
                   type="button"
                   onClick={() => startScrutationFromRandomQuote(currentRandomQuote)}
@@ -2338,6 +2370,25 @@ export const DailyReadingsAndPassageSelector: React.FC<DailyReadingsAndPassageSe
             </div>
           )}
         </div>
+      )}
+
+      {/* Full-screen pure scripture text mode */}
+      {currentRandomQuote && (
+        <FullScreenScriptureTextView
+          isOpen={isFullScreenQuote}
+          onClose={() => setIsFullScreenQuote(false)}
+          title={currentRandomQuote.title}
+          text={currentRandomQuote.text}
+          siglum={currentRandomQuote.siglum}
+          bookName={currentRandomQuote.bookName}
+          testament={currentRandomQuote.testament}
+          theologicalContext={currentRandomQuote.theologicalContext}
+          onNextWord={() => handleDrawRandomQuote()}
+          onStartScrutation={() => {
+            setIsFullScreenQuote(false);
+            startScrutationFromRandomQuote(currentRandomQuote);
+          }}
+        />
       )}
     </div>
   );
