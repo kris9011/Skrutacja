@@ -1,6 +1,9 @@
-import React, { useState } from 'react';
-import { BookOpen, Compass, BookmarkCheck, Library, Flame, Sparkles, CalendarDays, Droplets, Leaf, Network, Scroll, Users, Smartphone, Download, RotateCcw } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { BookOpen, Compass, BookmarkCheck, Library, Flame, Sparkles, CalendarDays, Droplets, Leaf, Network, Scroll, Users, Smartphone, Download, RotateCcw, BellRing, Bell } from 'lucide-react';
 import { InstallAppModal } from './InstallAppModal';
+import { DailyReminderModal } from './DailyReminderModal';
+import { getStoredReminderSettings } from '../utils/notificationService';
+import { ScrutationReminderSettings } from '../types';
 
 interface HeaderProps {
   activeTab: 'simple' | 'daily' | 'workspace' | 'tree' | 'patristic' | 'jewish' | 'community' | 'journal' | 'guide' | 'themes' | 'books';
@@ -8,6 +11,7 @@ interface HeaderProps {
   hasActiveSession: boolean;
   onReplayIntro?: () => void;
   onOpenResetModal?: () => void;
+  onOpenReminderModal?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({ 
@@ -15,14 +19,29 @@ export const Header: React.FC<HeaderProps> = ({
   setActiveTab, 
   hasActiveSession, 
   onReplayIntro,
-  onOpenResetModal 
+  onOpenResetModal,
+  onOpenReminderModal
 }) => {
   const [installModalOpen, setInstallModalOpen] = useState<boolean>(false);
   const [installPlatform, setInstallPlatform] = useState<'ios' | 'android'>('ios');
+  const [reminderModalOpen, setReminderModalOpen] = useState<boolean>(false);
+  const [reminderSettings, setReminderSettings] = useState<ScrutationReminderSettings>(getStoredReminderSettings());
+
+  useEffect(() => {
+    setReminderSettings(getStoredReminderSettings());
+  }, [reminderModalOpen]);
 
   const handleOpenInstall = (platform: 'ios' | 'android') => {
     setInstallPlatform(platform);
     setInstallModalOpen(true);
+  };
+
+  const handleOpenReminder = () => {
+    if (onOpenReminderModal) {
+      onOpenReminderModal();
+    } else {
+      setReminderModalOpen(true);
+    }
   };
 
   return (
@@ -39,6 +58,31 @@ export const Header: React.FC<HeaderProps> = ({
 
           {/* Action Buttons: Reset, Intro, iOS & Android */}
           <div className="flex items-center gap-1.5 shrink-0">
+            {/* Daily Reminder Bell Button */}
+            <button
+              type="button"
+              id="header-reminder-btn"
+              onClick={handleOpenReminder}
+              title={`Przypomnienie o skrutacji ${reminderSettings.enabled ? `(Włączone: ${reminderSettings.scheduledTime})` : '(Wyłączone)'}`}
+              className={`h-7 px-2 sm:px-2.5 rounded-lg border text-[11px] font-sans font-bold flex items-center gap-1.5 shadow-xs transition-all cursor-pointer active:scale-95 group ${
+                reminderSettings.enabled
+                  ? 'bg-emerald-100 hover:bg-emerald-200/90 border-emerald-400 text-emerald-950'
+                  : 'bg-white hover:bg-slate-100 border-slate-300 text-slate-700'
+              }`}
+            >
+              {reminderSettings.enabled ? (
+                <BellRing className="w-3.5 h-3.5 text-emerald-700 animate-bounce shrink-0" />
+              ) : (
+                <Bell className="w-3.5 h-3.5 text-slate-500 group-hover:text-slate-700 shrink-0" />
+              )}
+              <span className="hidden sm:inline">
+                {reminderSettings.enabled ? reminderSettings.scheduledTime : 'Przypomnienie'}
+              </span>
+              {reminderSettings.enabled && (
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-ping hidden sm:inline-block" />
+              )}
+            </button>
+
             {/* Prominent Reset Button */}
             {onOpenResetModal && (
               <button
@@ -235,6 +279,15 @@ export const Header: React.FC<HeaderProps> = ({
         isOpen={installModalOpen}
         onClose={() => setInstallModalOpen(false)}
         initialPlatform={installPlatform}
+      />
+
+      {/* Daily Reminder Settings Modal */}
+      <DailyReminderModal
+        isOpen={reminderModalOpen}
+        onClose={() => setReminderModalOpen(false)}
+        onSettingsSaved={(newSettings) => {
+          setReminderSettings(newSettings);
+        }}
       />
     </header>
   );

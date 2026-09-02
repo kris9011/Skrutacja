@@ -74,9 +74,10 @@ export const BilingualScriptureReader: React.FC<BilingualScriptureReaderProps> =
   // Automatically fetch full unabridged original text when entering 'oryginal' or 'bilingwistyczny' mode
   useEffect(() => {
     if ((displayMode === 'oryginal' || displayMode === 'bilingwistyczny') && !fetchedOriginal && !isLoadingOriginal) {
-      // If we already have explicit full custom text, use it
-      if (originalGreekText && originalGreekText.length > 50) return;
-      if (originalHebrewText && originalHebrewText.length > 50) return;
+      // If we already have complete unabridged text without ellipsis, use it
+      const hasCompleteGreek = originalGreekText && originalGreekText.length > 80 && !originalGreekText.includes('...');
+      const hasCompleteHebrew = originalHebrewText && originalHebrewText.length > 80 && !originalHebrewText.includes('...');
+      if (hasCompleteGreek || hasCompleteHebrew) return;
 
       setIsLoadingOriginal(true);
       fetch('/api/scrutation/original-text', {
@@ -102,8 +103,9 @@ export const BilingualScriptureReader: React.FC<BilingualScriptureReaderProps> =
   // Determine active full original text
   const activeOriginalText = 
     fetchedOriginal?.originalScript ||
-    originalGreekText || 
-    originalHebrewText || 
+    (originalGreekText && !originalGreekText.endsWith('...') ? originalGreekText : null) || 
+    (originalHebrewText && !originalHebrewText.endsWith('...') ? originalHebrewText : null) || 
+    fetchedOriginal?.originalScript ||
     (isOldTestament 
       ? 'בְּרֵאשִׁית בָּרָא אֱלֹהִים אֵת הַשָּׁמַיִם וְאֵת הָאָרֶץ׃ וְהָאָרֶץ הָיְתָה תֹהוּ וָבֹהוּ וְחֹשֶׁךְ עַל־פְּנֵי תְהוֹם וְרוּחַ אֱלֹהִים מְרַחֶפֶת עַל־פְּנֵי הַמָּיִם׃ וַיֹּאמֶר אֱלֹהִים יְהִי אוֹר וַיְהִי־אוֹר׃' 
       : 'Ἐν ἀρχῇ ἦν ὁ λόγος, καὶ ὁ λόγος ἦν πρὸς τὸν θεόν, καὶ θεὸς ἦν ὁ λόγος. οὗτος ἦν ἐν ἀρχῇ πρὸς τὸν θεόν. πάντα διʼ αὐτοῦ ἐγένετο, καὶ χωρὶς αὐτοῦ ἐγένετο οὐδὲ ἕν. ὃ γέγονεν ἐν αὐτῷ ζωὴ ἦν, καὶ ἡ ζωὴ ἦν τὸ φῶς τῶν ἀνθρώπων· καὶ τὸ φῶς ἐν τῇ σκοτίᾳ φαίνει, καὶ ἡ σκοτία αὐτὸ οὐ κατέλαβεν.');

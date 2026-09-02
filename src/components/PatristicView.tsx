@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { PatristicCommentarySection } from './PatristicCommentarySection';
 import { getGuaranteedDailyReadings } from '../data/liturgicalCalendarFallback';
 import { CHURCH_FATHERS_DIRECTORY, ChurchFatherBio } from '../data/patristicFathersDirectory';
@@ -54,6 +54,22 @@ export const PatristicView: React.FC<PatristicViewProps> = ({ defaultSiglum }) =
   const [verseText, setVerseText] = useState<string>(
     dailyLiturgical.readings.find(r => r.type === 'gospel')?.text || 'Ten lud czci Mnie wargami, lecz sercem swym daleko jest ode Mnie...'
   );
+
+  // Sync state when defaultSiglum prop updates from parent tabs (Tree, Daily Readings, Lexicon)
+  useEffect(() => {
+    if (defaultSiglum && defaultSiglum !== selectedSiglum) {
+      setSelectedSiglum(defaultSiglum);
+      const matchRdg = dailyLiturgical.readings.find(r => r.siglum === defaultSiglum || defaultSiglum.includes(r.siglum.split(' ')[0]));
+      if (matchRdg) {
+        setVerseText(matchRdg.text);
+      } else {
+        const matchThematic = POPULAR_THEMATIC_PERICOPES.find(p => p.siglum === defaultSiglum || defaultSiglum.includes(p.siglum.split(' ')[0]));
+        if (matchThematic) {
+          setVerseText(matchThematic.text);
+        }
+      }
+    }
+  }, [defaultSiglum]);
 
   const [customInput, setCustomInput] = useState<string>('');
   const [fatherSearchFilter, setFatherSearchFilter] = useState<string>('');

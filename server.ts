@@ -374,8 +374,28 @@ Dla każdego Ojca Kościoła podaj:
 // API: Daily Liturgical Readings (Czytania z dnia / Liturgia Słowa)
 app.post('/api/scrutation/daily-readings', async (req, res) => {
   const { date } = req.body; // YYYY-MM-DD format
-  const targetDate = date ? new Date(date) : new Date();
-  const dateStr = targetDate.toISOString().slice(0, 10);
+  let targetDate: Date;
+  let dateStr: string;
+
+  if (date && typeof date === 'string') {
+    const parts = date.slice(0, 10).split('-').map(Number);
+    if (parts.length === 3 && !isNaN(parts[0]) && !isNaN(parts[1]) && !isNaN(parts[2])) {
+      targetDate = new Date(parts[0], parts[1] - 1, parts[2], 12, 0, 0);
+      const y = targetDate.getFullYear();
+      const m = String(targetDate.getMonth() + 1).padStart(2, '0');
+      const dayNum = String(targetDate.getDate()).padStart(2, '0');
+      dateStr = `${y}-${m}-${dayNum}`;
+    } else {
+      targetDate = new Date(date);
+      dateStr = targetDate.toISOString().slice(0, 10);
+    }
+  } else {
+    targetDate = new Date();
+    const y = targetDate.getFullYear();
+    const m = String(targetDate.getMonth() + 1).padStart(2, '0');
+    const dayNum = String(targetDate.getDate()).padStart(2, '0');
+    dateStr = `${y}-${m}-${dayNum}`;
+  }
 
   if (dailyReadingsCache.has(dateStr)) {
     return res.json(dailyReadingsCache.get(dateStr));

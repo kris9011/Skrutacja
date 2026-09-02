@@ -76,7 +76,7 @@ const FIXED_FEASTS: FeastDayReading[] = [
         liturgicalIntroduction: 'Czytanie z Listu Świętego Jakuba Apostoła',
         text: 'Każde dobro, które otrzymujemy, i wszelki dar doskonały zstępują z góry, od Ojca świateł, u którego nie ma przemiany ani cienia zmienności. Ze swej woli zrodził nas przez słowo prawdy, byśmy byli jakby pierwocinami Jego stworzeń. Przyjmijcie w duchu łagodności zaszczepione w was słowo, które ma moc zbawić dusze wasze. Wprowadzajcie zaś słowo w czyn, a nie bądźcie tylko słuchaczami oszukującymi samych siebie. Religijność czysta i bez skazy wobec Boga i Ojca wyraża się w opiece nad sierotami i wdowami w ich utrapieniach i w zachowaniu siebie samego nieskalanym od wpływów świata.',
         theologicalTheme: 'Słowo prawdy zaszczepione w sercu i czynienie miłosierdzia',
-        greekText: 'πᾶσα δόσις ἀγαθὴ καὶ πᾶν δώρημα τέλειον ἄνωθέν ἐστιν, καταβαῖνον ἀπὸ τοῦ πατρὸς τῶν φώτων...',
+        greekText: 'πᾶσα δόσις ἀγαθὴ καὶ πᾶν δώρημα τέλειον ἄνωθέν ἐστιν, καταβαῖνον ἀπὸ τοῦ πατρὸς τῶν φώτων, παρ’ ᾧ οὐκ ἔνι παραλλαγὴ ἢ τροπῆς ἀποσκίασμα. βουληθεὶς ἀπεκύησεν ἡμᾶς λόγῳ ἀληθείας, εἰς τὸ εἶναι ἡμᾶς ἀπαρχήν τινα τῶν αὐτοῦ κτισμάτων. ἐν πραΰτητι δέξασθε τὸν ἔμφυτον λόγον τὸν δυνάμενον σῶσαι τὰς ψυχὰς ὑμῶν. γίνεσθε δὲ ποιηταὶ λόγου καὶ μὴ μόνον ἀκροαταὶ παραλογιζόμενοι ἑαυτούς. θρησκεία καθαρὰ καὶ ἀμίαντος παρὰ τῷ θεῷ καὶ πατρὶ αὕτη ἐστίν, ἐπισκέπτεσθαι ὀρφανοὺς καὶ χήρας ἐν τῇ θλίψει αὐτῶν, ἄσπιλον ἑαυτὸν τηρεῖν ἀπὸ τοῦ κόσμου.',
         keyVerses: [
           {
             siglum: 'Jk 1, 17-18',

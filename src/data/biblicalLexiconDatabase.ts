@@ -11,7 +11,7 @@ export interface BiblicalLexiconEntry {
   id: string;
   wordPolish: string;
   originalWord: string;
-  originalLanguage: 'Greka (Koine)' | 'Hebrajski' | 'Aramejski';
+  originalLanguage: 'Greka (Koine)' | 'Hebrajski' | 'Aramejski' | 'Hebrajski / Greka' | 'Greka / Hebrajski';
   transliteration: string;
   strongNumber: string;
   partOfSpeech: string;
@@ -24,6 +24,177 @@ export interface BiblicalLexiconEntry {
 }
 
 export const BIBLICAL_LEXICON_DATABASE: Record<string, BiblicalLexiconEntry> = {
+  // --- TRAWIĆ / OGIEŃ / KRZEW GOREJĄCY (Wj 3, Pwt 4, Hbr 12) ---
+  'trawic': {
+    id: 'trawic_g2719_h398',
+    wordPolish: 'trawić / pożerać / płonąć',
+    originalWord: 'אָכַל / καταναλίσκω',
+    originalLanguage: 'Hebrajski / Greka',
+    transliteration: 'akhal (H398) / katanalískō (G2719)',
+    strongNumber: 'H398 / G2719',
+    partOfSpeech: 'Czasownik / Pojęcie teologii ognia Bożego i sądu',
+    rootMeaning: 'Płonąć, trawić, spalać, oczyszczać obecnością Bożej chwały (Szekina)',
+    detailedDefinition: 'W Piśmie Świętym ogień Bożej obecności objawia się jako ogień, który nie niszczy stworzenia, lecz je uświęca (krzew gorejący w Wj 3, 2: «krzew płonął ogniem, a nie spłonął / nie trawił się»). Bóg jest również «ogniem trawiącym» (Pwt 4, 24; Hbr 12, 29) dla wszelkiego grzechu i obłudy, wypalając zło i oczyszczając serce człowieka.',
+    theologicalSignificance: 'Klucz chrystologiczny i paschalny: ogień krzewu gorejącego zapowiada niezniszczalność Kościoła, a ogień Ducha Świętego w Wieczerniku i w Emaus («czy serce nasze nie pałało w nas?») rozpala miłość Bożą.',
+    biblicalFrequency: 'Występuje ponad 800 razy w Starym Testamencie oraz wielokrotnie w Nowym Testamencie',
+    relatedWords: ['esz (hebr. ogień)', 'pyr (gr. ogień)', 'seneh (hebr. krzew gorejący)', 'kaio (palić/pałać)', 'zelos (gorliwość)'],
+    occurrences: [
+      {
+        siglum: 'Wj 3, 2',
+        bookName: 'Księga Wyjścia',
+        testament: 'ST',
+        text: 'Wtedy ukazał mu się Anioł Pański w płomieniu ognia, ze środka krzewu. Mojżesz widział, że krzew płonął ogniem, a nie spłonął (ogień go nie trawił).',
+        highlightWord: 'nie spłonął (nie trawił)',
+        contextNote: 'Objawienie Boga w krzewie gorejącym na Horebie'
+      },
+      {
+        siglum: 'Pwt 4, 24',
+        bookName: 'Księga Powtórzonego Prawa',
+        testament: 'ST',
+        text: 'Bo Pan, Bóg twój, jest ogniem trawiącym, Bogiem zazdrosnym o swój lud.',
+        highlightWord: 'ogniem trawiącym',
+        contextNote: 'Świętość i żarliwość Boga Przymierza'
+      },
+      {
+        siglum: 'Hbr 12, 29',
+        bookName: 'List do Hebrajczyków',
+        testament: 'NT',
+        text: 'Bóg nasz bowiem jest ogniem pochłaniającym (trawiącym wszelkie zło i grzech).',
+        highlightWord: 'ogniem pochłaniającym',
+        contextNote: 'Służba Bogu w duchu świętej czci'
+      },
+      {
+        siglum: '1 Krl 18, 38',
+        bookName: '1 Księga Królewska',
+        testament: 'ST',
+        text: 'I spadł ogień Pański od Boga, i strawił ofiarę całopalną, drwa, kamienie i proch, a wodę z rowu wysuszył.',
+        highlightWord: 'strawił ofiarę',
+        contextNote: 'Sąd i znak Bożej obecności na Górze Karmel'
+      },
+      {
+        siglum: 'Ps 50, 3',
+        bookName: 'Księga Psalmów',
+        testament: 'ST',
+        text: 'Bóg nasz nadchodzi i nie milczy: przed Nim ogień trawiący, a wokół Niego szaleje gwałtowna zawierucha.',
+        highlightWord: 'ogień trawiący',
+        contextNote: 'Teofania i nadejście Pana'
+      },
+      {
+        siglum: 'Iz 33, 14',
+        bookName: 'Księga Izajasza',
+        testament: 'ST',
+        text: 'Przelękli się grzesznicy na Syjonie: «Kto z nas wytrzyma przy trawiącym ogniu? Kto z nas ostoi się przy wiecznych płomieniach?»',
+        highlightWord: 'trawiącym ogniu',
+        contextNote: 'Świętość Boga wobec nieprawości'
+      },
+      {
+        siglum: 'Wj 24, 17',
+        bookName: 'Księga Wyjścia',
+        testament: 'ST',
+        text: 'A wygląd chwały Pańskiej w oczach synów Izraela był jak ogień pożerający (trawiący) na szczycie góry.',
+        highlightWord: 'ogień pożerający',
+        contextNote: 'Zawarcie Przymierza pod Synajem'
+      },
+      {
+        siglum: 'Łk 24, 32',
+        bookName: 'Ewangelia wg św. Łukasza',
+        testament: 'NT',
+        text: 'Mówili nawzajem do siebie: «Czy serce nasze nie pałało w nas (nie płonęło ogniem Słowa), kiedy rozmawiał z nami w drodze i Pisma nam wyjaśniał?»',
+        highlightWord: 'serce nasze nie pałało',
+        contextNote: 'Ogień Słowa Bożego w drodze do Emaus'
+      }
+    ]
+  },
+
+  'ogien': {
+    id: 'ogien_g4442_h784',
+    wordPolish: 'ogień',
+    originalWord: 'אֵשׁ / πῦρ',
+    originalLanguage: 'Hebrajski / Greka',
+    transliteration: 'esh (H784) / pyr (G4442)',
+    strongNumber: 'H784 / G4442',
+    partOfSpeech: 'Rzeczownik',
+    rootMeaning: 'Ogień obecności Bożej, sąd, oczyszczenie, Duch Święty',
+    detailedDefinition: 'Znak obecności Boga (Teofania): słup ognia w nocy (Wj 13), ogień na Synaju (Wj 19), ogień zstępujący na ofiarę (Kpł 9; 1 Krl 18). W Nowym Testamencie Jezus przyszedł rzucić ogień na ziemię (Łk 12, 49), a Duch Święty zstępuje w postaci języków z ognia (Dz 2, 3).',
+    theologicalSignificance: 'Ogień oczyszcza złoto wiary i trawi plewy grzechu.',
+    biblicalFrequency: 'Występuje 378 razy w ST i 71 razy w NT',
+    relatedWords: ['trawic', 'seneh', 'pneuma'],
+    occurrences: [
+      {
+        siglum: 'Łk 12, 49',
+        bookName: 'Ewangelia wg św. Łukasza',
+        testament: 'NT',
+        text: 'Przyszedłem ogień rzucić na ziemię i jakże bardzo pragnę, żeby on już zapłonął!',
+        highlightWord: 'ogień',
+        contextNote: 'Żarliwość misji Jezusa'
+      },
+      {
+        siglum: 'Dz 2, 3',
+        bookName: 'Dzieje Apostolskie',
+        testament: 'NT',
+        text: 'Ukazały się im też języki jakby z ognia, które się rozdzieliły, i na każdym z nich spoczął jeden.',
+        highlightWord: 'z ognia',
+        contextNote: 'Zesłanie Ducha Świętego'
+      },
+      {
+        siglum: 'Wj 3, 2',
+        bookName: 'Księga Wyjścia',
+        testament: 'ST',
+        text: 'Ukazał mu się Anioł Pański w płomieniu ognia, ze środka krzewu.',
+        highlightWord: 'ognia',
+        contextNote: 'Krzak gorejący'
+      }
+    ]
+  },
+
+  'wargami': {
+    id: 'wargi_g5491_h8193',
+    wordPolish: 'wargi / usta',
+    originalWord: 'שָׂפָה / χεῖλος',
+    originalLanguage: 'Hebrajski / Greka',
+    transliteration: 'saphah (H8193) / cheilos (G5491)',
+    strongNumber: 'H8193 / G5491',
+    partOfSpeech: 'Rzeczownik, rodzaj żeński',
+    rootMeaning: 'Warga, język, mowa zewnętrzna, wyznanie ust',
+    detailedDefinition: 'W biblijnej krytyce kultu wargi symbolizują zewnętrzną mowę i deklaracje, które bez przemiany serca stają się obłudą («Ten lud czci Mnie wargami, lecz sercem swym daleko jest ode Mnie» - Iz 29, 13; Mk 7, 6). W modlitwie wargi mają głosić chwałę Bożą z prawego serca (Ps 51, 17: «Panie, otwórz wargi moje, a usta moje będą głosić Twoją chwałę»).',
+    theologicalSignificance: 'Jedność mowy warg i stanu serca w autentycznej wierze.',
+    biblicalFrequency: 'Występuje 178 razy w ST i 7 razy w NT',
+    relatedWords: ['serce (kardia)', 'usta (stoma)', 'prawość (emet)'],
+    occurrences: [
+      {
+        siglum: 'Mk 7, 6',
+        bookName: 'Ewangelia wg św. Marka',
+        testament: 'NT',
+        text: 'Słusznie prorok Izajasz powiedział o was, obłudnikach: Ten lud czci Mnie wargami, lecz sercem swym daleko jest ode Mnie.',
+        highlightWord: 'wargami',
+        contextNote: 'Rozprawa Jezusa z faryzeuszami'
+      },
+      {
+        siglum: 'Iz 29, 13',
+        bookName: 'Księga Izajasza',
+        testament: 'ST',
+        text: 'Ponieważ ten lud zbliża się do Mnie tylko w słowach i sławi Mnie tylko wargami, podczas gdy serce jego jest daleko ode Mnie...',
+        highlightWord: 'wargami',
+        contextNote: 'Prorocka krytyka pustego rytualizmu'
+      },
+      {
+        siglum: 'Ps 51, 17',
+        bookName: 'Księga Psalmów',
+        testament: 'ST',
+        text: 'Panie, otwórz wargi moje, a usta moje będą głosić Twoją chwałę.',
+        highlightWord: 'wargi moje',
+        contextNote: 'Modlitwa pokutna Dawida (Miserere)'
+      },
+      {
+        siglum: 'Rz 10, 10',
+        bookName: 'List do Rzymian',
+        testament: 'NT',
+        text: 'Bo sercem przyjęta wiara prowadzi do usprawiedliwienia, a wyznawanie jej ustami i wargami – do zbawienia.',
+        highlightWord: 'ustami i wargami',
+        contextNote: 'Wyznanie wiary w Zmartwychwstałego'
+      }
+    ]
+  },
   // --- GREKA (Nowy Testament) ---
   'agape': {
     id: 'agape_g26',
@@ -567,38 +738,143 @@ export const BIBLICAL_LEXICON_DATABASE: Record<string, BiblicalLexiconEntry> = {
 };
 
 /**
+ * Polish Biblical Stemming and Lemma Alias Map
+ */
+const POLISH_LEMMA_ALIASES: Record<string, string> = {
+  'trawila': 'trawic',
+  'trawiła': 'trawic',
+  'trawil': 'trawic',
+  'trawił': 'trawic',
+  'trawi': 'trawic',
+  'trawia': 'trawic',
+  'trawią': 'trawic',
+  'trawily': 'trawic',
+  'trawiły': 'trawic',
+  'trawiacy': 'trawic',
+  'trawiący': 'trawic',
+  'trawiacym': 'trawic',
+  'trawiącym': 'trawic',
+  'trawiaca': 'trawic',
+  'trawiąca': 'trawic',
+  'trawiace': 'trawic',
+  'trawiące': 'trawic',
+  'strawi': 'trawic',
+  'strawil': 'trawic',
+  'strawił': 'trawic',
+  'strawila': 'trawic',
+  'strawiła': 'trawic',
+  'splonal': 'trawic',
+  'spłonął': 'trawic',
+  'splonela': 'trawic',
+  'spłonęła': 'trawic',
+  'pochlania': 'trawic',
+  'pochłania': 'trawic',
+  'pochlaniajacy': 'trawic',
+  'pochłaniający': 'trawic',
+  'wargami': 'wargami',
+  'wargi': 'wargami',
+  'warga': 'wargami',
+  'wargach': 'wargami',
+  'ustami': 'wargami',
+  'usta': 'wargami',
+  'ognia': 'ogien',
+  'ogniem': 'ogien',
+  'ognie': 'ogien',
+  'ogniu': 'ogien',
+  'ogien': 'ogien',
+  'ogień': 'ogien',
+  'milosci': 'agape',
+  'miłości': 'agape',
+  'milosc': 'agape',
+  'miłość': 'agape',
+  'sercem': 'kardia',
+  'serca': 'kardia',
+  'serce': 'kardia',
+  'sercu': 'kardia',
+  'sercach': 'kardia',
+  'slowa': 'logos',
+  'słowa': 'logos',
+  'slowo': 'logos',
+  'słowo': 'logos',
+  'slowem': 'logos',
+  'słowem': 'logos',
+  'slowu': 'logos',
+  'słowu': 'logos',
+  'nawrocenie': 'metanoia',
+  'nawrócenie': 'metanoia',
+  'nawrocil': 'metanoia',
+  'nawrócił': 'metanoia',
+  'nawracajcie': 'metanoia',
+  'wiary': 'pistis',
+  'wiara': 'pistis',
+  'wierze': 'pistis',
+  'wierzy': 'pistis',
+  'wierzyc': 'pistis',
+  'wierzyć': 'pistis',
+  'przymierza': 'berit',
+  'przymierze': 'berit',
+  'przymierzem': 'berit',
+  'laski': 'charis',
+  'łaski': 'charis',
+  'laska': 'charis',
+  'łaska': 'charis',
+  'krwi': 'haima',
+  'krew': 'haima',
+  'krwia': 'haima',
+  'krwią': 'haima'
+};
+
+/**
  * Searches our rich biblical lexicon or builds a smart dynamic entry
  */
 export function findBiblicalLexiconEntry(word: string, verseContext?: string): BiblicalLexiconEntry {
-  const cleanWord = word.trim().toLowerCase().replace(/[^a-zęóąśłżźćńa-z0-9]/gi, '');
+  const rawClean = word.trim().toLowerCase().replace(/[^a-zęóąśłżźćńa-z0-9]/gi, '');
+  
+  // 1. Check direct aliases (inflections)
+  if (POLISH_LEMMA_ALIASES[rawClean] && BIBLICAL_LEXICON_DATABASE[POLISH_LEMMA_ALIASES[rawClean]]) {
+    return BIBLICAL_LEXICON_DATABASE[POLISH_LEMMA_ALIASES[rawClean]];
+  }
 
-  // Exact or partial dictionary lookup
+  // 2. Check exact or partial dictionary lookup
   for (const [key, entry] of Object.entries(BIBLICAL_LEXICON_DATABASE)) {
     if (
-      cleanWord.includes(key) ||
-      key.includes(cleanWord) ||
-      entry.wordPolish.toLowerCase().includes(cleanWord) ||
-      cleanWord.includes(entry.wordPolish.toLowerCase()) ||
-      entry.transliteration.toLowerCase().includes(cleanWord) ||
-      entry.originalWord.includes(cleanWord)
+      rawClean === key ||
+      rawClean.includes(key) ||
+      key.includes(rawClean) ||
+      entry.wordPolish.toLowerCase().includes(rawClean) ||
+      rawClean.includes(entry.wordPolish.toLowerCase()) ||
+      entry.transliteration.toLowerCase().includes(rawClean) ||
+      entry.originalWord.includes(rawClean)
     ) {
       return entry;
     }
   }
 
-  // Smart heuristic generation for any biblical word
-  const isGreekLikely = !verseContext || verseContext.includes('Mt') || verseContext.includes('Mk') || verseContext.includes('Łk') || verseContext.includes('J ') || verseContext.includes('Rz') || verseContext.includes('Kor');
+  // 3. Stemming heuristic (strip common Polish verb & noun endings)
+  const stemmed = rawClean
+    .replace(/(iła|iło|iły|ił|ała|ało|ały|ał|ono|ący|ąca|ące|ego|emu|ymi|ach|ami|om|em|owi|ych|ie|em|ie|ym|om|ów|om|ie|ej|ą|ę|e|a|u|y|i)$/, '');
+
+  if (stemmed.length >= 3) {
+    for (const [key, entry] of Object.entries(BIBLICAL_LEXICON_DATABASE)) {
+      if (key.startsWith(stemmed) || entry.wordPolish.toLowerCase().includes(stemmed)) {
+        return entry;
+      }
+    }
+  }
+
+  // Smart heuristic generation for any biblical word with Polish occurrences
+  const isGreekLikely = !verseContext || verseContext.includes('Mt') || verseContext.includes('Mk') || verseContext.includes('Łk') || verseContext.includes('J ') || verseContext.includes('Rz') || verseContext.includes('Kor') || verseContext.includes('Hbr') || verseContext.includes('Jk');
   
   return {
-    id: `lexicon_${cleanWord}_dynamic`,
+    id: `lexicon_${rawClean}_dynamic`,
     wordPolish: word,
-    originalWord: isGreekLikely ? 'λόγος / πνεῦμα' : 'דָּבָר / רוּחַ',
+    originalWord: isGreekLikely ? 'λόγος / ῥῆμα' : 'דָּבָר / מִלָּה',
     originalLanguage: isGreekLikely ? 'Greka (Koine)' : 'Hebrajski',
-    transliteration: cleanWord,
+    transliteration: rawClean,
     strongNumber: isGreekLikely ? 'G' + (Math.floor(Math.random() * 4000) + 1000) : 'H' + (Math.floor(Math.random() * 7000) + 1000),
     partOfSpeech: 'Termin teologiczny / klucz biblijny',
     rootMeaning: `Pojęcie biblijne "${word}" w kontekście Pisma Świętego`,
-    detailedDefinition: `Słowo "${word}" pełni istotną rolę w teologicznym i duchowym przesłaniu tekstu biblijnego. W tradycji skrutacji (Scrutatio Scripturae) poszukiwanie tego samego słowa w innych księgach pozwala odkryć, jak Bóg stopniowo objawia swój plan zbawienia.`,
+    detailedDefinition: `Słowo "${word}" pełni istotną rolę w teologicznym i duchowym przesłaniu tekstu biblijnego. W tradycji skrutacji (Scrutatio Scripturae) poszukiwanie tego samego słowa i jego rdzenia w innych księgach pozwala odkryć, jak Bóg stopniowo objawia swój plan zbawienia.`,
     theologicalSignificance: `Klucz do łączenia Starego i Nowego Testamentu na zasadzie jedności Słowa Bożego.`,
     biblicalFrequency: 'Występuje wielokrotnie w kanonie Pisma Świętego',
     occurrences: [

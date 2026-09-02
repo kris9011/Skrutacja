@@ -21,6 +21,7 @@ import { ResetAppModal } from './components/ResetAppModal';
 import { ScrutationSession, BiblicalThemePreset } from './types';
 import { THEME_PRESETS } from './data/biblicalData';
 import { CheckCircle2, Flame, BookOpen, CalendarDays, Sparkles, BookmarkCheck, Network, Scroll, Users, RotateCcw } from 'lucide-react';
+import { initNotificationScheduler } from './utils/notificationService';
 
 const LOCAL_STORAGE_ACTIVE_SESSION = 'scrutatio_active_session_v1';
 const LOCAL_STORAGE_JOURNAL = 'scrutatio_journal_v1';
@@ -38,7 +39,7 @@ export default function App() {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [resetModalOpen, setResetModalOpen] = useState<boolean>(false);
 
-  // Load from localStorage on mount
+  // Load from localStorage on mount & initialize daily reminder scheduler
   useEffect(() => {
     try {
       const savedActive = localStorage.getItem(LOCAL_STORAGE_ACTIVE_SESSION);
@@ -53,6 +54,11 @@ export default function App() {
     } catch (e) {
       console.error('Error loading saved scrutation data:', e);
     }
+
+    // Start background check for scheduled daily scrutation notifications
+    initNotificationScheduler((title, body) => {
+      showToast(`🔔 ${title}: ${body}`);
+    });
   }, []);
 
   // Save active session to localStorage whenever updated
@@ -288,74 +294,7 @@ export default function App() {
         {activeTab === 'tree' && (
           <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
             <ScrutationTreeView
-              session={activeSession || {
-                id: 'session_default_tree',
-                title: 'Pascha Chrystusa i Sługa Jahwe',
-                theme: 'Typologia paschalna',
-                initialSiglum: 'Łk 24, 13-35',
-                initialText: 'Czy serce nasze nie pałało w nas, kiedy rozmawiał z nami w drodze i Pisma nam wyjaśniał?',
-                nodes: [
-                  {
-                    id: 'node_root',
-                    parentId: null,
-                    siglum: 'Łk 24, 13-35',
-                    text: 'Czy serce nasze nie pałało w nas, kiedy rozmawiał z nami w drodze i Pisma nam wyjaśniał?',
-                    testament: 'NT',
-                    crossReferenceReason: 'Uczniowie z Emaus — otwarcie oczu',
-                    order: 0,
-                    isExpanded: true,
-                    createdAt: Date.now()
-                  },
-                  {
-                    id: 'node_st_1',
-                    parentId: 'node_root',
-                    siglum: 'Rdz 22, 1-18',
-                    text: 'Abraham rzekł: Bóg upatrzy sobie baranka na całopalenie, synu mój.',
-                    testament: 'ST',
-                    crossReferenceReason: 'Akedah — Związanie Izaaka na Górze Moria',
-                    order: 1,
-                    isExpanded: true,
-                    createdAt: Date.now() + 1000
-                  },
-                  {
-                    id: 'node_st_2',
-                    parentId: 'node_root',
-                    siglum: 'Iz 53, 7',
-                    text: 'Dręczono Go, lecz sam się dał gnębić, nawet nie otworzył ust swoich. Jak baranek na rzeź prowadzony...',
-                    testament: 'ST',
-                    crossReferenceReason: 'Cierpiący Sługa Jahwe i Baranek Ofiarny',
-                    order: 2,
-                    isExpanded: true,
-                    createdAt: Date.now() + 2000
-                  },
-                  {
-                    id: 'node_nt_1',
-                    parentId: 'node_st_2',
-                    siglum: '1 Kor 5, 7',
-                    text: 'Chrystus bowiem został złożony w ofierze jako nasza Pascha.',
-                    testament: 'NT',
-                    crossReferenceReason: 'Spełnienie Paschy w Krzyżu i Zmartwychwstaniu',
-                    order: 3,
-                    isExpanded: true,
-                    createdAt: Date.now() + 3000
-                  }
-                ],
-                activeStep: 0,
-                prayerNotes: {
-                  statio: '',
-                  invocatio: '',
-                  lectio: '',
-                  meditatio: '',
-                  oratio: '',
-                  contemplatio: '',
-                  actio: '',
-                  wordOfLife: ''
-                },
-                durationSeconds: 0,
-                isCompleted: false,
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString()
-              }}
+              session={activeSession}
               onUpdateSession={handleUpdateSession}
               onOpenPatristicsForSiglum={(sig) => {
                 setPatristicSiglum(sig);
@@ -366,6 +305,9 @@ export default function App() {
                 setActiveTab('jewish');
               }}
               onResetTree={() => setResetModalOpen(true)}
+              onOpenDailyTab={() => setActiveTab('daily')}
+              onOpenThemesTab={() => setActiveTab('themes')}
+              onOpenBooksTab={() => setActiveTab('books')}
             />
           </div>
         )}
@@ -450,7 +392,45 @@ export default function App() {
             <PatristicView
               defaultSiglum={patristicSiglum || activeSession?.initialSiglum || 'Mk 7, 1-8'}
               onStartScrutationWithVerse={(sig, txt) => {
-                handleStartNewGeneric();
+                const isNT = sig.startsWith('Mt') || sig.startsWith('Mk') || sig.startsWith('Łk') || sig.startsWith('J') || sig.startsWith('Dz') || sig.startsWith('Rz') || sig.startsWith('1 Kor') || sig.startsWith('2 Kor') || sig.startsWith('Ga') || sig.startsWith('Ef') || sig.startsWith('Flp') || sig.startsWith('Kol') || sig.startsWith('1 Tes') || sig.startsWith('2 Tes') || sig.startsWith('1 Tm') || sig.startsWith('2 Tm') || sig.startsWith('Tt') || sig.startsWith('Flm') || sig.startsWith('Hbr') || sig.startsWith('Jk') || sig.startsWith('1 P') || sig.startsWith('2 P') || sig.startsWith('1 J') || sig.startsWith('2 J') || sig.startsWith('3 J') || sig.startsWith('Jud') || sig.startsWith('Ap');
+                const newSession: ScrutationSession = {
+                  id: 'session_' + Date.now(),
+                  title: `Ojcowie Kościoła: ${sig}`,
+                  theme: 'Tradycja Patrystyczna',
+                  initialSiglum: sig,
+                  initialText: txt,
+                  nodes: [
+                    {
+                      id: 'node_root',
+                      parentId: null,
+                      siglum: sig,
+                      text: txt,
+                      testament: isNT ? 'NT' : 'ST',
+                      crossReferenceReason: 'Werset wyjściowy z Tradycji Ojców Kościoła',
+                      order: 0,
+                      isExpanded: true,
+                      createdAt: Date.now()
+                    }
+                  ],
+                  activeStep: 0,
+                  prayerNotes: {
+                    statio: '',
+                    invocatio: '',
+                    lectio: '',
+                    meditatio: '',
+                    oratio: '',
+                    contemplatio: '',
+                    actio: '',
+                    wordOfLife: ''
+                  },
+                  durationSeconds: 0,
+                  isCompleted: false,
+                  createdAt: new Date().toISOString(),
+                  updatedAt: new Date().toISOString()
+                };
+                handleUpdateSession(newSession);
+                setActiveTab('tree');
+                showToast(`Rozpoczęto skrutację z komentarza Ojców: ${sig}`);
               }}
             />
           </div>

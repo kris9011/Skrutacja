@@ -222,4 +222,14 @@ export interface CommunitySharedSession {
   intentions: CommunityIntention[];
 }
 
+export interface ScrutationReminderSettings {
+  enabled: boolean;
+  scheduledTime: string; // 'HH:MM' (24h format, e.g. '06:00', '20:30')
+  daysOfWeek: number[]; // 0: Sunday, 1: Monday, ..., 6: Saturday
+  soundEnabled: boolean;
+  reminderTitle: string;
+  reminderBody: string;
+  lastNotifiedDate?: string; // YYYY-MM-DD
+}
+
 

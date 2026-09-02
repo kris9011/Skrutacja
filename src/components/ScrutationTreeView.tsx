@@ -36,13 +36,16 @@ import { getGuaranteedCrossReferences } from '../data/crossReferenceDatabase';
 import { audioEngine } from '../utils/audioContemplationEngine';
 
 interface ScrutationTreeViewProps {
-  session: ScrutationSession;
+  session: ScrutationSession | null;
   onUpdateSession: (session: ScrutationSession) => void;
   onSaveToJournal?: (session: ScrutationSession) => void;
   onSelectVerseToInspect?: (siglum: string, text: string) => void;
   onOpenPatristicsForSiglum?: (siglum: string) => void;
   onOpenJewishTraditionForSiglum?: (siglum: string) => void;
   onResetTree?: () => void;
+  onOpenDailyTab?: () => void;
+  onOpenThemesTab?: () => void;
+  onOpenBooksTab?: () => void;
 }
 
 interface TreeNodeLayout {
@@ -59,8 +62,211 @@ export const ScrutationTreeView: React.FC<ScrutationTreeViewProps> = ({
   onSaveToJournal,
   onOpenPatristicsForSiglum,
   onOpenJewishTraditionForSiglum,
-  onResetTree
+  onResetTree,
+  onOpenDailyTab,
+  onOpenThemesTab,
+  onOpenBooksTab
 }) => {
+  const [quickInputSiglum, setQuickInputSiglum] = useState<string>('');
+  const [quickInputText, setQuickInputText] = useState<string>('');
+  const [isCreatingCustom, setIsCreatingCustom] = useState<boolean>(false);
+
+  // If session is null or empty, display a clean sacred empty state
+  if (!session || !session.nodes || session.nodes.length === 0) {
+    const handleStartWithPreset = (sig: string, txt: string, title: string, reason: string) => {
+      const isNT = sig.startsWith('Mt') || sig.startsWith('Mk') || sig.startsWith('Łk') || sig.startsWith('J') || sig.startsWith('Dz') || sig.startsWith('Rz') || sig.startsWith('1 Kor') || sig.startsWith('2 Kor') || sig.startsWith('Ga') || sig.startsWith('Ef') || sig.startsWith('Flp') || sig.startsWith('Kol') || sig.startsWith('1 Tes') || sig.startsWith('2 Tes') || sig.startsWith('1 Tm') || sig.startsWith('2 Tm') || sig.startsWith('Tt') || sig.startsWith('Flm') || sig.startsWith('Hbr') || sig.startsWith('Jk') || sig.startsWith('1 P') || sig.startsWith('2 P') || sig.startsWith('1 J') || sig.startsWith('2 J') || sig.startsWith('3 J') || sig.startsWith('Jud') || sig.startsWith('Ap');
+      const newSession: ScrutationSession = {
+        id: 'session_' + Date.now(),
+        title: title || `Skrutacja: ${sig}`,
+        theme: 'Skrutacja Słowa Bożego',
+        initialSiglum: sig,
+        initialText: txt,
+        nodes: [
+          {
+            id: 'node_root',
+            parentId: null,
+            siglum: sig,
+            text: txt,
+            testament: isNT ? 'NT' : 'ST',
+            crossReferenceReason: reason || 'Werset wyjściowy do skrutacji',
+            order: 0,
+            isExpanded: true,
+            createdAt: Date.now()
+          }
+        ],
+        activeStep: 0,
+        prayerNotes: {
+          statio: '',
+          invocatio: '',
+          lectio: '',
+          meditatio: '',
+          oratio: '',
+          contemplatio: '',
+          actio: '',
+          wordOfLife: ''
+        },
+        durationSeconds: 0,
+        isCompleted: false,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+      onUpdateSession(newSession);
+    };
+
+    return (
+      <div className="space-y-6 max-w-4xl mx-auto py-8 text-slate-900 animate-fade-in">
+        {/* Empty Tree Banner */}
+        <div className="bg-white border-2 border-dashed border-slate-300 rounded-3xl p-6 sm:p-10 text-center space-y-4 shadow-xs">
+          <div className="w-16 h-16 rounded-3xl bg-emerald-50 text-emerald-800 border border-emerald-200 flex items-center justify-center mx-auto shadow-2xs">
+            <ListTree className="w-8 h-8" />
+          </div>
+          
+          <div className="space-y-1.5 max-w-lg mx-auto">
+            <span className="text-[11px] font-sans font-bold uppercase tracking-widest text-emerald-800 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
+              Drzewko Skrutacji Wyzerowane
+            </span>
+            <h2 className="font-serif text-2xl sm:text-3xl font-bold text-slate-900 pt-2">
+              Rozpocznij Nową Skrutację
+            </h2>
+            <p className="text-sm font-sans text-slate-600 leading-relaxed">
+              Drzewo jest obecnie czyste. Wybierz punkt startowy, aby rozpocząć modlitwę Słowem Bożym i rozbudowywać kolejne powiązania biblijne.
+            </p>
+          </div>
+
+          {/* Quick Launch Actions */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 text-left">
+            {/* Action 1: Daily Readings */}
+            <div 
+              onClick={() => onOpenDailyTab && onOpenDailyTab()}
+              className="p-5 rounded-2xl bg-gradient-to-br from-emerald-50/80 to-white border border-emerald-200 hover:border-emerald-400 hover:shadow-md transition-all cursor-pointer group space-y-2"
+            >
+              <div className="flex items-center justify-between">
+                <div className="p-2 rounded-xl bg-emerald-700 text-white shadow-2xs">
+                  <BookOpen className="w-5 h-5" />
+                </div>
+                <ArrowRight className="w-4 h-4 text-emerald-600 group-hover:translate-x-1 transition-transform" />
+              </div>
+              <h3 className="font-serif text-base font-bold text-slate-900 group-hover:text-emerald-900">
+                1. Z Dzisiejszych Czytań Mszalnych
+              </h3>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                Wybierz Ewangelię lub I Czytanie z dzisiejszego Lekcjonarza Kościoła i rozpocznij modlitwę w jedności z liturgią dnia.
+              </p>
+            </div>
+
+            {/* Action 2: Thematic Paths */}
+            <div 
+              onClick={() => onOpenThemesTab && onOpenThemesTab()}
+              className="p-5 rounded-2xl bg-gradient-to-br from-amber-50/80 to-white border border-amber-200 hover:border-amber-400 hover:shadow-md transition-all cursor-pointer group space-y-2"
+            >
+              <div className="flex items-center justify-between">
+                <div className="p-2 rounded-xl bg-amber-700 text-white shadow-2xs">
+                  <Sparkles className="w-5 h-5" />
+                </div>
+                <ArrowRight className="w-4 h-4 text-amber-600 group-hover:translate-x-1 transition-transform" />
+              </div>
+              <h3 className="font-serif text-base font-bold text-slate-900 group-hover:text-amber-900">
+                2. Wybierz Ścieżkę Tematyczną
+              </h3>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                Pascha Chrystusa, Krzew Gorejący, Związanie Izaaka, Przebaczenie, Nowe Serce lub Osiem Błogosławieństw.
+              </p>
+            </div>
+
+            {/* Action 3: Quick Start Samples */}
+            <div 
+              onClick={() => handleStartWithPreset('Łk 24, 32', 'Czy serce nasze nie pałało w nas, kiedy rozmawiał z nami w drodze i Pisma nam wyjaśniał?', 'Uczniowie z Emaus: Ogień Słowa Bożego', 'Otwarcie oczu i serc przez Pisma')}
+              className="p-5 rounded-2xl bg-slate-50 border border-slate-200 hover:border-slate-400 hover:shadow-md transition-all cursor-pointer group space-y-2"
+            >
+              <div className="flex items-center justify-between">
+                <div className="p-2 rounded-xl bg-slate-800 text-white shadow-2xs">
+                  <Flame className="w-5 h-5 text-amber-400" />
+                </div>
+                <ArrowRight className="w-4 h-4 text-slate-600 group-hover:translate-x-1 transition-transform" />
+              </div>
+              <h3 className="font-serif text-base font-bold text-slate-900">
+                3. Rozpocznij z Emaus (Łk 24, 32)
+              </h3>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                «Czy serce nasze nie pałało w nas...» — klasyczny punkt wyjścia do badania ognia Bożej obecności w ST i NT.
+              </p>
+            </div>
+
+            {/* Action 4: Custom Siglum Input */}
+            <div 
+              onClick={() => setIsCreatingCustom(true)}
+              className="p-5 rounded-2xl bg-slate-50 border border-slate-200 hover:border-slate-400 hover:shadow-md transition-all cursor-pointer group space-y-2"
+            >
+              <div className="flex items-center justify-between">
+                <div className="p-2 rounded-xl bg-emerald-900 text-white shadow-2xs">
+                  <Plus className="w-5 h-5" />
+                </div>
+                <ArrowRight className="w-4 h-4 text-slate-600 group-hover:translate-x-1 transition-transform" />
+              </div>
+              <h3 className="font-serif text-base font-bold text-slate-900">
+                4. Wpisz Dowolny Werset
+              </h3>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                Wprowadź siglum (np. Wj 3, 2 / Mk 7, 6 / Iz 53, 5 / Ps 23) i zacznij własną medytację.
+              </p>
+            </div>
+          </div>
+
+          {/* Inline Custom Input Form */}
+          {isCreatingCustom && (
+            <div className="mt-6 p-5 rounded-2xl bg-slate-100 border border-slate-300 text-left space-y-3 animate-fade-in">
+              <h4 className="font-serif text-sm font-bold text-slate-900 flex items-center gap-1.5">
+                <Plus className="w-4 h-4 text-emerald-700" />
+                <span>Wpisz werset wyjściowy do nowego drzewka:</span>
+              </h4>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <input
+                  type="text"
+                  placeholder="np. Wj 3, 2 lub Mk 7, 6"
+                  value={quickInputSiglum}
+                  onChange={(e) => setQuickInputSiglum(e.target.value)}
+                  className="px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-xs font-mono font-semibold text-slate-900 focus:outline-emerald-600"
+                />
+                <input
+                  type="text"
+                  placeholder="Treść wersetu (opcjonalnie)"
+                  value={quickInputText}
+                  onChange={(e) => setQuickInputText(e.target.value)}
+                  className="sm:col-span-2 px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-xs font-sans text-slate-900 focus:outline-emerald-600"
+                />
+              </div>
+              <div className="flex items-center justify-end gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={() => setIsCreatingCustom(false)}
+                  className="px-3 py-1.5 rounded-xl bg-white border border-slate-300 text-xs font-sans font-medium text-slate-600 hover:bg-slate-50 cursor-pointer"
+                >
+                  Anuluj
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!quickInputSiglum.trim()) return;
+                    handleStartWithPreset(
+                      quickInputSiglum.trim(),
+                      quickInputText.trim() || `Werset ${quickInputSiglum.trim()}`,
+                      `Skrutacja: ${quickInputSiglum.trim()}`,
+                      'Werset startowy'
+                    );
+                  }}
+                  className="px-4 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-sans font-bold flex items-center gap-1.5 cursor-pointer shadow-xs"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Rozpocznij Drzewo</span>
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   const [zoomLevel, setZoomLevel] = useState<number>(1);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(session.nodes[0]?.id || null);
   const [filterTestament, setFilterTestament] = useState<'ALL' | 'ST' | 'NT'>('ALL');
