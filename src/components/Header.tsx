@@ -1,15 +1,16 @@
 import React from 'react';
-import { BookOpen, Compass, BookmarkCheck, Library, Flame, Sparkles, CalendarDays, Droplets, Leaf, Network, Scroll, Users, Smartphone, Download, RotateCcw, BellRing, Bell } from 'lucide-react';
+import { BookOpen, Compass, BookmarkCheck, Library, Flame, Sparkles, CalendarDays, Droplets, Leaf, Network, Scroll, Users, Smartphone, Download, RotateCcw, BellRing, Bell, Church } from 'lucide-react';
 import { ScrutationReminderSettings } from '../types';
 
 interface HeaderProps {
-  activeTab: 'simple' | 'daily' | 'workspace' | 'tree' | 'patristic' | 'jewish' | 'community' | 'journal' | 'guide' | 'themes' | 'books';
-  setActiveTab: (tab: 'simple' | 'daily' | 'workspace' | 'tree' | 'patristic' | 'jewish' | 'community' | 'journal' | 'guide' | 'themes' | 'books') => void;
+  activeTab: 'simple' | 'daily' | 'workspace' | 'tree' | 'patristic' | 'jewish' | 'community' | 'journal' | 'guide' | 'themes' | 'books' | 'breviary';
+  setActiveTab: (tab: 'simple' | 'daily' | 'workspace' | 'tree' | 'patristic' | 'jewish' | 'community' | 'journal' | 'guide' | 'themes' | 'books' | 'breviary') => void;
   hasActiveSession: boolean;
   onReplayIntro?: () => void;
   onOpenResetModal?: () => void;
   onOpenReminderModal: () => void;
   onOpenInstallModal: (platform: 'ios' | 'android') => void;
+  onOpenDrawWordModal?: () => void;
   reminderSettings: ScrutationReminderSettings;
 }
 
@@ -21,6 +22,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenResetModal,
   onOpenReminderModal,
   onOpenInstallModal,
+  onOpenDrawWordModal,
   reminderSettings
 }) => {
 
@@ -186,6 +188,34 @@ export const Header: React.FC<HeaderProps> = ({
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
               )}
             </button>
+
+            {/* Brewiarz (Liturgia Godzin) */}
+            <button
+              id="nav-breviary-btn"
+              onClick={() => setActiveTab('breviary')}
+              className={`py-1.5 px-2.5 text-xs transition-all rounded-xl flex items-center gap-1.5 cursor-pointer font-medium whitespace-nowrap ${
+                activeTab === 'breviary'
+                  ? 'text-amber-950 bg-amber-100 border border-amber-400 font-bold shadow-xs'
+                  : 'hover:text-slate-900 hover:bg-slate-100/80'
+              }`}
+              title="Liturgia Godzin (Brewiarz dla Świeckich i Duchownych)"
+            >
+              <Church className="w-3.5 h-3.5 text-amber-600" />
+              <span>Brewiarz</span>
+            </button>
+
+            {/* Losuj Słowo Boże Modal Trigger */}
+            {onOpenDrawWordModal && (
+              <button
+                id="nav-draw-word-btn"
+                onClick={onOpenDrawWordModal}
+                className="py-1.5 px-2.5 text-xs transition-all rounded-xl flex items-center gap-1.5 cursor-pointer font-bold whitespace-nowrap bg-gradient-to-r from-amber-500/15 via-yellow-400/20 to-amber-500/15 text-amber-900 border border-amber-400/50 hover:bg-amber-100/90 shadow-xs"
+                title="Wylosuj natchnione Słowo Boże (Rhema) z siglami i kontekstem"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-amber-600 animate-pulse" />
+                <span>Losuj Słowo</span>
+              </button>
+            )}
 
             <button
               id="nav-workspace-btn"

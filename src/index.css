@@ -241,20 +241,6 @@
   color: #0F172A !important;
 }
 
-/* Headings in Light theme */
-h1.text-white,
-h2.text-white,
-h3.text-white,
-h4.text-white,
-.font-display.text-white {
-  color: #0F172A !important;
-}
-
-/* Specific card titles that have text-white */
-.group:hover .group-hover\:text-white {
-  color: #0F172A !important;
-}
-
 /* Scrollbars */
 ::-webkit-scrollbar {
   width: 6px;

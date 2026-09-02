@@ -568,7 +568,7 @@ export const DailyReadingsAndPassageSelector: React.FC<DailyReadingsAndPassageSe
   });
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8 sm:py-12 space-y-8 text-slate-800">
+    <div className="max-w-6xl mx-auto px-3 sm:px-6 py-4 sm:py-10 space-y-6 sm:space-y-8 text-slate-800">
       {/* ========================================================================= */}
       {/* MODAL: WYBÓR KONKRETNEGO ZDANIA / WERSETU / ZWROTKI DO SKRUTACJI */}
       {/* ========================================================================= */}
@@ -1140,7 +1140,7 @@ export const DailyReadingsAndPassageSelector: React.FC<DailyReadingsAndPassageSe
                         <div className="h-2.5 w-full bg-gradient-to-r from-emerald-600 via-amber-400 to-emerald-600" />
                       )}
 
-                      <div className="p-6 sm:p-9 space-y-6">
+                      <div className="p-3.5 sm:p-8 space-y-5 sm:space-y-6">
                         {/* Top Meta & Action Bar with Step Navigation */}
                         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-5 border-b border-slate-100">
                           <div className="flex items-center gap-2.5 flex-wrap">

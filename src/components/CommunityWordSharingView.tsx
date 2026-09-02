@@ -203,16 +203,16 @@ Chwała Ojcu i Synowi, i Duchowi Świętemu!`;
   };
 
   return (
-    <div className="max-w-5xl mx-auto space-y-8 animate-fade-in pb-12">
+    <div className="max-w-5xl mx-auto px-3 sm:px-6 space-y-6 sm:space-y-8 animate-fade-in pb-16">
       {/* Top Banner */}
-      <div className="p-6 sm:p-9 rounded-3xl bg-gradient-to-br from-emerald-600 via-teal-700 to-emerald-900 text-white shadow-md space-y-5">
-        <div className="flex items-center justify-between flex-wrap gap-3">
-          <div className="flex items-center gap-2">
-            <span className="px-3 py-1 rounded-full text-xs font-sans font-bold bg-white/20 backdrop-blur-md text-emerald-100 uppercase tracking-wider flex items-center gap-1.5 border border-white/20">
-              <Users className="w-3.5 h-3.5 text-emerald-200" />
+      <div className="p-5 sm:p-9 rounded-2xl sm:rounded-3xl bg-gradient-to-br from-emerald-800 via-teal-900 to-emerald-950 text-white shadow-lg space-y-5 border border-emerald-700/50">
+        <div className="flex items-center justify-between flex-wrap gap-2.5">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="px-3 py-1 rounded-full text-xs font-sans font-bold bg-white/15 backdrop-blur-md text-emerald-100 uppercase tracking-wider flex items-center gap-1.5 border border-white/20">
+              <Users className="w-3.5 h-3.5 text-emerald-300" />
               Wspólnotowe Dzielenie Słowem
             </span>
-            <span className="font-mono text-xs text-emerald-200 bg-emerald-950/50 px-2.5 py-0.5 rounded-lg border border-emerald-500/30">
+            <span className="font-mono text-[11px] sm:text-xs text-emerald-200 bg-emerald-950/70 px-2.5 py-0.5 rounded-lg border border-emerald-500/30">
               Krąg Biblijny • Wspólnota • Dzielenie
             </span>
           </div>
@@ -220,29 +220,29 @@ Chwała Ojcu i Synowi, i Duchowi Świętemu!`;
           {activeCommunitySession && (
             <div className="flex items-center gap-2">
               <span className="text-xs font-sans text-emerald-200">Kod Kręgu:</span>
-              <span className="font-mono text-base font-bold bg-white text-emerald-950 px-3.5 py-1 rounded-xl shadow-xs tracking-widest">
+              <span className="font-mono text-sm sm:text-base font-bold bg-white text-emerald-950 px-3 py-0.5 sm:px-3.5 sm:py-1 rounded-xl shadow-xs tracking-widest">
                 {activeCommunitySession.roomCode}
               </span>
             </div>
           )}
         </div>
 
-        <div className="space-y-2">
-          <h1 className="font-serif text-2xl sm:text-4xl font-bold tracking-tight text-white">
-            „Gdzie dwaj lub trzej zebrani są w imię moje...”
+        <div className="space-y-2.5">
+          <h1 className="font-serif text-xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-amber-100 drop-shadow-sm leading-snug">
+            <span className="text-amber-300">„</span>Gdzie dwaj lub trzej zebrani są w imię moje...<span className="text-amber-300">”</span>
           </h1>
-          <p className="font-sans text-sm sm:text-base text-emerald-100 leading-relaxed max-w-3xl">
+          <p className="font-sans text-xs sm:text-base text-emerald-100/90 leading-relaxed max-w-3xl">
             Prowadź skrutację razem ze swoją wspólnotą, kręgiem biblijnym lub rodziną. Dzielcie się echem Słowa (jak dotyka ono konkretnego życia) i wpisujcie wspólne intencje modlitewne.
           </p>
         </div>
 
         {/* Share & Quick Action Bar */}
         {activeCommunitySession && (
-          <div className="pt-2 flex items-center gap-2 flex-wrap border-t border-emerald-500/40">
+          <div className="pt-2 flex items-center gap-2 flex-wrap border-t border-emerald-700/60">
             <button
               type="button"
               onClick={handleCopyShareLink}
-              className="px-4 py-2 rounded-xl bg-white text-emerald-950 hover:bg-emerald-50 text-xs font-sans font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-xs"
+              className="px-3.5 sm:px-4 py-2 rounded-xl bg-white text-emerald-950 hover:bg-emerald-50 text-xs font-sans font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-xs active:scale-95"
             >
               {isCopiedLink ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Share2 className="w-3.5 h-3.5" />}
               <span>{isCopiedLink ? 'Skopiowano link!' : 'Kopiuj link do kręgu'}</span>
@@ -251,7 +251,7 @@ Chwała Ojcu i Synowi, i Duchowi Świętemu!`;
             <button
               type="button"
               onClick={handleCopySummary}
-              className="px-4 py-2 rounded-xl bg-emerald-800 hover:bg-emerald-700 text-white text-xs font-sans font-bold border border-emerald-500/50 flex items-center gap-1.5 transition-all cursor-pointer"
+              className="px-3.5 sm:px-4 py-2 rounded-xl bg-emerald-800/90 hover:bg-emerald-700 text-white text-xs font-sans font-bold border border-emerald-500/50 flex items-center gap-1.5 transition-all cursor-pointer active:scale-95"
             >
               {isCopiedSummary ? <Check className="w-3.5 h-3.5 text-emerald-300" /> : <Copy className="w-3.5 h-3.5" />}
               <span>{isCopiedSummary ? 'Skopiowano podsumowanie!' : 'Kopiuj raport kręgu (WhatsApp/Email)'}</span>

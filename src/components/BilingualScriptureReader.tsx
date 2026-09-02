@@ -63,8 +63,8 @@ export const BilingualScriptureReader: React.FC<BilingualScriptureReaderProps> =
   } | null>(null);
   const [isLoadingOriginal, setIsLoadingOriginal] = useState<boolean>(false);
 
-  // Clean and split words for interactive selection
-  const polishWords = polishText.split(/(\s+|[.,;!?:«»"()—]+)/).filter(Boolean);
+  // Clean and split words for interactive selection - tokens keep natural spacing and attached punctuation
+  const rawWords = polishText.trim().split(/\s+/).filter(Boolean);
 
   const isOldTestament = Boolean(
     originalHebrewText || 
@@ -169,23 +169,23 @@ export const BilingualScriptureReader: React.FC<BilingualScriptureReaderProps> =
   return (
     <div className={`space-y-4 ${className}`}>
       {/* Top Header with Pill Switcher matching user request */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-slate-50/80 p-2.5 sm:p-3 rounded-2xl border border-slate-200">
-        <div className="flex items-center gap-2">
-          <span className="font-mono text-xs font-bold text-slate-900 bg-white px-2.5 py-1 rounded-lg border border-slate-200 shadow-2xs">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 bg-slate-50/80 p-2 sm:p-3 rounded-2xl border border-slate-200 overflow-hidden">
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="font-mono text-xs font-bold text-slate-900 bg-white px-2.5 py-1 rounded-lg border border-slate-200 shadow-2xs shrink-0">
             {siglum}
           </span>
-          <span className="text-xs font-sans text-slate-600 hidden md:inline">
-            Kliknij dowolne słowo, aby odkryć jego rdzeń i występowanie w Biblii
+          <span className="text-xs font-sans text-slate-600 truncate hidden sm:inline">
+            Kliknij dowolne słowo, aby odkryć rdzeń i występowanie w Biblii
           </span>
         </div>
 
         {/* The Exact Pill Toggle Design: [ POLSKI | ORYGINAŁ | BILINGWISTYCZNY ] (⟳) */}
-        <div className="flex items-center gap-2 self-end sm:self-auto">
-          <div className="inline-flex items-center p-1 bg-slate-200/70 backdrop-blur-xs rounded-full border border-slate-300 shadow-inner">
+        <div className="flex items-center gap-1.5 w-full sm:w-auto justify-between sm:justify-end overflow-x-auto no-scrollbar">
+          <div className="inline-flex items-center p-0.5 sm:p-1 bg-slate-200/70 backdrop-blur-xs rounded-full border border-slate-300 shadow-inner w-full sm:w-auto justify-around sm:justify-start">
             <button
               type="button"
               onClick={() => setDisplayMode('polski')}
-              className={`px-3.5 py-1 rounded-full text-xs font-sans font-bold uppercase tracking-wider transition-all duration-200 cursor-pointer ${
+              className={`px-2.5 sm:px-3.5 py-1 rounded-full text-[11px] sm:text-xs font-sans font-bold uppercase tracking-wider transition-all duration-200 cursor-pointer whitespace-nowrap ${
                 displayMode === 'polski'
                   ? 'bg-white text-emerald-950 shadow-xs ring-1 ring-slate-200'
                   : 'text-slate-600 hover:text-slate-950'
@@ -196,7 +196,7 @@ export const BilingualScriptureReader: React.FC<BilingualScriptureReaderProps> =
             <button
               type="button"
               onClick={() => setDisplayMode('oryginal')}
-              className={`px-3.5 py-1 rounded-full text-xs font-sans font-bold uppercase tracking-wider transition-all duration-200 cursor-pointer ${
+              className={`px-2.5 sm:px-3.5 py-1 rounded-full text-[11px] sm:text-xs font-sans font-bold uppercase tracking-wider transition-all duration-200 cursor-pointer whitespace-nowrap ${
                 displayMode === 'oryginal'
                   ? 'bg-white text-emerald-950 shadow-xs ring-1 ring-slate-200'
                   : 'text-slate-600 hover:text-slate-950'
@@ -207,7 +207,7 @@ export const BilingualScriptureReader: React.FC<BilingualScriptureReaderProps> =
             <button
               type="button"
               onClick={() => setDisplayMode('bilingwistyczny')}
-              className={`px-3.5 py-1 rounded-full text-xs font-sans font-bold uppercase tracking-wider transition-all duration-200 cursor-pointer ${
+              className={`px-2.5 sm:px-3.5 py-1 rounded-full text-[11px] sm:text-xs font-sans font-bold uppercase tracking-wider transition-all duration-200 cursor-pointer whitespace-nowrap ${
                 displayMode === 'bilingwistyczny'
                   ? 'bg-white text-emerald-950 shadow-xs ring-1 ring-slate-200'
                   : 'text-slate-600 hover:text-slate-950'
@@ -221,7 +221,7 @@ export const BilingualScriptureReader: React.FC<BilingualScriptureReaderProps> =
           <button
             type="button"
             onClick={handleReset}
-            className="p-2 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900 border border-slate-300 transition-all cursor-pointer shadow-2xs"
+            className="p-1.5 sm:p-2 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900 border border-slate-300 transition-all cursor-pointer shadow-2xs shrink-0"
             title="Zresetuj widok i odznacz słowo"
           >
             <RotateCw className="w-3.5 h-3.5" />
@@ -238,48 +238,56 @@ export const BilingualScriptureReader: React.FC<BilingualScriptureReaderProps> =
 
       {/* 1. MODE: POLSKI (Interactive Word by Word) */}
       {displayMode === 'polski' && (
-        <div className="p-5 sm:p-7 rounded-2xl bg-white border border-slate-200 shadow-2xs space-y-3">
-          <div className="font-scripture text-lg sm:text-xl text-slate-900 leading-relaxed sm:leading-loose">
+        <div className="p-4 sm:p-7 rounded-2xl bg-white border border-slate-200 shadow-2xs space-y-3">
+          <div className="font-scripture text-base sm:text-xl text-slate-900 leading-relaxed sm:leading-loose">
             «
-            {polishWords.map((token, idx) => {
-              const isWord = /^[a-zęóąśłżźćńA-ZĘÓĄŚŁŻŹĆŃ0-9]+$/.test(token);
-              if (!isWord) {
-                return <span key={idx}>{token}</span>;
-              }
-
-              const isSelected = selectedWord?.toLowerCase() === token.toLowerCase();
+            {rawWords.map((token, idx) => {
+              const match = token.match(/^([«„"'(]*)(.*?)([.,;!?:»”"')—]*)$/);
+              const leadingPunct = match ? match[1] : '';
+              const coreToken = match ? match[2] : token;
+              const trailingPunct = match ? match[3] : '';
+              const isWord = /^[a-zęóąśłżźćńA-ZĘÓĄŚŁŻŹĆŃ0-9]+$/.test(coreToken);
+              const isSelected = isWord && selectedWord?.toLowerCase() === coreToken.toLowerCase();
 
               return (
-                <span
-                  key={idx}
-                  onClick={() => handleWordClick(token)}
-                  onMouseEnter={() => setHoveredWordIndex(idx)}
-                  onMouseLeave={() => setHoveredWordIndex(null)}
-                  className={`inline-block px-1 py-0.5 rounded cursor-pointer transition-all duration-150 relative group ${
-                    isSelected
-                      ? 'bg-emerald-200 text-emerald-950 font-bold shadow-2xs ring-1 ring-emerald-400'
-                      : hoveredWordIndex === idx
-                      ? 'bg-emerald-50 text-emerald-900 underline decoration-emerald-500 decoration-2 underline-offset-4'
-                      : 'hover:bg-slate-100 hover:text-slate-950'
-                  }`}
-                  title="Kliknij, aby sprawdzić znaczenie w grece/hebrajskim i występowanie w Biblii"
-                >
-                  {token}
+                <span key={idx} className="inline">
+                  {leadingPunct}
+                  {isWord ? (
+                    <span
+                      onClick={() => handleWordClick(coreToken)}
+                      onMouseEnter={() => setHoveredWordIndex(idx)}
+                      onMouseLeave={() => setHoveredWordIndex(null)}
+                      className={`inline cursor-pointer px-0.5 py-0.5 rounded transition-all duration-150 ${
+                        isSelected
+                          ? 'bg-emerald-200 text-emerald-950 font-bold shadow-2xs ring-1 ring-emerald-400'
+                          : hoveredWordIndex === idx
+                          ? 'bg-emerald-50 text-emerald-900 underline decoration-emerald-500 decoration-2 underline-offset-4'
+                          : 'hover:bg-slate-100 hover:text-slate-950'
+                      }`}
+                      title="Kliknij, aby sprawdzić znaczenie w grece/hebrajskim i występowanie w Biblii"
+                    >
+                      {coreToken}
+                    </span>
+                  ) : (
+                    <span>{coreToken}</span>
+                  )}
+                  {trailingPunct}
+                  {idx < rawWords.length - 1 ? ' ' : ''}
                 </span>
               );
             })}
             »
           </div>
 
-          <div className="flex items-center justify-between text-xs text-slate-500 pt-2 border-t border-slate-100">
+          <div className="flex items-center justify-between text-xs text-slate-500 pt-2 border-t border-slate-100 gap-2 flex-wrap">
             <span className="flex items-center gap-1">
-              <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
-              Wskazówka: kliknij dowolne słowo powyżej, aby otworzyć aparat filologiczny i powiązane wersety.
+              <Sparkles className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+              <span>Wskazówka: kliknij dowolne słowo powyżej, aby otworzyć aparat filologiczny.</span>
             </span>
             <button
               type="button"
               onClick={() => handleCopy(polishText)}
-              className="hover:text-emerald-700 flex items-center gap-1 font-sans cursor-pointer"
+              className="hover:text-emerald-700 flex items-center gap-1 font-sans cursor-pointer shrink-0"
             >
               {isCopied ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
               <span>{isCopied ? 'Skopiowano' : 'Kopiuj całość'}</span>
@@ -369,7 +377,10 @@ export const BilingualScriptureReader: React.FC<BilingualScriptureReaderProps> =
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2.5">
-            {polishWords.filter(w => /^[a-zęóąśłżźćńA-ZĘÓĄŚŁŻŹĆŃ0-9]+$/.test(w)).map((word, wIdx) => {
+            {rawWords
+              .map(w => w.replace(/^[«„"'(]+|[.,;!?:»”"')—]+$/g, ''))
+              .filter(w => /^[a-zęóąśłżźćńA-ZĘÓĄŚŁŻŹĆŃ0-9]+$/.test(w))
+              .map((word, wIdx) => {
               const previewLex = findBiblicalLexiconEntry(word, siglum);
               const isSelected = selectedWord?.toLowerCase() === word.toLowerCase();
 

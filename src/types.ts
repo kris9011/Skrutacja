@@ -168,6 +168,7 @@ export interface RandomScriptureQuote {
   category: 'Pięcioksiąg i Historia' | 'Mądrość i Psalmy' | 'Prorocy' | 'Ewangelie' | 'Dzieje i Listy Apostolskie' | 'Apokalipsa';
   title: string;
   text: string;
+  broaderContext?: string; // Szerszy kontekst perykopy biblijnej, tło historyczne i teologiczne
   theologicalContext: string;
   crossReferencesPreview?: {
     siglum: string;
@@ -175,6 +176,112 @@ export interface RandomScriptureQuote {
     text: string;
     testament: 'ST' | 'NT';
   }[];
+}
+
+export type BreviaryHourType = 
+  | 'invitatorium' 
+  | 'lectionis' 
+  | 'laudes' 
+  | 'daytime' // Modlitwa w ciągu dnia (Tercja, Seksta, Nona)
+  | 'tercia' 
+  | 'sexta' 
+  | 'nona' 
+  | 'vesperae' 
+  | 'completorium';
+
+export type BreviaryAudience = 'lay' | 'clergy';
+
+export interface BreviaryPsalmItem {
+  id: string;
+  siglum: string;
+  title: string;
+  latinTitle?: string;
+  antiphon: string;
+  text: string; // Formatting with strophes and choir indications
+  gloryBe?: boolean;
+  category?: 'psalm' | 'canticle_st' | 'canticle_nt';
+  commentary?: string; // Wskazówka medytacyjna
+}
+
+export interface BreviaryReading {
+  siglum: string;
+  intro: string;
+  text: string;
+  response: {
+    verse: string;
+    response: string;
+  };
+}
+
+export interface BreviaryPatristicReading {
+  author: string;
+  source: string;
+  title: string;
+  text: string;
+  response: {
+    verse: string;
+    response: string;
+  };
+}
+
+export interface BreviaryIntercessions {
+  call: string;
+  intentions: {
+    intention: string;
+    response?: string;
+  }[];
+}
+
+export interface BreviaryHourData {
+  id: string;
+  hourType: BreviaryHourType;
+  name: string;
+  latinName: string;
+  recommendedTime: string;
+  description: string;
+  invocations?: {
+    verse: string;
+    response: string;
+  };
+  hymn: {
+    title: string;
+    latinTitle?: string;
+    strophes: string[];
+  };
+  psalmody: BreviaryPsalmItem[];
+  scriptureReading: BreviaryReading;
+  patristicReading?: BreviaryPatristicReading;
+  evangelicalCanticle?: {
+    name: string; // Benedictus (Jutrznia) / Magnificat (Nieszpory) / Nunc Dimittis (Kompleta)
+    siglum: string;
+    antiphon: string;
+    latinIncipit: string;
+    text: string;
+  };
+  examinationOfConscience?: {
+    invitation: string;
+    confiteor: string;
+    absolution: string;
+  };
+  intercessions?: BreviaryIntercessions;
+  ourFather: boolean;
+  closingPrayer: string;
+  marianAntiphon?: {
+    title: string;
+    latinTitle: string;
+    text: string;
+  };
+  rubrics?: string[];
+}
+
+export interface BreviaryDayOffice {
+  date: string; // YYYY-MM-DD
+  formattedDate: string;
+  liturgicalCelebration: string;
+  liturgicalRank: 'Dzień powszedni' | 'Wspomnienie' | 'Święto' | 'Uroczystość' | 'Niedziela';
+  psalterWeek: 1 | 2 | 3 | 4;
+  liturgicalColor: 'green' | 'red' | 'purple' | 'white';
+  hours: Record<BreviaryHourType, BreviaryHourData>;
 }
 
 export interface JewishTraditionCommentary {
