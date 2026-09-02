@@ -130,44 +130,50 @@ export const DailyReminderModal: React.FC<DailyReminderModalProps> = ({
 
   return (
     <div 
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-fade-in"
+      className="fixed inset-0 z-50 flex items-start sm:items-center justify-center p-3 sm:p-6 bg-slate-950/65 backdrop-blur-sm animate-fade-in overflow-y-auto"
+      style={{
+        paddingTop: 'max(env(safe-area-inset-top, 0px) + 12px, 16px)',
+        paddingBottom: 'max(env(safe-area-inset-bottom, 0px) + 12px, 16px)',
+        paddingLeft: 'max(env(safe-area-inset-left, 0px) + 12px, 12px)',
+        paddingRight: 'max(env(safe-area-inset-right, 0px) + 12px, 12px)'
+      }}
       onClick={onClose}
     >
       <div 
-        className="bg-white rounded-3xl border border-slate-200 shadow-2xl max-w-lg w-full overflow-hidden text-slate-900 animate-scale-up"
+        className="bg-white rounded-3xl border border-slate-200 shadow-2xl max-w-lg w-full overflow-hidden text-slate-900 animate-scale-up my-auto flex flex-col max-h-[calc(100dvh-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px)-32px)]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="bg-gradient-to-r from-emerald-800 via-teal-900 to-slate-900 text-white p-5 sm:p-6 relative">
+        <div className="bg-gradient-to-r from-emerald-800 via-teal-900 to-slate-900 text-white p-4 sm:p-6 relative shrink-0">
           <button
             type="button"
             onClick={onClose}
-            className="absolute top-4 right-4 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white/80 hover:text-white transition-colors cursor-pointer"
+            className="absolute top-3.5 right-3.5 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white/80 hover:text-white transition-colors cursor-pointer"
             title="Zamknij"
           >
             <X className="w-5 h-5" />
           </button>
 
           <div className="flex items-center gap-3">
-            <div className="p-3 rounded-2xl bg-white/15 backdrop-blur-md border border-white/20 text-emerald-300 shadow-inner">
-              <BellRing className="w-6 h-6 animate-pulse" />
+            <div className="p-2.5 sm:p-3 rounded-2xl bg-white/15 backdrop-blur-md border border-white/20 text-emerald-300 shadow-inner">
+              <BellRing className="w-5 h-5 sm:w-6 sm:h-6 animate-pulse" />
             </div>
             <div>
               <span className="text-[10px] font-sans font-bold uppercase tracking-widest text-emerald-300">
                 Wierność Codziennej Modlitwie
               </span>
-              <h2 className="font-serif text-xl sm:text-2xl font-bold tracking-tight text-white">
+              <h2 className="font-serif text-lg sm:text-2xl font-bold tracking-tight text-white">
                 Przypomnienie o Skrutacji
               </h2>
             </div>
           </div>
-          <p className="text-xs text-emerald-100/90 font-sans mt-2 leading-relaxed">
+          <p className="text-xs text-emerald-100/90 font-sans mt-1.5 sm:mt-2 leading-relaxed">
             Ustaw stałą porę dnia, aby aplikacja wysłała powiadomienie w przeglądarce i przypomniała o chwili wyciszenia ze Słowem Bożym.
           </p>
         </div>
 
         {/* Content Body */}
-        <div className="p-5 sm:p-6 space-y-5 max-h-[75vh] overflow-y-auto custom-scrollbar">
+        <div className="p-4 sm:p-6 space-y-4 sm:space-y-5 overflow-y-auto custom-scrollbar flex-1">
           
           {/* Browser Support & Permission Banner */}
           {!isSupported ? (
@@ -401,7 +407,7 @@ export const DailyReminderModal: React.FC<DailyReminderModalProps> = ({
         </div>
 
         {/* Modal Action Buttons */}
-        <div className="p-4 sm:p-5 bg-slate-50 border-t border-slate-200 flex items-center justify-between gap-3">
+        <div className="p-3.5 sm:p-5 bg-slate-50 border-t border-slate-200 flex items-center justify-between gap-2 sm:gap-3 shrink-0">
           <button
             type="button"
             onClick={handleTestNotification}

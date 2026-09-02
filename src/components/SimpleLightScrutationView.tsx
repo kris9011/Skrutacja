@@ -1284,10 +1284,22 @@ const PatristicQuickModal: React.FC<PatristicQuickModalProps> = ({
   const [data, setData] = useState(() => getGuaranteedPatristicData(siglum, verseText));
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto animate-fade-in">
-      <div className="bg-white rounded-3xl max-w-2xl w-full border border-slate-200 shadow-2xl overflow-hidden my-8 max-h-[90vh] flex flex-col">
+    <div 
+      className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-start sm:items-center justify-center p-3 sm:p-6 overflow-y-auto animate-fade-in"
+      style={{
+        paddingTop: 'max(env(safe-area-inset-top, 0px) + 12px, 16px)',
+        paddingBottom: 'max(env(safe-area-inset-bottom, 0px) + 12px, 16px)',
+        paddingLeft: 'max(env(safe-area-inset-left, 0px) + 12px, 12px)',
+        paddingRight: 'max(env(safe-area-inset-right, 0px) + 12px, 12px)'
+      }}
+      onClick={onClose}
+    >
+      <div 
+        className="bg-white rounded-3xl max-w-2xl w-full border border-slate-200 shadow-2xl overflow-hidden my-auto max-h-[calc(100dvh-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px)-32px)] flex flex-col"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
-        <div className="p-5 sm:p-6 border-b border-slate-200 bg-gradient-to-r from-emerald-50 via-sky-50 to-white flex items-center justify-between">
+        <div className="p-4 sm:p-6 border-b border-slate-200 bg-gradient-to-r from-emerald-50 via-sky-50 to-white flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-2xl bg-sky-600 text-white flex items-center justify-center shadow-xs">
               <Sparkles className="w-5 h-5" />
@@ -1310,7 +1322,7 @@ const PatristicQuickModal: React.FC<PatristicQuickModalProps> = ({
         </div>
 
         {/* Content Body */}
-        <div className="p-6 overflow-y-auto space-y-4">
+        <div className="p-4 sm:p-6 overflow-y-auto space-y-4 flex-1">
           <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200">
             <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-900 block mb-1">
               Rozważany werset:
@@ -1352,7 +1364,7 @@ const PatristicQuickModal: React.FC<PatristicQuickModalProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="p-4 sm:p-5 border-t border-slate-200 bg-slate-50 flex items-center justify-between">
+        <div className="p-3.5 sm:p-5 border-t border-slate-200 bg-slate-50 flex items-center justify-between shrink-0">
           {onOpenFullPatristic ? (
             <button
               onClick={() => {

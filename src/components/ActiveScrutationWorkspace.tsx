@@ -584,6 +584,12 @@ export const ActiveScrutationWorkspace: React.FC<ActiveScrutationWorkspaceProps>
       <div 
         id="focus-meditation-mode-container"
         className={`fixed inset-0 z-50 ${t.container} flex flex-col justify-between p-4 sm:p-8 md:p-12 overflow-y-auto selection:bg-emerald-200 selection:text-emerald-950 animate-fade-in font-sans transition-colors duration-300`}
+        style={{
+          paddingTop: 'max(env(safe-area-inset-top, 0px) + 16px, 16px)',
+          paddingBottom: 'max(env(safe-area-inset-bottom, 0px) + 16px, 16px)',
+          paddingLeft: 'max(env(safe-area-inset-left, 0px) + 16px, 16px)',
+          paddingRight: 'max(env(safe-area-inset-right, 0px) + 16px, 16px)'
+        }}
       >
         {/* Subtle decorative background glow */}
         <div className={`absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 sm:w-[600px] sm:h-[600px] ${t.glow} rounded-full blur-3xl pointer-events-none`} />

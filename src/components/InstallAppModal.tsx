@@ -75,13 +75,22 @@ export const InstallAppModal: React.FC<InstallAppModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+    <div 
+      className="fixed inset-0 z-50 flex items-start sm:items-center justify-center p-3 sm:p-6 bg-slate-900/65 backdrop-blur-sm animate-fade-in overflow-y-auto"
+      style={{
+        paddingTop: 'max(env(safe-area-inset-top, 0px) + 12px, 16px)',
+        paddingBottom: 'max(env(safe-area-inset-bottom, 0px) + 12px, 16px)',
+        paddingLeft: 'max(env(safe-area-inset-left, 0px) + 12px, 12px)',
+        paddingRight: 'max(env(safe-area-inset-right, 0px) + 12px, 12px)'
+      }}
+      onClick={onClose}
+    >
       <div 
         onClick={(e) => e.stopPropagation()}
-        className="bg-white rounded-3xl border border-slate-200 shadow-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]"
+        className="bg-white rounded-3xl border border-slate-200 shadow-2xl w-full max-w-lg overflow-hidden flex flex-col my-auto max-h-[calc(100dvh-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px)-32px)]"
       >
         {/* Modal Header */}
-        <div className="bg-gradient-to-r from-emerald-800 to-teal-800 p-5 sm:p-6 text-white relative">
+        <div className="bg-gradient-to-r from-emerald-800 to-teal-800 p-4 sm:p-6 text-white relative shrink-0">
           <button
             type="button"
             onClick={onClose}
@@ -277,7 +286,7 @@ export const InstallAppModal: React.FC<InstallAppModalProps> = ({
         </div>
 
         {/* Modal Footer */}
-        <div className="p-4 bg-slate-50 border-t border-slate-200 flex justify-end">
+        <div className="p-3.5 sm:p-4 bg-slate-50 border-t border-slate-200 flex justify-end shrink-0">
           <button
             type="button"
             onClick={onClose}

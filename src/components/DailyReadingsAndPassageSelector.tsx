@@ -573,13 +573,25 @@ export const DailyReadingsAndPassageSelector: React.FC<DailyReadingsAndPassageSe
       {/* MODAL: WYBÓR KONKRETNEGO ZDANIA / WERSETU / ZWROTKI DO SKRUTACJI */}
       {/* ========================================================================= */}
       {readingToPickVerse && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs animate-fade-in overflow-y-auto">
+        <div 
+          className="fixed inset-0 z-50 flex items-start sm:items-center justify-center p-3 sm:p-6 bg-slate-900/60 backdrop-blur-xs animate-fade-in overflow-y-auto"
+          style={{
+            paddingTop: 'max(env(safe-area-inset-top, 0px) + 12px, 16px)',
+            paddingBottom: 'max(env(safe-area-inset-bottom, 0px) + 12px, 16px)',
+            paddingLeft: 'max(env(safe-area-inset-left, 0px) + 12px, 12px)',
+            paddingRight: 'max(env(safe-area-inset-right, 0px) + 12px, 12px)'
+          }}
+          onClick={() => {
+            setReadingToPickVerse(null);
+            setSelectedSentenceText(null);
+          }}
+        >
           <div 
-            className="relative w-full max-w-3xl bg-white border border-slate-200 rounded-2xl shadow-2xl overflow-hidden my-8"
+            className="relative w-full max-w-3xl bg-white border border-slate-200 rounded-3xl shadow-2xl overflow-hidden my-auto flex flex-col max-h-[calc(100dvh-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px)-32px)]"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
-            <div className="p-5 sm:p-6 bg-slate-50 border-b border-slate-200 flex items-start justify-between gap-4">
+            <div className="p-4 sm:p-6 bg-slate-50 border-b border-slate-200 flex items-start justify-between gap-4 shrink-0">
               <div className="space-y-1.5">
                 <div className="flex items-center gap-2">
                   <span className="px-2.5 py-0.5 rounded-full text-[11px] font-sans font-bold uppercase tracking-wider bg-emerald-100 text-emerald-900 border border-emerald-300">
@@ -589,7 +601,7 @@ export const DailyReadingsAndPassageSelector: React.FC<DailyReadingsAndPassageSe
                     {readingToPickVerse.siglum}
                   </span>
                 </div>
-                <h3 className="font-serif text-xl sm:text-2xl font-bold text-slate-900">
+                <h3 className="font-serif text-lg sm:text-2xl font-bold text-slate-900">
                   Wybierz werset lub konkretne zdanie do skrutacji
                 </h3>
                 <p className="text-xs text-slate-600 font-sans leading-relaxed">
@@ -611,7 +623,7 @@ export const DailyReadingsAndPassageSelector: React.FC<DailyReadingsAndPassageSe
             </div>
 
             {/* Modal Body */}
-            <div className="p-5 sm:p-6 space-y-5 max-h-[65vh] overflow-y-auto custom-scrollbar">
+            <div className="p-4 sm:p-6 space-y-5 overflow-y-auto custom-scrollbar flex-1">
               {/* Option 1: Whole Pericope */}
               <div 
                 onClick={() => startScrutationFromDailyReading(

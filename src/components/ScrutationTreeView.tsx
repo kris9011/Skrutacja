@@ -665,7 +665,15 @@ export const ScrutationTreeView: React.FC<ScrutationTreeViewProps> = ({
   };
 
   return (
-    <div className={`space-y-6 ${isFullscreen ? 'fixed inset-0 z-50 bg-slate-50 p-6 overflow-y-auto' : ''}`}>
+    <div 
+      className={`space-y-6 ${isFullscreen ? 'fixed inset-0 z-50 bg-slate-50 p-4 sm:p-6 overflow-y-auto' : ''}`}
+      style={isFullscreen ? {
+        paddingTop: 'max(env(safe-area-inset-top, 0px) + 16px, 20px)',
+        paddingBottom: 'max(env(safe-area-inset-bottom, 0px) + 16px, 20px)',
+        paddingLeft: 'max(env(safe-area-inset-left, 0px) + 16px, 16px)',
+        paddingRight: 'max(env(safe-area-inset-right, 0px) + 16px, 16px)'
+      } : undefined}
+    >
       {/* Top Header & Bar */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-5 sm:p-6 rounded-3xl border border-slate-200 shadow-sm">
         <div className="space-y-1">

@@ -35,6 +35,12 @@ export const IntroSplash: React.FC<IntroSplashProps> = ({ onComplete }) => {
           transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
           onClick={handleDismiss}
           className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-gradient-to-b from-emerald-950 via-slate-950 to-emerald-950 text-white cursor-pointer select-none overflow-hidden px-4"
+          style={{
+            paddingTop: 'max(env(safe-area-inset-top, 0px) + 16px, 20px)',
+            paddingBottom: 'max(env(safe-area-inset-bottom, 0px) + 16px, 20px)',
+            paddingLeft: 'max(env(safe-area-inset-left, 0px) + 16px, 16px)',
+            paddingRight: 'max(env(safe-area-inset-right, 0px) + 16px, 16px)'
+          }}
         >
           {/* Subtle Ambient Background Rays & Radial Glow */}
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_35%,rgba(16,185,129,0.18),transparent_60%)] pointer-events-none" />
