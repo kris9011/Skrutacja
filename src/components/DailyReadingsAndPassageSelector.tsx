@@ -2222,15 +2222,23 @@ export const DailyReadingsAndPassageSelector: React.FC<DailyReadingsAndPassageSe
               </div>
 
               {/* Title & Scripture Text */}
-              <div className="space-y-4">
-                <h3 className="font-serif text-xl sm:text-2xl font-bold text-slate-900 leading-tight">
-                  {currentRandomQuote.title}
-                </h3>
+              <div className="space-y-3.5">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-1.5 text-amber-600">
+                    <Sparkles className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+                    <span className="text-[10px] font-sans font-bold uppercase tracking-widest text-amber-700">
+                      Słowo Życia • Rhema
+                    </span>
+                  </div>
+                  <blockquote className="font-serif text-xl sm:text-2xl font-bold tracking-tight text-amber-800 sm:text-amber-900 leading-snug drop-shadow-xs">
+                    „{currentRandomQuote.title.replace(/[«»]/g, '').trim().replace(/^[„"“”\s]+/, '').replace(/[„"“”\s]+$/, '').trim()}”
+                  </blockquote>
+                </div>
 
-                <div className="p-5 sm:p-7 rounded-2xl bg-emerald-50/50 border border-emerald-200 shadow-xs relative">
-                  <Quote className="absolute top-4 left-4 w-7 h-7 text-emerald-600/20 pointer-events-none" />
-                  <p className="font-serif text-xl sm:text-2xl text-slate-950 leading-relaxed italic pl-6 sm:pl-8 font-medium">
-                    „{currentRandomQuote.text.trim().replace(/^[«"„“”\s]+/, '').replace(/[»"„“”\s]+$/, '').trim()}”
+                <div className="p-4 sm:p-5 rounded-2xl bg-amber-50/40 border border-amber-200/70 border-l-4 border-l-amber-500 shadow-xs relative">
+                  <Quote className="absolute top-3.5 left-3.5 w-6 h-6 text-amber-600/15 pointer-events-none" />
+                  <p className="font-serif text-base sm:text-lg text-slate-700 sm:text-slate-800 leading-relaxed italic font-normal pl-5 sm:pl-7">
+                    „{currentRandomQuote.text.replace(/[«»]/g, '').trim().replace(/^[„"“”\s]+/, '').replace(/[„"“”\s]+$/, '').trim()}”
                   </p>
                 </div>
               </div>

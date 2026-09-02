@@ -69,16 +69,19 @@ export const RandomScriptureDrawModal: React.FC<RandomScriptureDrawModalProps> =
   };
 
   const cleanQuoteText = (text: string): string => {
+    if (!text) return '';
     return text
+      .replace(/[«»]/g, '')
       .trim()
-      .replace(/^[«"„“”\s]+/, '')
-      .replace(/[»"„“”\s]+$/, '')
+      .replace(/^[„"“”\s]+/, '')
+      .replace(/[„"“”\s]+$/, '')
       .trim();
   };
 
   const handleCopyQuote = async () => {
-    const cleaned = cleanQuoteText(currentQuote.text);
-    const textToCopy = `„${cleaned}”\n(${currentQuote.siglum} - ${currentQuote.bookName})\n\nKontekst: ${currentQuote.theologicalContext}\n\n— Z aplikacji Skrutacja Pisma Świętego`;
+    const quoteSentence = cleanQuoteText(currentQuote.title);
+    const fullPassage = cleanQuoteText(currentQuote.text);
+    const textToCopy = `„${quoteSentence}”\n\n„${fullPassage}”\n(${currentQuote.siglum} - ${currentQuote.bookName})\n\nKontekst: ${currentQuote.theologicalContext}\n\n— Z aplikacji Skrutacja Pisma Świętego`;
     try {
       await navigator.clipboard.writeText(textToCopy);
       setIsCopied(true);
@@ -238,13 +241,26 @@ export const RandomScriptureDrawModal: React.FC<RandomScriptureDrawModalProps> =
                     </div>
                   </div>
 
-                  {/* 2. Main Bible Verse Text */}
-                  <div className="space-y-2.5">
-                    <h3 className="font-sans text-xs uppercase tracking-wider text-emerald-800 font-bold">
-                      {currentQuote.title}
-                    </h3>
-                    <div className="font-serif text-2xl sm:text-3xl text-slate-950 leading-relaxed sm:leading-relaxed tracking-wide italic border-l-4 sm:border-l-[6px] border-emerald-600 pl-5 sm:pl-7 pr-3 py-4 sm:py-5 bg-emerald-50/70 rounded-r-2xl shadow-xs">
-                      „{cleanQuoteText(currentQuote.text)}”
+                  {/* 2. Main Bible Verse & Passage Presentation */}
+                  <div className="space-y-3.5">
+                    {/* Zdanie powyżej cytatu - piękny cytat w złotych literach z cudzysłowem */}
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-1.5 text-amber-600">
+                        <Sparkles className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+                        <span className="text-[10px] font-sans font-bold uppercase tracking-widest text-amber-700">
+                          Słowo Życia • Rhema
+                        </span>
+                      </div>
+                      <blockquote className="font-serif text-xl sm:text-2xl font-bold tracking-tight text-amber-800 sm:text-amber-900 leading-snug drop-shadow-xs">
+                        „{cleanQuoteText(currentQuote.title)}”
+                      </blockquote>
+                    </div>
+
+                    {/* Poniżej cały fragment - również ładnie, ale miększą czcionką */}
+                    <div className="p-4 sm:p-5 rounded-2xl bg-amber-50/40 border border-amber-200/70 border-l-4 border-l-amber-500 shadow-xs relative">
+                      <p className="font-serif text-base sm:text-lg text-slate-700 sm:text-slate-800 leading-relaxed italic font-normal">
+                        „{cleanQuoteText(currentQuote.text)}”
+                      </p>
                     </div>
                   </div>
 
