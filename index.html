@@ -10,8 +10,8 @@
     <meta property="og:type" content="website" />
     <meta name="twitter:card" content="summary_large_image" />
 
-    <!-- SecurePrivacy Cookie Consent -->
-    <script src="https://app.secureprivacy.ai/script/6a971ee57500671f4a729f16.js"></script>
+    <!-- SecurePrivacy Cookie Consent (Non-blocking) -->
+    <script async src="https://app.secureprivacy.ai/script/6a971ee57500671f4a729f16.js"></script>
 
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-ELJ74W0R02"></script>
@@ -37,13 +37,30 @@
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;800&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,500&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   </head>
   <body class="bg-slate-50 text-slate-900 antialiased selection:bg-emerald-100 selection:text-emerald-900">
-    <div id="root"></div>
+    <div id="root">
+      <div style="min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; background-color: #f8fafc; font-family: system-ui, -apple-system, sans-serif; color: #0f172a; padding: 20px; text-align: center;">
+        <div style="width: 56px; height: 56px; border-radius: 16px; background: linear-gradient(135deg, #047857, #064e3b); display: flex; align-items: center; justify-content: center; color: white; font-size: 24px; box-shadow: 0 10px 25px -5px rgba(4, 120, 87, 0.3); margin-bottom: 16px;">
+          📖
+        </div>
+        <div style="font-size: 18px; font-weight: 700; color: #0f172a; margin-bottom: 6px;">
+          Skrutacja Pisma Świętego
+        </div>
+        <div style="font-size: 13px; color: #64748b; max-width: 280px; line-height: 1.4;">
+          Wczytywanie Słowa Bożego...
+        </div>
+      </div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
     <script>
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js').catch(err => {
-            console.log('SW status:', err);
+          navigator.serviceWorker.register('/sw.js').then(reg => {
+            // Check for updates periodically
+            if (reg) {
+              reg.update().catch(() => {});
+            }
+          }).catch(err => {
+            console.log('SW registration notice:', err);
           });
         });
       }

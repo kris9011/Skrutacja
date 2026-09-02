@@ -154,6 +154,10 @@ export interface ScriptureLookupResult {
   theologicalTheme: string;
   keyWords?: string[];
   suggestedScrutationTheme: string;
+  greekText?: string;
+  hebrewText?: string;
+  latinText?: string;
+  theologicalContext?: string;
 }
 
 export interface RandomScriptureQuote {

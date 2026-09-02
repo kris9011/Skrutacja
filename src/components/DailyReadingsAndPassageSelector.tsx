@@ -521,9 +521,10 @@ export const DailyReadingsAndPassageSelector: React.FC<DailyReadingsAndPassageSe
   const handleDrawRandomQuote = (category?: string, testament?: 'ALL' | 'ST' | 'NT') => {
     setIsDrawingRandom(true);
     setTimeout(() => {
+      const activeTestament = (testament || randomTestamentFilter);
       const drawn = getRandomScriptureQuote(
         category || randomCategoryFilter,
-        testament || randomTestamentFilter
+        activeTestament === 'ALL' ? undefined : activeTestament
       );
       setCurrentRandomQuote(drawn);
       setDrawHistory(prev => [drawn, ...prev.filter(q => q.id !== drawn.id)].slice(0, 10));

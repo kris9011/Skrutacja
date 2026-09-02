@@ -939,7 +939,9 @@ export const ScrutationTreeView: React.FC<ScrutationTreeViewProps> = ({
                           {isRoot ? 'START' : isST ? 'ST' : 'NT'}
                         </span>
                         {isWordOfLife && (
-                          <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500 animate-pulse" title="Słowo Życia" />
+                          <span title="Słowo Życia">
+                            <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500 animate-pulse" />
+                          </span>
                         )}
                       </div>
 
