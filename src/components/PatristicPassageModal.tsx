@@ -1,5 +1,5 @@
-import React from 'react';
-import { X, Scroll, ExternalLink, Sparkles } from 'lucide-react';
+import React, { useState } from 'react';
+import { X, Scroll, ExternalLink, Sparkles, MessageSquareQuote, Search } from 'lucide-react';
 import { PatristicCommentarySection } from './PatristicCommentarySection';
 
 interface PatristicPassageModalProps {
@@ -10,6 +10,7 @@ interface PatristicPassageModalProps {
   label?: string;
   onOpenFullPatristicView?: (siglum: string) => void;
   onStartScrutation?: (siglum: string, text: string) => void;
+  onOpenModernCommentary?: (siglum: string, text: string, label?: string) => void;
 }
 
 export const PatristicPassageModal: React.FC<PatristicPassageModalProps> = ({
@@ -19,9 +20,20 @@ export const PatristicPassageModal: React.FC<PatristicPassageModalProps> = ({
   verseText,
   label,
   onOpenFullPatristicView,
-  onStartScrutation
+  onStartScrutation,
+  onOpenModernCommentary
 }) => {
+  const [activeSiglum, setActiveSiglum] = useState<string>(siglum);
+  const [searchInput, setSearchInput] = useState<string>('');
+
   if (!isOpen) return null;
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchInput.trim()) {
+      setActiveSiglum(searchInput.trim());
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-950/70 backdrop-blur-sm animate-fade-in overflow-y-auto">
@@ -38,7 +50,7 @@ export const PatristicPassageModal: React.FC<PatristicPassageModalProps> = ({
                 {label ? `Ojcowie Kościoła • ${label}` : 'Ojcowie Kościoła (Catena Aurea)'}
               </span>
               <span className="font-mono text-xs font-bold text-white bg-sky-950/70 px-2.5 py-0.5 rounded-md border border-sky-500/30">
-                {siglum}
+                {activeSiglum}
               </span>
             </div>
             <h2 className="font-serif text-xl sm:text-2xl font-bold tracking-tight text-white flex items-center gap-2">
@@ -56,7 +68,7 @@ export const PatristicPassageModal: React.FC<PatristicPassageModalProps> = ({
                 type="button"
                 onClick={() => {
                   onClose();
-                  onOpenFullPatristicView(siglum);
+                  onOpenFullPatristicView(activeSiglum);
                 }}
                 className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-sky-800/80 hover:bg-sky-700 text-xs font-sans font-bold text-sky-100 transition-colors cursor-pointer border border-sky-600/40"
                 title="Otwórz w pełnej zakładce Ojców Kościoła"
@@ -76,15 +88,62 @@ export const PatristicPassageModal: React.FC<PatristicPassageModalProps> = ({
           </div>
         </div>
 
+        {/* Navigation Switch Bar: Ojcowie Kościoła vs Komentarze Najnowsze */}
+        <div className="bg-sky-950/30 border-b border-slate-200 px-4 py-2.5 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 shrink-0">
+          <div className="inline-flex rounded-xl p-1 bg-slate-100 border border-slate-200 self-start">
+            <button
+              type="button"
+              className="px-3.5 py-1.5 rounded-lg text-xs font-sans font-bold bg-sky-700 text-white shadow-xs flex items-center gap-1.5"
+            >
+              <Scroll className="w-3.5 h-3.5" />
+              <span>Ojcowie Kościoła (Tradycja)</span>
+            </button>
+            {onOpenModernCommentary && (
+              <button
+                type="button"
+                onClick={() => {
+                  onClose();
+                  onOpenModernCommentary(activeSiglum, verseText, label);
+                }}
+                className="px-3.5 py-1.5 rounded-lg text-xs font-sans font-medium text-slate-700 hover:text-slate-900 hover:bg-white/80 transition-colors flex items-center gap-1.5 cursor-pointer"
+                title="Przełącz na najnowsze komentarze biblijno-egzegetyczne"
+              >
+                <MessageSquareQuote className="w-3.5 h-3.5 text-amber-600" />
+                <span>Komentarze najnowsze</span>
+              </button>
+            )}
+          </div>
+
+          {/* Quick Siglum / Phrase Search */}
+          <form onSubmit={handleSearch} className="flex items-center gap-1.5">
+            <div className="relative flex-1 sm:w-64">
+              <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                placeholder="Wpisz fragment np. Mt 5,3..."
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                className="w-full pl-8 pr-2.5 py-1 text-xs rounded-lg border border-slate-300 focus:outline-none focus:border-sky-600 font-sans"
+              />
+            </div>
+            <button
+              type="submit"
+              className="px-3 py-1 bg-sky-700 hover:bg-sky-800 text-white text-xs font-sans font-bold rounded-lg transition-colors cursor-pointer"
+            >
+              Szukaj
+            </button>
+          </form>
+        </div>
+
         {/* Scrollable Content Body */}
         <div className="p-5 sm:p-7 overflow-y-auto space-y-6 flex-1 text-slate-900">
           <PatristicCommentarySection
-            siglum={siglum}
+            siglum={activeSiglum}
             verseText={verseText}
             onInsertInsightToNotes={(insight) => {
               if (onStartScrutation) {
                 onClose();
-                onStartScrutation(siglum, verseText);
+                onStartScrutation(activeSiglum, verseText);
               }
             }}
           />

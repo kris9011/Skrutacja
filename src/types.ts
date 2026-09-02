@@ -349,4 +349,39 @@ export interface ScrutationReminderSettings {
   lastNotifiedDate?: string; // YYYY-MM-DD
 }
 
+export interface PassageCommentaryData {
+  siglum: string;
+  title: string;
+  historicalLiteraryContext: string;
+  theologicalMessage: string;
+  spiritualSense: {
+    literal: string;
+    allegorical: string;
+    moral: string;
+    anagogical: string;
+  };
+  thomasAquinas?: {
+    title: string;
+    catenaAureaGloss: string;
+    scholasticSynthesis: string;
+  };
+  jfbCommentary?: {
+    title: string;
+    criticalNotes: string;
+    historicalExegesis: string;
+  };
+  pastoralCommentary?: {
+    title: string;
+    authorTradition: string;
+    practicalApplication: string;
+    spiritualEncouragement: string;
+  };
+  classicFootnotes?: {
+    title: string;
+    notes: string;
+  };
+  meditationPoints: string[];
+  prayer: string;
+}
+
 

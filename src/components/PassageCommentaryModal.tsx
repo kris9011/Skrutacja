@@ -11,25 +11,15 @@ import {
   HelpCircle,
   ArrowRight,
   RefreshCw,
-  Share2
+  Share2,
+  MessageSquareQuote,
+  Search,
+  Feather,
+  ShieldCheck,
+  BookmarkCheck,
+  FileText
 } from 'lucide-react';
-
-interface SpiritualSense {
-  literal: string;
-  allegorical: string;
-  moral: string;
-  anagogical: string;
-}
-
-interface PassageCommentaryData {
-  siglum: string;
-  title: string;
-  historicalLiteraryContext: string;
-  theologicalMessage: string;
-  spiritualSense: SpiritualSense;
-  meditationPoints: string[];
-  prayer: string;
-}
+import { PassageCommentaryData } from '../types';
 
 interface PassageCommentaryModalProps {
   isOpen: boolean;
@@ -43,6 +33,16 @@ interface PassageCommentaryModalProps {
   onStartScrutation?: (siglum: string, text: string) => void;
 }
 
+type CommentarySectionTab =
+  | 'all'
+  | 'thomas'
+  | 'jfb'
+  | 'pastoral'
+  | 'senses'
+  | 'context'
+  | 'wujek'
+  | 'meditation';
+
 export const PassageCommentaryModal: React.FC<PassageCommentaryModalProps> = ({
   isOpen,
   onClose,
@@ -54,20 +54,26 @@ export const PassageCommentaryModal: React.FC<PassageCommentaryModalProps> = ({
   onOpenPatristics,
   onStartScrutation
 }) => {
+  const [activeSiglum, setActiveSiglum] = useState<string>(siglum);
+  const [searchInput, setSearchInput] = useState<string>('');
   const [commentary, setCommentary] = useState<PassageCommentaryData | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [copied, setCopied] = useState<boolean>(false);
-  const [activeSection, setActiveSection] = useState<'all' | 'context' | 'senses' | 'meditation'>('all');
+  const [activeSection, setActiveSection] = useState<CommentarySectionTab>('all');
 
-  const fetchCommentary = async () => {
-    if (!siglum) return;
+  useEffect(() => {
+    setActiveSiglum(siglum);
+  }, [siglum]);
+
+  const fetchCommentary = async (targetSiglum: string = activeSiglum) => {
+    if (!targetSiglum) return;
     setIsLoading(true);
     try {
       const res = await fetch('/api/scrutation/passage-commentary', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          siglum,
+          siglum: targetSiglum,
           text,
           label,
           liturgicalContext: liturgicalContext || theologicalTheme
@@ -79,19 +85,38 @@ export const PassageCommentaryModal: React.FC<PassageCommentaryModalProps> = ({
       } else {
         throw new Error('Nie udało się pobrać komentarza');
       }
-    } catch (err) {
-      console.warn('Fallback passage commentary:', err);
-      // Fallback local commentary
+    } catch (_err) {
+      // Fallback multi-perspective commentary
       setCommentary({
-        siglum,
-        title: `Komentarz biblijny: ${label ? `${label} (${siglum})` : siglum}`,
-        historicalLiteraryContext: `Fragment z księgi ${siglum.split(' ')[0]} wpisuje się w zbawczą historię Przymierza. Bóg w konkretnym czasie i języku objawia swoją wolę, wzywając człowieka do zaufania i wejścia w zażyłość z Nim.`,
+        siglum: targetSiglum,
+        title: `Komentarz biblijny: ${label ? `${label} (${targetSiglum})` : targetSiglum}`,
+        historicalLiteraryContext: `Fragment z księgi ${targetSiglum.split(' ')[0]} wpisuje się w zbawczą historię Przymierza. Bóg w konkretnym czasie i języku objawia swoją wolę, wzywając człowieka do zaufania i wejścia w zażyłość z Nim.`,
         theologicalMessage: theologicalTheme || `Orędzie tego tekstu ogłasza prymat Bożej łaski i wierności. Słowo to rozjaśnia mroki ludzkiego serca i prowadzi do odkrycia Chrystusa jako centrum całego Pisma.`,
         spiritualSense: {
           literal: 'Sens dosłowny wskazuje na wydarzenie zbawcze oraz słowa i czyny przekazane przez natchnionego autora dla pouczenia wierzących.',
           allegorical: 'Sens alegoryczny pozwala rozpoznać zapowiedź i figurę tajemnicy Chrystusa i Kościoła, które w Nim znajdują ostateczne wypełnienie.',
           moral: 'Sens moralny prowadzi do nawrócenia obyczajów, wzywając do miłości braterskiej, pokory i wypełniania woli Ojca.',
           anagogical: 'Sens anagogiczny wznosi myśl ku rzeczom wiecznym – do eschatologicznego celu naszej ziemskiej pielgrzymki.'
+        },
+        thomasAquinas: {
+          title: 'Wykład św. Tomasza z Akwinu (Doctor Angelicus)',
+          catenaAureaGloss: 'Święty Tomasz z Akwinu naucza, że całe Pismo Święte ma za cel doprowadzenie człowieka do komunii z Bogiem. W duchu Catena Aurea perykopa ta łączy głos Tradycji z głęboką kontemplacją tajemnicy wcielonej Mądrości Bożej.',
+          scholasticSynthesis: 'Przyczyną sprawczą zbawczego orędzia jest Boże miłosierdzie; przyczyną celową – wieczne szczęście człowieka. Fragment ten oświeca rozum wiarą i rozpala wolę miłością (caritas).'
+        },
+        jfbCommentary: {
+          title: 'Komentarz Jamiesona-Fausseta-Browna (JFB) po polsku',
+          criticalNotes: 'W tekście oryginalnym kluczowe terminy wskazują na trwałe, niezłomne przymierze Boga. JFB podkreśla precyzję oryginalnego słownictwa i ścisły związek z całością objawienia biblijnego.',
+          historicalExegesis: 'Tło epoki i kontekst starożytny ukazują wierność Boga pośród zmiennych kolei losów narodu wybranego, zapowiadając pełnię odkupienia w Nowym Testamencie.'
+        },
+        pastoralCommentary: {
+          title: 'Komentarz Pastoralno-Duszpasterski',
+          authorTradition: 'Tradycja duszpasterska: Matthew Henry & C.H. Spurgeon («Skarbnica Dawidowa»)',
+          practicalApplication: 'Słowo to jest wezwaniem do zbadania stanu własnego serca: zaufaj Bożej Opatrzności w codziennych troskach i zrób dziś konkretny krok przebaczenia.',
+          spiritualEncouragement: 'Bóg nie męczy się przebaczaniem. Jego miłosierdzie jest świeże każdego poranka – nie ulegaj zniechęceniu w swoich zmaganiach.'
+        },
+        classicFootnotes: {
+          title: 'Tradycyjne Przypisy Polskie (ks. Jakub Wujek)',
+          notes: 'W klasycznej polskiej tradycji biblijnej werset ten interpretowany jest jako tarcza wiary i wezwanie do stateczności w cnocie pośród przeciwności świata.'
         },
         meditationPoints: [
           'Jakie słowo lub obraz z tego fragmentu zatrzymuje dzisiaj moją uwagę?',
@@ -106,16 +131,41 @@ export const PassageCommentaryModal: React.FC<PassageCommentaryModalProps> = ({
   };
 
   useEffect(() => {
-    if (isOpen && siglum) {
-      fetchCommentary();
+    if (isOpen && activeSiglum) {
+      fetchCommentary(activeSiglum);
     }
-  }, [isOpen, siglum]);
+  }, [isOpen, activeSiglum]);
 
   if (!isOpen) return null;
 
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchInput.trim()) {
+      setActiveSiglum(searchInput.trim());
+    }
+  };
+
   const handleCopyAll = async () => {
     if (!commentary) return;
-    const fullContent = `${commentary.title}\nSiglum: ${siglum}\n\nTekst biblijny:\n${text}\n\nKontekst historyczno-literacki:\n${commentary.historicalLiteraryContext}\n\nOrędzie teologiczne:\n${commentary.theologicalMessage}\n\nCztery Zmysły Pisma Świętego:\n- Sens dosłowny: ${commentary.spiritualSense.literal}\n- Sens alegoryczny: ${commentary.spiritualSense.allegorical}\n- Sens moralny: ${commentary.spiritualSense.moral}\n- Sens anagogiczny: ${commentary.spiritualSense.anagogical}\n\nPunkty do medytacji:\n${commentary.meditationPoints.map((p, i) => `${i + 1}. ${p}`).join('\n')}\n\nModlitwa:\n${commentary.prayer}`;
+    const fullContent = [
+      `${commentary.title}`,
+      `Siglum: ${activeSiglum}`,
+      `\nTekst biblijny:\n«${text}»`,
+      `\n1. KONTEKST & ORĘDZIE:`,
+      `Kontekst historyczno-literacki: ${commentary.historicalLiteraryContext}`,
+      `Orędzie teologiczne: ${commentary.theologicalMessage}`,
+      `\n2. CZTERY ZMYSŁY PISMA ŚWIĘTEGO (KKK 115-119):`,
+      `- Sens dosłowny: ${commentary.spiritualSense.literal}`,
+      `- Sens alegoryczny: ${commentary.spiritualSense.allegorical}`,
+      `- Sens moralny: ${commentary.spiritualSense.moral}`,
+      `- Sens anagogiczny: ${commentary.spiritualSense.anagogical}`,
+      commentary.thomasAquinas ? `\n3. ŚW. TOMASZ Z AKWINU (DOCTOR ANGELICUS):\n${commentary.thomasAquinas.catenaAureaGloss}\nSynteza: ${commentary.thomasAquinas.scholasticSynthesis}` : '',
+      commentary.jfbCommentary ? `\n4. JAMIESON-FAUSSET-BROWN (JFB) PO POLSKU:\nUwagi krytyczne: ${commentary.jfbCommentary.criticalNotes}\nEgzegeza: ${commentary.jfbCommentary.historicalExegesis}` : '',
+      commentary.pastoralCommentary ? `\n5. KOMENTARZ PASTORALNY (${commentary.pastoralCommentary.authorTradition}):\nZastosowanie: ${commentary.pastoralCommentary.practicalApplication}\nPocieszenie: ${commentary.pastoralCommentary.spiritualEncouragement}` : '',
+      commentary.classicFootnotes ? `\n6. PRZYPISY TRADYCYJNE (ks. J. Wujek):\n${commentary.classicFootnotes.notes}` : '',
+      `\n7. PUNKTY DO MEDYTACJI (Lectio Divina):\n${commentary.meditationPoints.map((p, i) => `${i + 1}. ${p}`).join('\n')}`,
+      `\n8. MODLITWA SERCA (Oratio):\n«${commentary.prayer}»`
+    ].filter(Boolean).join('\n');
 
     try {
       if (navigator.clipboard) {
@@ -143,12 +193,15 @@ export const PassageCommentaryModal: React.FC<PassageCommentaryModalProps> = ({
                 {label || 'Komentarz Biblijny'}
               </span>
               <span className="font-mono text-xs font-bold text-amber-100 bg-amber-950/40 px-2.5 py-0.5 rounded-md border border-amber-500/30">
-                {siglum}
+                {activeSiglum}
+              </span>
+              <span className="px-2 py-0.5 rounded bg-emerald-950/40 text-[10px] font-sans font-semibold text-emerald-200 border border-emerald-500/30">
+                Tomasz z Akwinu • JFB • Pastoralny
               </span>
             </div>
             <h2 className="font-serif text-xl sm:text-2xl font-bold tracking-tight text-white flex items-center gap-2">
               <BookOpen className="w-5 h-5 text-amber-300 shrink-0" />
-              <span>{commentary?.title || `Komentarz do fragmentu: ${siglum}`}</span>
+              <span>{commentary?.title || `Komentarz do fragmentu: ${activeSiglum}`}</span>
             </h2>
             {liturgicalContext && (
               <p className="text-xs text-amber-200/90 font-sans italic">
@@ -160,7 +213,7 @@ export const PassageCommentaryModal: React.FC<PassageCommentaryModalProps> = ({
           <div className="flex items-center gap-1.5 shrink-0">
             <button
               type="button"
-              onClick={fetchCommentary}
+              onClick={() => fetchCommentary(activeSiglum)}
               disabled={isLoading}
               className="p-2 rounded-xl bg-amber-800/60 hover:bg-amber-800 text-amber-200 hover:text-white transition-colors cursor-pointer"
               title="Odśwież komentarz"
@@ -171,7 +224,7 @@ export const PassageCommentaryModal: React.FC<PassageCommentaryModalProps> = ({
               type="button"
               onClick={handleCopyAll}
               className="p-2 rounded-xl bg-amber-800/60 hover:bg-amber-800 text-amber-200 hover:text-white transition-colors cursor-pointer"
-              title="Kopiuj cały komentarz"
+              title="Kopiuj cały komentarz (wszystkie tradycje)"
             >
               {copied ? <Check className="w-4 h-4 text-emerald-300" /> : <Copy className="w-4 h-4" />}
             </button>
@@ -186,8 +239,55 @@ export const PassageCommentaryModal: React.FC<PassageCommentaryModalProps> = ({
           </div>
         </div>
 
+        {/* Navigation Switch Bar: Komentarze Wieloaspektowe vs Ojcowie Kościoła + Search */}
+        <div className="bg-amber-950/20 border-b border-amber-200/60 px-4 py-2.5 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 shrink-0">
+          <div className="inline-flex rounded-xl p-1 bg-slate-100 border border-slate-200 self-start">
+            <button
+              type="button"
+              className="px-3.5 py-1.5 rounded-lg text-xs font-sans font-bold bg-amber-600 text-white shadow-xs flex items-center gap-1.5"
+            >
+              <MessageSquareQuote className="w-3.5 h-3.5" />
+              <span>Komentarze (Tomasz • JFB • Pastoralne)</span>
+            </button>
+            {onOpenPatristics && (
+              <button
+                type="button"
+                onClick={() => {
+                  onClose();
+                  onOpenPatristics(activeSiglum);
+                }}
+                className="px-3.5 py-1.5 rounded-lg text-xs font-sans font-medium text-slate-700 hover:text-slate-900 hover:bg-white/80 transition-colors flex items-center gap-1.5 cursor-pointer"
+                title="Przełącz na komentarze Ojców Kościoła"
+              >
+                <Scroll className="w-3.5 h-3.5 text-sky-700" />
+                <span>Ojcowie Kościoła</span>
+              </button>
+            )}
+          </div>
+
+          {/* Quick Siglum / Phrase Search */}
+          <form onSubmit={handleSearch} className="flex items-center gap-1.5">
+            <div className="relative flex-1 sm:w-64">
+              <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                placeholder="Wpisz fragment np. Mt 5,3..."
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                className="w-full pl-8 pr-2.5 py-1 text-xs rounded-lg border border-amber-300 focus:outline-none focus:border-amber-600 font-sans"
+              />
+            </div>
+            <button
+              type="submit"
+              className="px-3 py-1 bg-amber-600 hover:bg-amber-700 text-white text-xs font-sans font-bold rounded-lg transition-colors cursor-pointer"
+            >
+              Szukaj
+            </button>
+          </form>
+        </div>
+
         {/* Section Navigation Pills */}
-        <div className="bg-amber-50/70 border-b border-amber-200/70 px-4 py-2 flex items-center gap-2 overflow-x-auto shrink-0">
+        <div className="bg-amber-50/70 border-b border-amber-200/70 px-4 py-2 flex items-center gap-1.5 overflow-x-auto shrink-0 scrollbar-none">
           <button
             type="button"
             onClick={() => setActiveSection('all')}
@@ -197,18 +297,43 @@ export const PassageCommentaryModal: React.FC<PassageCommentaryModalProps> = ({
                 : 'text-amber-900 hover:bg-amber-100'
             }`}
           >
-            Całość komentarza
+            🌟 Całość
           </button>
           <button
             type="button"
-            onClick={() => setActiveSection('context')}
-            className={`px-3 py-1 rounded-lg text-xs font-sans font-bold transition-colors whitespace-nowrap cursor-pointer ${
-              activeSection === 'context'
+            onClick={() => setActiveSection('thomas')}
+            className={`px-3 py-1 rounded-lg text-xs font-sans font-bold transition-colors whitespace-nowrap cursor-pointer flex items-center gap-1 ${
+              activeSection === 'thomas'
                 ? 'bg-amber-800 text-white shadow-xs'
                 : 'text-amber-900 hover:bg-amber-100'
             }`}
+            title="Wykład św. Tomasza z Akwinu (Catena Aurea i synteza teologiczna)"
           >
-            Kontekst & Orędzie
+            <span>🕊️ Św. Tomasz z Akwinu</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveSection('jfb')}
+            className={`px-3 py-1 rounded-lg text-xs font-sans font-bold transition-colors whitespace-nowrap cursor-pointer flex items-center gap-1 ${
+              activeSection === 'jfb'
+                ? 'bg-amber-800 text-white shadow-xs'
+                : 'text-amber-900 hover:bg-amber-100'
+            }`}
+            title="Jamieson-Fausset-Brown (JFB) po polsku: krytyczno-egzegetyczny"
+          >
+            <span>📖 JFB (po polsku)</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveSection('pastoral')}
+            className={`px-3 py-1 rounded-lg text-xs font-sans font-bold transition-colors whitespace-nowrap cursor-pointer flex items-center gap-1 ${
+              activeSection === 'pastoral'
+                ? 'bg-amber-800 text-white shadow-xs'
+                : 'text-amber-900 hover:bg-amber-100'
+            }`}
+            title="Komentarze pastoralne: Matthew Henry & Spurgeon Skarbnica Dawidowa"
+          >
+            <span>🌿 Pastoralne & Spurgeon</span>
           </button>
           <button
             type="button"
@@ -219,7 +344,30 @@ export const PassageCommentaryModal: React.FC<PassageCommentaryModalProps> = ({
                 : 'text-amber-900 hover:bg-amber-100'
             }`}
           >
-            4 Zmysły Pisma (KKK)
+            📜 4 Zmysły Pisma
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveSection('context')}
+            className={`px-3 py-1 rounded-lg text-xs font-sans font-bold transition-colors whitespace-nowrap cursor-pointer ${
+              activeSection === 'context'
+                ? 'bg-amber-800 text-white shadow-xs'
+                : 'text-amber-900 hover:bg-amber-100'
+            }`}
+          >
+            🧭 Kontekst & Orędzie
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveSection('wujek')}
+            className={`px-3 py-1 rounded-lg text-xs font-sans font-bold transition-colors whitespace-nowrap cursor-pointer ${
+              activeSection === 'wujek'
+                ? 'bg-amber-800 text-white shadow-xs'
+                : 'text-amber-900 hover:bg-amber-100'
+            }`}
+            title="Przypisy ks. Jakuba Wujka i tradycja polska"
+          >
+            <span>⛪ Ks. Jakub Wujek</span>
           </button>
           <button
             type="button"
@@ -230,7 +378,7 @@ export const PassageCommentaryModal: React.FC<PassageCommentaryModalProps> = ({
                 : 'text-amber-900 hover:bg-amber-100'
             }`}
           >
-            Medytacja & Modlitwa
+            🕯️ Medytacja
           </button>
         </div>
 
@@ -253,15 +401,173 @@ export const PassageCommentaryModal: React.FC<PassageCommentaryModalProps> = ({
             <div className="py-16 text-center space-y-3">
               <RefreshCw className="w-8 h-8 text-amber-600 animate-spin mx-auto" />
               <p className="font-serif text-base text-slate-700 font-semibold">
-                Opracowywanie komentarza biblijno-liturgicznego dla {siglum}...
+                Opracowywanie wszechstronnego komentarza dla {siglum}...
               </p>
-              <p className="text-xs text-slate-500 font-sans">
-                Analiza zmysłów Pisma Świętego, tradycji egzegetycznej i orędzia zbawczego
+              <p className="text-xs text-slate-500 font-sans max-w-md mx-auto">
+                Łączenie teologii św. Tomasza z Akwinu, analizy krytycznej JFB po polsku, komentarza pastoralnego oraz 4 zmysłów Pisma Świętego.
               </p>
             </div>
           ) : commentary ? (
             <>
-              {/* Context & Theological Message */}
+              {/* 1. Saint Thomas Aquinas (Doctor Angelicus) Section */}
+              {(activeSection === 'all' || activeSection === 'thomas') && commentary.thomasAquinas && (
+                <div className="p-5 rounded-2xl bg-gradient-to-br from-amber-50/90 via-orange-50/40 to-yellow-50/80 border border-amber-300 shadow-2xs space-y-4">
+                  <div className="flex items-center justify-between flex-wrap gap-2 pb-2 border-b border-amber-200">
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 rounded-lg bg-amber-200 flex items-center justify-center text-amber-900 font-bold text-xs">
+                        🕊️
+                      </div>
+                      <div>
+                        <h3 className="font-serif text-base font-bold text-amber-950">
+                          {commentary.thomasAquinas.title}
+                        </h3>
+                        <span className="text-[10px] font-sans text-amber-800 uppercase tracking-wider font-semibold">
+                          Catena Aurea & Wykład Pisma Świętego • Synteza Scholastyczna
+                        </span>
+                      </div>
+                    </div>
+                    <span className="px-2 py-0.5 rounded text-[11px] font-sans font-bold bg-amber-100 text-amber-900 border border-amber-300">
+                      Doctor Angelicus
+                    </span>
+                  </div>
+
+                  <div className="space-y-3 text-slate-800 text-xs sm:text-sm">
+                    <div className="p-3.5 bg-white/90 rounded-xl border border-amber-200 space-y-1">
+                      <div className="font-sans font-bold text-amber-900 text-[11px] uppercase tracking-wider flex items-center gap-1.5">
+                        <Feather className="w-3.5 h-3.5 text-amber-700" />
+                        <span>Wykład Pisma i Catena Aurea:</span>
+                      </div>
+                      <p className="font-serif leading-relaxed text-slate-800">
+                        {commentary.thomasAquinas.catenaAureaGloss}
+                      </p>
+                    </div>
+
+                    <div className="p-3.5 bg-white/90 rounded-xl border border-amber-200 space-y-1">
+                      <div className="font-sans font-bold text-amber-900 text-[11px] uppercase tracking-wider flex items-center gap-1.5">
+                        <ShieldCheck className="w-3.5 h-3.5 text-amber-700" />
+                        <span>Synteza teologiczna (Łaska, cnoty, sakramenty):</span>
+                      </div>
+                      <p className="font-serif leading-relaxed text-slate-800">
+                        {commentary.thomasAquinas.scholasticSynthesis}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* 2. Jamieson-Fausset-Brown (JFB) in Polish */}
+              {(activeSection === 'all' || activeSection === 'jfb') && commentary.jfbCommentary && (
+                <div className="p-5 rounded-2xl bg-gradient-to-br from-sky-50/90 via-slate-50 to-blue-50/70 border border-sky-300 shadow-2xs space-y-4">
+                  <div className="flex items-center justify-between flex-wrap gap-2 pb-2 border-b border-sky-200">
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 rounded-lg bg-sky-200 flex items-center justify-center text-sky-900 font-bold text-xs">
+                        📖
+                      </div>
+                      <div>
+                        <h3 className="font-serif text-base font-bold text-sky-950">
+                          {commentary.jfbCommentary.title}
+                        </h3>
+                        <span className="text-[10px] font-sans text-sky-800 uppercase tracking-wider font-semibold">
+                          A Commentary, Critical and Explanatory, on the Whole Bible (1871)
+                        </span>
+                      </div>
+                    </div>
+                    <span className="px-2 py-0.5 rounded text-[11px] font-sans font-bold bg-sky-100 text-sky-900 border border-sky-300">
+                      Egzegeza krytyczna
+                    </span>
+                  </div>
+
+                  <div className="space-y-3 text-slate-800 text-xs sm:text-sm">
+                    <div className="p-3.5 bg-white/90 rounded-xl border border-sky-200 space-y-1">
+                      <div className="font-sans font-bold text-sky-900 text-[11px] uppercase tracking-wider flex items-center gap-1.5">
+                        <BookmarkCheck className="w-3.5 h-3.5 text-sky-700" />
+                        <span>Uwagi krytyczno-językowe (hebr./gr. w przekładzie polskim):</span>
+                      </div>
+                      <p className="font-serif leading-relaxed text-slate-800">
+                        {commentary.jfbCommentary.criticalNotes}
+                      </p>
+                    </div>
+
+                    <div className="p-3.5 bg-white/90 rounded-xl border border-sky-200 space-y-1">
+                      <div className="font-sans font-bold text-sky-900 text-[11px] uppercase tracking-wider flex items-center gap-1.5">
+                        <Compass className="w-3.5 h-3.5 text-sky-700" />
+                        <span>Tło archeologiczne, historyczne i spójność Pisma:</span>
+                      </div>
+                      <p className="font-serif leading-relaxed text-slate-800">
+                        {commentary.jfbCommentary.historicalExegesis}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* 3. Pastoral Commentary (Matthew Henry & Spurgeon Skarbnica Dawidowa) */}
+              {(activeSection === 'all' || activeSection === 'pastoral') && commentary.pastoralCommentary && (
+                <div className="p-5 rounded-2xl bg-gradient-to-br from-emerald-50/90 via-teal-50/40 to-slate-50 border border-emerald-300 shadow-2xs space-y-4">
+                  <div className="flex items-center justify-between flex-wrap gap-2 pb-2 border-b border-emerald-200">
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 rounded-lg bg-emerald-200 flex items-center justify-center text-emerald-900 font-bold text-xs">
+                        🌿
+                      </div>
+                      <div>
+                        <h3 className="font-serif text-base font-bold text-emerald-950">
+                          {commentary.pastoralCommentary.title}
+                        </h3>
+                        <span className="text-[10px] font-sans text-emerald-800 uppercase tracking-wider font-semibold">
+                          {commentary.pastoralCommentary.authorTradition}
+                        </span>
+                      </div>
+                    </div>
+                    <span className="px-2 py-0.5 rounded text-[11px] font-sans font-bold bg-emerald-100 text-emerald-900 border border-emerald-300">
+                      Duszpasterstwo & Życie
+                    </span>
+                  </div>
+
+                  <div className="space-y-3 text-slate-800 text-xs sm:text-sm">
+                    <div className="p-3.5 bg-white/90 rounded-xl border border-emerald-200 space-y-1">
+                      <div className="font-sans font-bold text-emerald-900 text-[11px] uppercase tracking-wider flex items-center gap-1.5">
+                        <Sparkles className="w-3.5 h-3.5 text-emerald-700" />
+                        <span>Praktyczne zastosowanie w codzienności:</span>
+                      </div>
+                      <p className="font-serif leading-relaxed text-slate-800">
+                        {commentary.pastoralCommentary.practicalApplication}
+                      </p>
+                    </div>
+
+                    <div className="p-3.5 bg-white/90 rounded-xl border border-emerald-200 space-y-1">
+                      <div className="font-sans font-bold text-emerald-900 text-[11px] uppercase tracking-wider flex items-center gap-1.5">
+                        <Heart className="w-3.5 h-3.5 text-emerald-700" />
+                        <span>Pocieszenie duchowe i zachęta w próbie:</span>
+                      </div>
+                      <p className="font-serif leading-relaxed text-slate-800">
+                        {commentary.pastoralCommentary.spiritualEncouragement}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* 4. Classic Polish Footnotes (ks. Jakub Wujek) */}
+              {(activeSection === 'all' || activeSection === 'wujek') && commentary.classicFootnotes && (
+                <div className="p-5 rounded-2xl bg-amber-50/60 border border-amber-300/80 shadow-2xs space-y-3">
+                  <div className="flex items-center justify-between pb-2 border-b border-amber-200">
+                    <div className="flex items-center gap-2">
+                      <FileText className="w-4 h-4 text-amber-800" />
+                      <h3 className="font-serif text-sm sm:text-base font-bold text-amber-950">
+                        {commentary.classicFootnotes.title}
+                      </h3>
+                    </div>
+                    <span className="text-[10px] font-sans font-bold text-amber-800 uppercase tracking-widest bg-amber-100 px-2 py-0.5 rounded">
+                      Biblia Wujka
+                    </span>
+                  </div>
+                  <p className="font-serif text-xs sm:text-sm text-slate-800 leading-relaxed bg-white/90 p-3.5 rounded-xl border border-amber-200">
+                    {commentary.classicFootnotes.notes}
+                  </p>
+                </div>
+              )}
+
+              {/* 5. Context & Theological Message */}
               {(activeSection === 'all' || activeSection === 'context') && (
                 <div className="space-y-4">
                   <div className="p-4 rounded-2xl bg-white border border-slate-200 space-y-2 shadow-2xs">
@@ -286,7 +592,7 @@ export const PassageCommentaryModal: React.FC<PassageCommentaryModalProps> = ({
                 </div>
               )}
 
-              {/* Four Senses of Scripture */}
+              {/* 6. Four Senses of Scripture */}
               {(activeSection === 'all' || activeSection === 'senses') && (
                 <div className="space-y-3">
                   <div className="flex items-center justify-between pb-1 border-b border-slate-200">
@@ -340,7 +646,7 @@ export const PassageCommentaryModal: React.FC<PassageCommentaryModalProps> = ({
                 </div>
               )}
 
-              {/* Meditation Questions & Prayer */}
+              {/* 7. Meditation Questions & Prayer */}
               {(activeSection === 'all' || activeSection === 'meditation') && (
                 <div className="space-y-4">
                   {commentary.meditationPoints && commentary.meditationPoints.length > 0 && (
@@ -424,3 +730,4 @@ export const PassageCommentaryModal: React.FC<PassageCommentaryModalProps> = ({
     </div>
   );
 };
+

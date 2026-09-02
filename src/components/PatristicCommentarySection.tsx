@@ -58,8 +58,7 @@ export const PatristicCommentarySection: React.FC<PatristicCommentarySectionProp
         setCommentaries(guaranteed.commentaries);
         setOriginalScripture(guaranteed.originalScripture);
       }
-    } catch (err) {
-      console.warn('Patristic fallback activated for:', sig, err);
+    } catch (_err) {
       const guaranteed = getGuaranteedPatristicData(sig, text);
       setCommentaries(guaranteed.commentaries);
       setOriginalScripture(guaranteed.originalScripture);

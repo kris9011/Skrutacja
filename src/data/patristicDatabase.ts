@@ -1,4 +1,12 @@
 import { PatristicCommentary, OriginalScriptureDetails } from '../types';
+import { getAquinasCommentaryForQuote } from './aquinasCommentariesDatabase';
+
+function mapToPatristicSense(sense: string): 'Dosłowny (Litteralis)' | 'Alegoryczny / Typologiczny (Allegoricus)' | 'Moralny / Tropologiczny (Tropologicus)' | 'Anagogiczny (Anagogicus)' {
+  if (sense.includes('Moralny') || sense.includes('Tropologicus')) return 'Moralny / Tropologiczny (Tropologicus)';
+  if (sense.includes('Alegorycz') || sense.includes('Mistycz') || sense.includes('Allegoricus')) return 'Alegoryczny / Typologiczny (Allegoricus)';
+  if (sense.includes('Anagog') || sense.includes('Eschatolog') || sense.includes('Anagogicus')) return 'Anagogiczny (Anagogicus)';
+  return 'Dosłowny (Litteralis)';
+}
 
 export interface PatristicVerseData {
   siglum: string;
@@ -308,15 +316,15 @@ export function getGuaranteedPatristicData(siglum: string, verseText?: string): 
         },
         {
           id: `pat_gen_${Date.now()}_3`,
-          author: 'Św. Tomasz z Akwinu (Catena Aurea)',
+          author: 'Św. Tomasz z Akwinu (Doctor Angelicus)',
           century: 'XIII w. (1225–1274)',
           tradition: 'Łacińska (Zachodnia)',
-          workTitle: 'Catena Aurea (Złoty Łańcuch komentarzy Ojców Kościoła)',
+          workTitle: getAquinasCommentaryForQuote(normalizedSiglum, undefined, cleanText).workTitle,
           originalLanguage: 'Łacina',
-          originalText: '«Omnis Scriptura divinitus inspirata utilis est ad docendum: Christus enim est finis Legis ad iustitiam omni credenti.»',
-          polishTranslation: '«Wszelkie Pismo przez Boga natchnione jest pożyteczne do nauczania: Chrystus bowiem jest kresem Prawa ku usprawiedliwieniu każdego, kto wierzy.»',
-          theologicalSense: 'Anagogiczny (Anagogicus)',
-          spiritualInsight: `Łączenie wersetów w metodzie Scrutatio Scripturae ukazuje cudowną harmonię planu zbawienia. Werset ${normalizedSiglum} kieruje nasz wzrok ku eschatologicznemu wypełnieniu w Królestwie Bożym.`
+          originalText: getAquinasCommentaryForQuote(normalizedSiglum, undefined, cleanText).originalText || '«Omnis Scriptura divinitus inspirata utilis est ad docendum veritatem.»',
+          polishTranslation: getAquinasCommentaryForQuote(normalizedSiglum, undefined, cleanText).polishTranslation,
+          theologicalSense: mapToPatristicSense(getAquinasCommentaryForQuote(normalizedSiglum, undefined, cleanText).theologicalSense),
+          spiritualInsight: getAquinasCommentaryForQuote(normalizedSiglum, undefined, cleanText).spiritualInsight
         }
       ]
     };
@@ -374,6 +382,18 @@ export function getGuaranteedPatristicData(siglum: string, verseText?: string): 
           polishTranslation: '«Pismo Święte rośnie wraz z tym, kto je czyta. Im głębiej je skrutujesz w modlitwie, tym jaśniej oświeca ono twoją drogę życiową.»',
           theologicalSense: 'Moralny / Tropologiczny (Tropologicus)',
           spiritualInsight: `To Słowo (${normalizedSiglum}) jest skierowane bezpośrednio do twojej obecnej sytuacji życiowej, dając siłę do ufnego poddania się woli Pana.`
+        },
+        {
+          id: `pat_ot_${Date.now()}_4`,
+          author: 'Św. Tomasz z Akwinu (Doctor Angelicus)',
+          century: 'XIII w. (1225–1274)',
+          tradition: 'Łacińska (Zachodnia)',
+          workTitle: getAquinasCommentaryForQuote(normalizedSiglum, undefined, cleanText).workTitle,
+          originalLanguage: 'Łacina',
+          originalText: getAquinasCommentaryForQuote(normalizedSiglum, undefined, cleanText).originalText || '«Omnia quae in Veteri Testamento scripta sunt, ad nostram doctrinam et figuram Christi scripta sunt.»',
+          polishTranslation: getAquinasCommentaryForQuote(normalizedSiglum, undefined, cleanText).polishTranslation,
+          theologicalSense: getAquinasCommentaryForQuote(normalizedSiglum, undefined, cleanText).theologicalSense,
+          spiritualInsight: getAquinasCommentaryForQuote(normalizedSiglum, undefined, cleanText).spiritualInsight
         }
       ]
     };
