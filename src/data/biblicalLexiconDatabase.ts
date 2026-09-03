@@ -734,6 +734,64 @@ export const BIBLICAL_LEXICON_DATABASE: Record<string, BiblicalLexiconEntry> = {
         contextNote: 'Przemiana serca przez Ducha'
       }
     ]
+  },
+
+  // --- PRACA / TRUD / ZARZUCENIE SIECI (Łk 5, 5; Mt 11, 28; 1 Kor 15, 10; Ps 127) ---
+  'kopiao': {
+    id: 'kopiao_g2872',
+    wordPolish: 'pracować / trudzić się',
+    originalWord: 'κοπιάω',
+    originalLanguage: 'Greka (Koine)',
+    transliteration: 'kopiáō',
+    strongNumber: 'G2872',
+    partOfSpeech: 'Czasownik',
+    rootMeaning: 'Ciężko pracować, trudzić się aż do wyczerpania, mozolić się',
+    detailedDefinition: 'W Nowym Testamencie oznacza wysiłek fizyczny lub apostolski posunięty aż do zmęczenia. W Łk 5, 5 Szymon Piotr mówi: «całą noc pracowaliśmy (kopiasantes) i niceśmy nie ułowili, lecz na Twoje słowo zarzucę sieci». Oznacza to granice ludzkiego wysiłku bez Chrystusa i owocność posłuszeństwa Słowu Bożemu.',
+    theologicalSignificance: 'Klucz do duchowości powołania i owocności: bez Chrystusa ludzki trud pozostaje bezowocny («całą noc pracowaliśmy i niceśmy nie ułowili»), lecz w posłuszeństwie Jego Słowu przynosi obfity połów i dar łaski.',
+    biblicalFrequency: 'Występuje 23 razy w Nowym Testamencie (odpowiednik hebr. amal / jaga w ST)',
+    relatedWords: ['kopos (trud/mozół)', 'ergon (dzieło/praca)', 'amal (hebr. trud)', 'jaga (hebr. mozolić się)'],
+    occurrences: [
+      {
+        siglum: 'Łk 5, 5',
+        bookName: 'Ewangelia wg św. Łukasza',
+        testament: 'NT',
+        text: 'Mistrzu, całą noc pracowaliśmy i niceśmy nie ułowili. Lecz na Twoje słowo zarzucę sieci.',
+        highlightWord: 'pracowaliśmy',
+        contextNote: 'Cudowny połów ryb na Jeziorze Genezaret'
+      },
+      {
+        siglum: 'Mt 11, 28',
+        bookName: 'Ewangelia wg św. Mateusza',
+        testament: 'NT',
+        text: 'Przyjdźcie do Mnie wszyscy, którzy utrudzeni i obciążeni jesteście, a Ja wam dam ukojenie.',
+        highlightWord: 'utrudzeni',
+        contextNote: 'Zaproszenie Jezusa dla utrudzonych trudem życia'
+      },
+      {
+        siglum: '1 Kor 15, 10',
+        bookName: '1 List do Koryntian',
+        testament: 'NT',
+        text: 'Za łaską Boga jestem czym jestem, a dana mi łaska Jego nie okazała się daremna; więcej niż oni wszyscy pracowałem, nie ja jednak, lecz łaska Boża ze mną.',
+        highlightWord: 'pracowałem',
+        contextNote: 'Św. Paweł o trudzie apostolskim wspieranym łaską'
+      },
+      {
+        siglum: 'Ps 127, 1',
+        bookName: 'Księga Psalmów',
+        testament: 'ST',
+        text: 'Jeżeli Pan domu nie zbuduje, na próżno pracują ci, którzy go wznoszą. Jeżeli Pan miasta nie ustrzeże, daremnie czuwa strażnik.',
+        highlightWord: 'pracują',
+        contextNote: 'Pieśń stopni – bez Boga wszelki trud jest próżny'
+      },
+      {
+        siglum: 'J 4, 38',
+        bookName: 'Ewangelia wg św. Jana',
+        testament: 'NT',
+        text: 'Ja was posłałem żąć to, nad czym wyście się nie trudzili. Inni się trudzili, a wy w ich trud weszliście.',
+        highlightWord: 'trudzili',
+        contextNote: 'Żniwo królestwa Bożego przy studni w Samarii'
+      }
+    ]
   }
 };
 
@@ -821,8 +879,38 @@ const POLISH_LEMMA_ALIASES: Record<string, string> = {
   'krwi': 'haima',
   'krew': 'haima',
   'krwia': 'haima',
-  'krwią': 'haima'
+  'krwią': 'haima',
+  'pracowalismy': 'kopiao',
+  'pracowaliśmy': 'kopiao',
+  'pracowalem': 'kopiao',
+  'pracowałem': 'kopiao',
+  'pracowac': 'kopiao',
+  'pracować': 'kopiao',
+  'pracuja': 'kopiao',
+  'pracują': 'kopiao',
+  'pracuje': 'kopiao',
+  'pracy': 'kopiao',
+  'praca': 'kopiao',
+  'trudzilismy': 'kopiao',
+  'trudziliśmy': 'kopiao',
+  'trudzili': 'kopiao',
+  'trudzic': 'kopiao',
+  'trudzić': 'kopiao',
+  'utrudzeni': 'kopiao',
+  'trud': 'kopiao',
+  'trudu': 'kopiao'
 };
+
+/**
+ * Checks if a word exists in the curated lexicon database or via aliases
+ */
+export function hasExactBiblicalLexiconEntry(word: string): boolean {
+  const rawClean = word.trim().toLowerCase().replace(/[^a-zęóąśłżźćńa-z0-9]/gi, '');
+  if (POLISH_LEMMA_ALIASES[rawClean] && BIBLICAL_LEXICON_DATABASE[POLISH_LEMMA_ALIASES[rawClean]]) {
+    return true;
+  }
+  return Object.prototype.hasOwnProperty.call(BIBLICAL_LEXICON_DATABASE, rawClean);
+}
 
 /**
  * Searches our rich biblical lexicon or builds a smart dynamic entry
@@ -872,43 +960,43 @@ export function findBiblicalLexiconEntry(word: string, verseContext?: string): B
     originalLanguage: isGreekLikely ? 'Greka (Koine)' : 'Hebrajski',
     transliteration: rawClean,
     strongNumber: isGreekLikely ? 'G' + (Math.floor(Math.random() * 4000) + 1000) : 'H' + (Math.floor(Math.random() * 7000) + 1000),
-    partOfSpeech: 'Termin teologiczny / klucz biblijny',
-    rootMeaning: `Pojęcie biblijne "${word}" w kontekście Pisma Świętego`,
-    detailedDefinition: `Słowo "${word}" pełni istotną rolę w teologicznym i duchowym przesłaniu tekstu biblijnego. W tradycji skrutacji (Scrutatio Scripturae) poszukiwanie tego samego słowa i jego rdzenia w innych księgach pozwala odkryć, jak Bóg stopniowo objawia swój plan zbawienia.`,
+    partOfSpeech: 'Termin biblijny / słowo kluczowe',
+    rootMeaning: `Pojęcie biblijne "${word}" w tekście natchnionym`,
+    detailedDefinition: `Słowo "${word}" występuje w badanym fragmencie Pisma Świętego (${verseContext || 'Kanon'}). W tradycji skrutacji (Scrutatio Scripturae) badanie kontekstu tego terminu pozwala prześledzić, jak Bóg przemawia przez poszczególne księgi Pisma Świętego.`,
     theologicalSignificance: `Klucz do łączenia Starego i Nowego Testamentu na zasadzie jedności Słowa Bożego.`,
-    biblicalFrequency: 'Występuje wielokrotnie w kanonie Pisma Świętego',
+    biblicalFrequency: 'Występuje w tekście Pisma Świętego',
     occurrences: [
-      {
-        siglum: verseContext || 'J 1, 1-5',
-        bookName: 'Kanon Pisma Świętego',
-        testament: isGreekLikely ? 'NT' : 'ST',
-        text: `«Słowo Boże objawia moc i życie w każdym wersecie zawierającym pojęcie: ${word}»`,
-        highlightWord: word,
-        contextNote: 'Werset wyjściowy do skrutacji'
-      },
       {
         siglum: 'Ps 119, 105',
         bookName: 'Księga Psalmów',
         testament: 'ST',
         text: 'Twoje słowo jest lampą dla moich stóp i światłem na mojej ścieżce.',
         highlightWord: 'słowo',
-        contextNote: 'Moc oświecająca Słowa'
+        contextNote: 'Światło Słowa Bożego w życiu wierzącego'
       },
       {
         siglum: 'Hbr 4, 12',
         bookName: 'List do Hebrajczyków',
         testament: 'NT',
-        text: 'Żywe bowiem jest słowo Boże, skuteczne i ostrzejsze niż wszelki miecz obosieczny.',
-        highlightWord: 'słowo',
-        contextNote: 'Żywa skuteczność Słowa'
+        text: 'Żywe bowiem jest słowo Boże, skuteczne i ostrzejsze niż wszelki miecz obosieczny, przenikające aż do rozdzielenia duszy i ducha.',
+        highlightWord: 'słowo Boże',
+        contextNote: 'Żywa skuteczność i przenikliwość Bożego Słowa'
       },
       {
         siglum: 'Iz 55, 10-11',
         bookName: 'Księga Izajasza',
         testament: 'ST',
-        text: 'Podobnie jak ulewa i śnieg spadają z nieba... tak słowo, które wychodzi z ust moich, nie wraca do Mnie bezowocne.',
+        text: 'Podobnie jak ulewa i śnieg spadają z nieba... tak słowo, które wychodzi z ust moich, nie wraca do Mnie bezowocne, zanim wpierw nie dokona tego, co chciałem.',
         highlightWord: 'słowo',
-        contextNote: 'Płodność Słowa Bożego'
+        contextNote: 'Niezawodna owocność słowa pochodzącego od Boga'
+      },
+      {
+        siglum: 'Łk 1, 37-38',
+        bookName: 'Ewangelia wg św. Łukasza',
+        testament: 'NT',
+        text: 'Dla Boga bowiem nie ma nic niemożliwego. Na to rzekła Maryja: «Oto ja służebnica Pańska, niech mi się stanie według twego słowa!».',
+        highlightWord: 'słowa',
+        contextNote: 'Wiara i posłuszeństwo Słowu Bożemu'
       }
     ]
   };

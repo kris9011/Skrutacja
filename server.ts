@@ -889,7 +889,8 @@ Przygotuj pełną analizę leksykalną i konkordancyjną tego słowa:
 5. Dokładne znaczenie rdzenia słowa i definicja w teologii biblijnej.
 6. Znaczenie teologiczne i duchowe (jak to pojęcie buduje historię zbawienia i przymierze).
 7. Przybliżona częstotliwość występowania w Piśmie Świętym.
-8. Lista od 3 do 5 kluczowych wersetów z CAŁEGO Pisma Świętego (zarówno Stary jak i Nowy Testament), gdzie to samo pojęcie/słowo lub jego hebrajski/grecki odpowiednik występuje w sposób kluczowy, aby użytkownik mógł kontynuować skrutację biblijną.`;
+8. Lista od 3 do 5 kluczowych, AUTENTYCZNYCH wersetów z CAŁEGO Pisma Świętego (zarówno Stary jak i Nowy Testament, np. Biblia Tysiąclecia), gdzie to samo pojęcie/słowo lub jego hebrajski/grecki odpowiednik występuje w sposób kluczowy.
+BARDZO WAŻNE: Pole 'text' w 'occurrences' MUSI zawierać dokładny, prawdziwy tekst wersetu biblijnego z Pisma Świętego. Pod żadnym pozorem nie wolno generować meta-zdań, streszczeń ani fikcyjnych cytatów. Jeśli werset to np. Łk 5, 5, podaj rzeczywiste słowa z Ewangelii.`;
 
     const schema = {
       type: Type.OBJECT,

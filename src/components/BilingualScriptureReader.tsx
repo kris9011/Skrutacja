@@ -29,9 +29,16 @@ import {
   ChevronDown,
   ChevronUp,
   Hash,
-  BookMarked
+  BookMarked,
+  Loader2,
+  AlertCircle
 } from 'lucide-react';
-import { BiblicalLexiconEntry, BiblicalWordOccurrence, findBiblicalLexiconEntry } from '../data/biblicalLexiconDatabase';
+import { 
+  BiblicalLexiconEntry, 
+  BiblicalWordOccurrence, 
+  findBiblicalLexiconEntry,
+  hasExactBiblicalLexiconEntry 
+} from '../data/biblicalLexiconDatabase';
 import { 
   parseBiblicalVerses, 
   groupVersesIntoParagraphs, 
@@ -70,6 +77,8 @@ export const BilingualScriptureReader: React.FC<BilingualScriptureReaderProps> =
   const [selectedWord, setSelectedWord] = useState<string | null>(null);
   const [lexiconData, setLexiconData] = useState<BiblicalLexiconEntry | null>(null);
   const [isLoadingLexicon, setIsLoadingLexicon] = useState<boolean>(false);
+  const [lexiconStatus, setLexiconStatus] = useState<'idle' | 'loading' | 'slow_loading' | 'ready' | 'error'>('idle');
+  const [isExactCurated, setIsExactCurated] = useState<boolean>(false);
   const [isCopied, setIsCopied] = useState<boolean>(false);
   const [hoveredWordIndex, setHoveredWordIndex] = useState<number | null>(null);
 
@@ -356,10 +365,19 @@ export const BilingualScriptureReader: React.FC<BilingualScriptureReaderProps> =
 
     setSelectedWord(trimmed);
     setIsLoadingLexicon(true);
+    setLexiconStatus('loading');
+
+    const exactExists = hasExactBiblicalLexiconEntry(trimmed);
+    setIsExactCurated(exactExists);
 
     // Initial instant preview from local database
     const localEntry = findBiblicalLexiconEntry(trimmed, siglum);
     setLexiconData(localEntry);
+
+    // If request takes longer than 3 seconds, show prompt that loading is in progress / please try again
+    const slowTimer = setTimeout(() => {
+      setLexiconStatus(prev => prev === 'loading' ? 'slow_loading' : prev);
+    }, 3000);
 
     try {
       const response = await fetch('/api/scrutation/word-lookup', {
@@ -372,12 +390,20 @@ export const BilingualScriptureReader: React.FC<BilingualScriptureReaderProps> =
         })
       });
 
+      clearTimeout(slowTimer);
+
       if (response.ok) {
         const data = await response.json();
         setLexiconData(data);
+        setIsExactCurated(true);
+        setLexiconStatus('ready');
+      } else {
+        setLexiconStatus('ready');
       }
     } catch (e) {
-      console.warn('Word lookup API error, using local database:', e);
+      clearTimeout(slowTimer);
+      console.warn('Word lookup API error, using local verified database:', e);
+      setLexiconStatus('ready');
     } finally {
       setIsLoadingLexicon(false);
     }
@@ -388,6 +414,7 @@ export const BilingualScriptureReader: React.FC<BilingualScriptureReaderProps> =
     setDisplayMode('polski');
     setSelectedWord(null);
     setLexiconData(null);
+    setLexiconStatus('idle');
   };
 
   const handleCopy = (text: string) => {
@@ -1442,6 +1469,26 @@ export const BilingualScriptureReader: React.FC<BilingualScriptureReaderProps> =
             </button>
           </div>
 
+          {/* Honest Status / Slow Loading Banner */}
+          {isLoadingLexicon && lexiconStatus === 'slow_loading' && (
+            <div className="p-3.5 rounded-2xl bg-amber-50 border border-amber-300 text-amber-950 flex items-center gap-3 text-xs font-sans">
+              <Loader2 className="w-4 h-4 text-amber-700 animate-spin shrink-0" />
+              <div className="flex-1">
+                <p className="font-bold text-amber-900">Trwa ładowanie pełnej filologicznej bazy konkordancji...</p>
+                <p className="text-amber-800/90 text-[11px]">
+                  Gdy serwer analizuje rdzeń wyrazu, wyświetlamy zweryfikowane wersety biblijne. Jeśli ładowanie przedłuża się, proszę spróbować ponownie za chwilę.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {isLoadingLexicon && lexiconStatus === 'loading' && (
+            <div className="px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 flex items-center gap-2 text-xs font-sans">
+              <Loader2 className="w-3.5 h-3.5 text-emerald-700 animate-spin shrink-0" />
+              <span>Trwa weryfikacja wystąpień słowa w Piśmie Świętym...</span>
+            </div>
+          )}
+
           {/* Morphological & Lexical Meaning */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="p-4 rounded-2xl bg-white border border-stone-200 space-y-2">
@@ -1510,7 +1557,7 @@ export const BilingualScriptureReader: React.FC<BilingualScriptureReaderProps> =
                     </div>
 
                     <p className="font-scripture text-sm text-stone-900 leading-relaxed">
-                      «{occ.text}»
+                      {occ.text.startsWith('«') ? occ.text : `«${occ.text}»`}
                     </p>
 
                     {occ.contextNote && (
@@ -1524,7 +1571,10 @@ export const BilingualScriptureReader: React.FC<BilingualScriptureReaderProps> =
                   <div className="pt-2 border-t border-stone-100 flex items-center justify-between gap-2">
                     <button
                       type="button"
-                      onClick={() => handleCopy(`${occ.siglum}: «${occ.text}»`)}
+                      onClick={() => {
+                        const cleanQuote = occ.text.startsWith('«') ? occ.text : `«${occ.text}»`;
+                        handleCopy(`${occ.siglum}: ${cleanQuote}`);
+                      }}
                       className="p-1.5 rounded-lg text-stone-400 hover:text-emerald-900 hover:bg-stone-50 transition-colors cursor-pointer"
                       title="Skopiuj werset"
                     >
