@@ -30,11 +30,13 @@ import {
   HelpCircle,
   Clock,
   Wand2,
-  X
+  X,
+  MessageSquareQuote
 } from 'lucide-react';
 import { ScrutationSession, ScrutationNode, CrossReferenceItem } from '../types';
 import { getGuaranteedCrossReferences } from '../data/crossReferenceDatabase';
 import { audioEngine } from '../utils/audioContemplationEngine';
+import { PassageCommentaryModal } from './PassageCommentaryModal';
 
 interface ScrutationTreeViewProps {
   session: ScrutationSession | null;
@@ -304,6 +306,7 @@ export const ScrutationTreeView: React.FC<ScrutationTreeViewProps> = ({
   const [pickerCustomSiglum, setPickerCustomSiglum] = useState<string>('');
   const [pickerCustomText, setPickerCustomText] = useState<string>('');
   const [isFetchingPickerCustom, setIsFetchingPickerCustom] = useState<boolean>(false);
+  const [commentaryModalNode, setCommentaryModalNode] = useState<ScrutationNode | null>(null);
 
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -1234,6 +1237,19 @@ export const ScrutationTreeView: React.FC<ScrutationTreeViewProps> = ({
                           type="button"
                           onClick={(e) => {
                             e.stopPropagation();
+                            setCommentaryModalNode(item.node);
+                          }}
+                          className="px-2 py-1 rounded-lg bg-sky-50 hover:bg-sky-100 text-sky-950 border border-sky-300 text-[11px] font-sans font-bold flex items-center gap-1 cursor-pointer transition-all shadow-2xs active:scale-95"
+                          title={`Otwórz komentarz biblijny, św. Tomasza i Ojców Kościoła do ${item.node.siglum}`}
+                        >
+                          <MessageSquareQuote className="w-3 h-3 text-sky-700 shrink-0" />
+                          <span>Komentarz</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
                             handleScrutateFromNode(item.node);
                           }}
                           className="px-2.5 py-1 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white font-bold flex items-center gap-1 cursor-pointer transition-all shadow-xs text-[11px] active:scale-95"
@@ -1379,6 +1395,16 @@ export const ScrutationTreeView: React.FC<ScrutationTreeViewProps> = ({
                     >
                       <BookOpen className="w-3.5 h-3.5 text-slate-700" />
                       <span>Wybierz z listy powiązań</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setCommentaryModalNode(selectedNode)}
+                      className="py-2.5 px-3 rounded-xl bg-sky-50 hover:bg-sky-100 text-sky-950 border border-sky-300 text-xs font-sans font-bold flex items-center justify-center gap-2 transition-colors cursor-pointer shadow-2xs col-span-1 sm:col-span-2"
+                      title="Otwórz pełny komentarz egzegetyczny, św. Tomasza z Akwinu i Ojców Kościoła"
+                    >
+                      <MessageSquareQuote className="w-4 h-4 text-sky-700" />
+                      <span>Komentarz Biblijny & Ojców Kościoła ({selectedNode.siglum})</span>
                     </button>
                   </div>
 
@@ -1884,6 +1910,20 @@ export const ScrutationTreeView: React.FC<ScrutationTreeViewProps> = ({
             </div>
           </div>
         </div>
+      )}
+      {/* Passage Commentary Modal */}
+      {commentaryModalNode && (
+        <PassageCommentaryModal
+          isOpen={Boolean(commentaryModalNode)}
+          onClose={() => setCommentaryModalNode(null)}
+          siglum={commentaryModalNode.siglum}
+          text={commentaryModalNode.text}
+          theologicalTheme={commentaryModalNode.theologicalTheme || commentaryModalNode.crossReferenceReason}
+          onOpenPatristics={onOpenPatristicsForSiglum}
+          onStartScrutation={() => {
+            setCommentaryModalNode(null);
+          }}
+        />
       )}
     </div>
   );
