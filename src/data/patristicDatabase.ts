@@ -392,7 +392,7 @@ export function getGuaranteedPatristicData(siglum: string, verseText?: string): 
           originalLanguage: 'Łacina',
           originalText: getAquinasCommentaryForQuote(normalizedSiglum, undefined, cleanText).originalText || '«Omnia quae in Veteri Testamento scripta sunt, ad nostram doctrinam et figuram Christi scripta sunt.»',
           polishTranslation: getAquinasCommentaryForQuote(normalizedSiglum, undefined, cleanText).polishTranslation,
-          theologicalSense: getAquinasCommentaryForQuote(normalizedSiglum, undefined, cleanText).theologicalSense,
+          theologicalSense: mapToPatristicSense(getAquinasCommentaryForQuote(normalizedSiglum, undefined, cleanText).theologicalSense),
           spiritualInsight: getAquinasCommentaryForQuote(normalizedSiglum, undefined, cleanText).spiritualInsight
         }
       ]

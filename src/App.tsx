@@ -16,26 +16,24 @@ import { PatristicView } from './components/PatristicView';
 import { ScrutationTreeView } from './components/ScrutationTreeView';
 import { JewishTraditionView } from './components/JewishTraditionView';
 import { BreviaryView } from './components/BreviaryView';
+import { LitaniesAndNovenasView } from './components/LitaniesAndNovenasView';
 import { RandomScriptureDrawModal } from './components/RandomScriptureDrawModal';
 import { IntroSplash, IntroChoice } from './components/IntroSplash';
 import { ResetAppModal } from './components/ResetAppModal';
 import { DailyReminderModal } from './components/DailyReminderModal';
 import { InstallAppModal } from './components/InstallAppModal';
 import { PrayerToolsBar } from './components/PrayerToolsBar';
-import { ScrutationSession, BiblicalThemePreset, ScrutationReminderSettings, BreviaryAudience } from './types';
+import { ScrutationSession, BiblicalThemePreset, ScrutationReminderSettings, BreviaryAudience, MainAppTab } from './types';
 import { THEME_PRESETS } from './data/biblicalData';
-import { CheckCircle2, Flame, BookOpen, CalendarDays, Sparkles, BookmarkCheck, Network, Scroll, RotateCcw, Church } from 'lucide-react';
+import { CheckCircle2, Flame, BookOpen, CalendarDays, Sparkles, BookmarkCheck, Network, Scroll, RotateCcw, Church, Heart } from 'lucide-react';
 import { initNotificationScheduler, getStoredReminderSettings } from './utils/notificationService';
 
 const LOCAL_STORAGE_ACTIVE_SESSION = 'scrutatio_active_session_v1';
 const LOCAL_STORAGE_JOURNAL = 'scrutatio_journal_v1';
 
 export default function App() {
-  const [showIntro, setShowIntro] = useState<boolean>(() => {
-    // Only show intro splash once per browser session or on reload
-    return true;
-  });
-  const [activeTab, setActiveTab] = useState<'simple' | 'daily' | 'workspace' | 'tree' | 'patristic' | 'jewish' | 'journal' | 'guide' | 'themes' | 'books' | 'breviary'>('daily');
+  const [showIntro, setShowIntro] = useState<boolean>(false);
+  const [activeTab, setActiveTab] = useState<MainAppTab>('daily');
   const [breviaryAudience, setBreviaryAudience] = useState<BreviaryAudience>('lay');
   const [isDrawWordModalOpen, setIsDrawWordModalOpen] = useState<boolean>(false);
   const [activeSession, setActiveSession] = useState<ScrutationSession | null>(null);
@@ -255,12 +253,10 @@ export default function App() {
             setShowIntro(false);
             if (choice === 'scrutation') {
               setActiveTab('daily');
-            } else if (choice === 'breviary_clergy') {
-              setBreviaryAudience('clergy');
+            } else if (choice === 'breviary') {
               setActiveTab('breviary');
-            } else if (choice === 'breviary_lay') {
-              setBreviaryAudience('lay');
-              setActiveTab('breviary');
+            } else if (choice === 'litanies') {
+              setActiveTab('litanies');
             } else if (choice === 'draw_word') {
               setIsDrawWordModalOpen(true);
             }
@@ -329,6 +325,47 @@ export default function App() {
             onOpenPatristicForVerse={(sig) => {
               setPatristicSiglum(sig);
               setActiveTab('patristic');
+            }}
+            onOpenLitaniesTab={() => setActiveTab('litanies')}
+            onOpenJournalForPrayer={(title, txt) => {
+              const newSession: ScrutationSession = {
+                id: 'session_' + Date.now(),
+                title: `Modlitwa: ${title}`,
+                theme: 'Litanie i Nowenny',
+                initialSiglum: 'Modlitwa',
+                initialText: txt,
+                entryType: 'prayer',
+                sourceContext: title,
+                nodes: [
+                  {
+                    id: 'node_root',
+                    parentId: null,
+                    siglum: title,
+                    text: txt,
+                    testament: 'NT',
+                    crossReferenceReason: 'Zapis z modlitwy Nowenny/Litanii',
+                    order: 0,
+                    isExpanded: true,
+                    createdAt: Date.now()
+                  }
+                ],
+                activeStep: 0,
+                prayerNotes: {
+                  statio: '',
+                  invocatio: '',
+                  lectio: txt,
+                  meditatio: '',
+                  oratio: '',
+                  contemplatio: '',
+                  actio: `Odmówiono modlitwę: ${title}`,
+                  wordOfLife: title
+                },
+                durationSeconds: 0,
+                isCompleted: true,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+              };
+              handleSaveToJournal(newSession);
             }}
           />
         )}
@@ -584,6 +621,41 @@ export default function App() {
             }}
           />
         )}
+
+        {/* Litanie i Nowenny View */}
+        {activeTab === 'litanies' && (
+          <LitaniesAndNovenasView
+            onOpenJournalForPrayer={(title, text) => {
+              const newSession: ScrutationSession = {
+                id: 'session_' + Date.now(),
+                title: title,
+                theme: 'Litanie i Nowenny',
+                initialSiglum: 'Modlitwa',
+                initialText: text.slice(0, 300),
+                entryType: 'prayer',
+                sourceContext: 'Litanie i Nowenny',
+                nodes: [],
+                activeStep: 0,
+                prayerNotes: {
+                  statio: '',
+                  invocatio: '',
+                  lectio: text,
+                  meditatio: '',
+                  oratio: '',
+                  contemplatio: '',
+                  actio: '',
+                  wordOfLife: title
+                },
+                durationSeconds: 0,
+                isCompleted: true,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+              };
+              handleSaveToJournal(newSession);
+              showToast(`Zapisano modlitwę «${title}» w Dzienniku`);
+            }}
+          />
+        )}
       </main>
 
       {/* Mobile Sticky Bottom Navigation */}
@@ -625,6 +697,17 @@ export default function App() {
         >
           <Church className="w-4 h-4 mb-0.5 text-amber-600" />
           <span className="text-[9px] uppercase">Brewiarz</span>
+        </button>
+
+        <button
+          id="mobile-nav-litanies"
+          onClick={() => setActiveTab('litanies')}
+          className={`flex flex-col items-center justify-center min-h-[44px] px-1.5 rounded-lg transition-colors cursor-pointer shrink-0 ${
+            activeTab === 'litanies' ? 'text-rose-700 font-bold' : 'text-slate-500'
+          }`}
+        >
+          <Heart className="w-4 h-4 mb-0.5 text-rose-600 fill-rose-100" />
+          <span className="text-[9px] uppercase font-bold">Nowenny</span>
         </button>
 
         <button

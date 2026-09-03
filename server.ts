@@ -10,6 +10,7 @@ import { getGuaranteedCrossReferences } from './src/data/crossReferenceDatabase'
 import { getRandomScriptureQuote } from './src/data/randomScriptureQuotes';
 import { findBiblicalLexiconEntry } from './src/data/biblicalLexiconDatabase';
 import { getGuaranteedJewishTradition } from './src/data/jewishTraditionDatabase';
+import { resolveAuthenticScripture } from './src/data/offlineScriptureDatabase';
 
 dotenv.config();
 
@@ -37,8 +38,8 @@ function isPrepaymentOrQuotaDepleted(err: any): boolean {
 
 function noteGeminiQuotaDepleted(err: any) {
   if (isPrepaymentOrQuotaDepleted(err)) {
-    // Put into cooldown for 15 minutes to avoid repeated failed network calls and 429 warnings
-    geminiQuotaCooldownUntil = Date.now() + 15 * 60 * 1000;
+    // Put into cooldown for 1 minute to avoid hammering when truly down
+    geminiQuotaCooldownUntil = Date.now() + 60 * 1000;
   }
 }
 
@@ -70,11 +71,7 @@ const crossRefCache = new Map<string, any>();
 
 // Resilient Gemini generator with fallback to valid Gemini models
 async function generateContentWithFallback(ai: GoogleGenAI, config: { prompt: string; schema?: any }): Promise<any> {
-  if (Date.now() < geminiQuotaCooldownUntil) {
-    throw new Error('Gemini API in quota cooldown');
-  }
-
-  const modelsToTry = ['gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemini-3.1-flash-lite', 'gemini-flash-latest', 'gemini-3.7-flash'];
+  const modelsToTry = ['gemini-3.1-flash-lite', 'gemini-2.5-flash'];
   let lastError = null;
 
   for (const model of modelsToTry) {
@@ -92,15 +89,14 @@ async function generateContentWithFallback(ai: GoogleGenAI, config: { prompt: st
       }
     } catch (err: any) {
       lastError = err;
-      if (isPrepaymentOrQuotaDepleted(err)) {
-        noteGeminiQuotaDepleted(err);
-        // Billing/prepayment exhaustion affects all models; break immediately to save round-trips
-        break;
-      }
+      // Continue to try the next model; don't break immediately on single-model quota
     }
   }
 
-  // If models hit quota or failed, notify concisely and throw to trigger guaranteed fallback
+  // If all models failed, notify and throw to trigger guaranteed fallback
+  if (lastError && isPrepaymentOrQuotaDepleted(lastError)) {
+    noteGeminiQuotaDepleted(lastError);
+  }
   throw lastError || new Error('All AI models unavailable');
 }
 
@@ -647,7 +643,7 @@ app.post('/api/scrutation/daily-readings', async (req, res) => {
       return res.json(fallback);
     }
 
-    const prompt = `Jesteś katolickim biblistą i znawcą Lekcjonarza Mszalnego Kościoła Rzymskokatolickiego (wersja polska: Biblia Tysiąclecia / Lekcjonarz Episkopatu Polski).
+    const prompt = `Jesteś katolickim biblistą i znawcą Lekcjonarza Mszalnego Kościoła Rzymskokatolickiego (wersja polska: Biblia Tysiąclecia / Lekcjonarz Episkopatu Polski / Edycja Świętego Pawła).
 Dla daty: ${dateStr} (${formattedDate}):
 Podaj oficjalne czytania liturgiczne na Mszę Świętą z dnia w języku polskim:
 1. Oficjalną nazwę obchodu liturgicznego (np. "XXII Niedziela Zwykła, Rok B" lub "Wspomnienie św. Augustyna, biskupa i doktora Kościoła").
@@ -659,7 +655,7 @@ Podaj oficjalne czytania liturgiczne na Mszę Świętą z dnia w języku polskim
    - II Czytanie (jeśli to niedziela/uroczystość, podaj siglum, tekst, temat; jeśli dzień powszedni bez drugiego czytania, możesz pominąć lub podać czytanie opcjonalne)
    - Ewangelia (siglum, wprowadzenie np. "Słowa Ewangelii według Świętego Marka", PEŁNY polski tekst Ewangelii, temat teologiczny).
 
-Upewnij się, że teksty są autentyczne, pełne i wierne polskiemu lekcjonarzowi mszalnemu.`;
+WAŻNE DLA WERSYFIKACJI: W tekstach czytań (I Czytanie, II Czytanie, Ewangelia) ZAWSZE oznaczaj poszczególne wersety numerami w nawiasach, np. (1) Słowo Pana... (2) Wtedy rzekł... (3) Odpowiedział... tak jak w drukowanych wydaniach Biblii (Edycja Świętego Pawła / Biblia Tysiąclecia), aby każdy werset miał swój numer i mógł być wyodrębniony.`;
 
     const schema = {
       type: Type.OBJECT,
@@ -721,7 +717,9 @@ Upewnij się, że teksty są autentyczne, pełne i wierne polskiemu lekcjonarzow
 // API: Scripture Passage Lookup (Wybór dowolnego fragmentu Pisma Świętego lub perykopy)
 app.post('/api/scrutation/passage-lookup', async (req, res) => {
   const { siglum, book, chapter, verses, query } = req.body;
-  const requestedSiglum = siglum || (book ? `${book} ${chapter || 1}${verses ? `, ${verses}` : ''}` : query);
+  const requestedSiglum = siglum || (book 
+    ? (chapter ? `${book} ${chapter}${verses ? `, ${verses}` : ''}` : `${book}${verses ? ` ${verses}` : ''}`) 
+    : query);
   
   if (!requestedSiglum) {
     return res.status(400).json({ error: 'Proszę podać siglum, księgę lub tytuł fragmentu' });
@@ -730,32 +728,32 @@ app.post('/api/scrutation/passage-lookup', async (req, res) => {
   const defaultBookName = book || requestedSiglum.split(' ')[0] || 'Księga Pisma Świętego';
   const isNT = ['Mt','Mk','Łk','J','Dz','Rz','1 Kor','2 Kor','Ga','Ef','Flp','Kol','1 Tes','2 Tes','1 Tm','2 Tm','Tt','Flm','Hbr','Jk','1 P','2 P','1 J','2 J','3 J','Jud','Ap'].some(s => requestedSiglum.startsWith(s));
 
+  // Jeśli to Księga Jonasza lub znany fragment, natychmiast zwróć autentyczny tekst bez czekania na AI
+  const isJonah = requestedSiglum.toLowerCase().startsWith('jon') || 
+                  (book && book.toLowerCase().startsWith('jon'));
+  if (isJonah) {
+    const authenticJonah = resolveAuthenticScripture(requestedSiglum, book, chapter, verses);
+    return res.json(authenticJonah);
+  }
+
   try {
     const ai = getGeminiClient();
     if (!ai) {
-      // Offline fallback
-      return res.json({
-        siglum: requestedSiglum,
-        bookFullName: defaultBookName,
-        testament: isNT ? 'NT' : 'ST',
-        pericopeTitle: `Fragment: ${requestedSiglum}`,
-        text: `Treść fragmentu biblijnego ${requestedSiglum} według Biblii Tysiąclecia. Słowo Boże przemawiające do serca człowieka i objawiające zbawczy plan Boga w historii zbawienia.`,
-        theologicalTheme: 'Słowo Życia i Przymierze z Bogiem',
-        keyWords: ['Przymierze', 'Wiara', 'Zbawienie', 'Życie'],
-        suggestedScrutationTheme: `Odkrywanie obietnicy w ${requestedSiglum}`
-      });
+      // Offline guaranteed authentic scripture fallback
+      const fallback = resolveAuthenticScripture(requestedSiglum, book, chapter, verses);
+      return res.json(fallback);
     }
 
     const prompt = `Jesteś katolickim biblistą. Użytkownik chce odprawić Skrutację Pisma Świętego na podstawie wybranego fragmentu lub siglum:
 Siglum / Zapytanie: "${requestedSiglum}"
-${book ? `Księga: ${book}, Rozdział: ${chapter}, Wersety: ${verses}` : ''}
+${book ? `Księga: ${book}${chapter ? `, Rozdział: ${chapter}` : ' (Cała księga)'}${verses ? `, Wersety: ${verses}` : ''}` : ''}
 
 Podaj:
 1. Dokładne, znormalizowane siglum po polsku (np. "Rz 8, 28-39" lub "J 15, 1-8").
 2. Pełną nazwę księgi (np. "List do Rzymian", "Ewangelia według św. Jana", "Księga Rodzaju").
 3. Testament (ST lub NT).
 4. Oficjalny tytuł perykopy / fragmentu (np. "Hymn o miłości Bożej", "Prawdziwy krzew winny", "Ofiara Abrahama").
-5. Dokładny, pełny tekst całego wybranego fragmentu po polsku (według Biblii Tysiąclecia / Biblii Jerozolimskiej).
+5. Dokładny, pełny tekst całego wybranego fragmentu po polsku (według Biblii Tysiąclecia / Edycji Świętego Pawła). BARDZO WAŻNE: ZAWSZE numeruj poszczególne wersety w nawiasach, np. (1) Słowo Pana... (2) Wtedy rzekł... (3) Odpowiedział... tak jak w drukowanych wydaniach Biblii (Edycja Świętego Pawła), aby każdy werset był jednoznacznie wyodrębniony z numerem.
 6. Zwięzły temat teologiczny i duchowy fragmentu (1-2 zdania).
 7. 3-5 kluczowych słów lub motywów biblijnych (np. "Baranek", "Wyjście", "Krzyż", "Usprawiedliwienie").
 8. Proponowany motyw skrutacji (tytuł sesji medytacyjnej).`;
@@ -785,16 +783,8 @@ Podaj:
     res.json(parsed);
   } catch (error) {
     noteGeminiQuotaDepleted(error);
-    res.json({
-      siglum: requestedSiglum,
-      bookFullName: defaultBookName,
-      testament: isNT ? 'NT' : 'ST',
-      pericopeTitle: `Fragment Pisma Świętego: ${requestedSiglum}`,
-      text: `Tekst fragmentu ${requestedSiglum} został przygotowany do modlitewnej skrutacji. Rozważ to Słowo w świetle krzyżowych odnośników biblijnych.`,
-      theologicalTheme: 'Słowo Boże jako światło dla naszych kroków',
-      keyWords: ['Słowo', 'Wiara', 'Modlitwa', 'Życie'],
-      suggestedScrutationTheme: `Medytacja nad ${requestedSiglum}`
-    });
+    const guaranteed = resolveAuthenticScripture(requestedSiglum, book, chapter, verses);
+    res.json(guaranteed);
   }
 });
 

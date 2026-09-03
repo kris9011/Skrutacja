@@ -30,7 +30,21 @@ export interface ScrutationNode {
   }[];
 }
 
-export type JournalEntryType = 'scrutation' | 'breviary' | 'rhema_draw' | 'reading';
+export type MainAppTab = 
+  | 'simple' 
+  | 'daily' 
+  | 'workspace' 
+  | 'tree' 
+  | 'patristic' 
+  | 'jewish' 
+  | 'journal' 
+  | 'guide' 
+  | 'themes' 
+  | 'books' 
+  | 'breviary' 
+  | 'litanies';
+
+export type JournalEntryType = 'scrutation' | 'breviary' | 'rhema_draw' | 'reading' | 'prayer';
 
 export interface ScrutationSession {
   id: string;

@@ -234,6 +234,40 @@ export function initNotificationScheduler(onTrigger?: (title: string, body: stri
         onTrigger(settings.reminderTitle, settings.reminderBody);
       }
     }
+
+    // Check Novenas reminders
+    try {
+      const rawNovenaReminders = localStorage.getItem('scrutatio_novena_reminders_v1');
+      const rawProgress = localStorage.getItem('scrutatio_novenas_progress_v1');
+      if (rawNovenaReminders) {
+        const novenaReminders = JSON.parse(rawNovenaReminders);
+        const progressMap = rawProgress ? JSON.parse(rawProgress) : {};
+        let updated = false;
+
+        for (const [novenaId, rem] of Object.entries<any>(novenaReminders)) {
+          if (rem && rem.enabled && rem.time === currentTimeStr && rem.lastNotifiedDate !== todayStr) {
+            const currentDay = (progressMap[novenaId]?.completedDays?.length || 0) + 1;
+            const novenaTitle = rem.novenaTitle || 'Nowenna';
+            const title = `🕊️ Czas na Nowennę: ${novenaTitle} (Dzień ${currentDay})`;
+            const body = `Otwórz aplikację, aby odmówić modlitwę na dzień ${currentDay}.`;
+
+            showScrutationNotification(title, body, true);
+            rem.lastNotifiedDate = todayStr;
+            updated = true;
+
+            if (onTrigger) {
+              onTrigger(title, body);
+            }
+          }
+        }
+
+        if (updated) {
+          localStorage.setItem('scrutatio_novena_reminders_v1', JSON.stringify(novenaReminders));
+        }
+      }
+    } catch (novenaErr) {
+      console.warn('Error checking novena reminders:', novenaErr);
+    }
   };
 
   // Check every 15 seconds for precision

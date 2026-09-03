@@ -9,10 +9,11 @@ import {
   Flame, 
   BookOpen, 
   Compass,
-  Sunrise
+  Sunrise,
+  Heart
 } from 'lucide-react';
 
-export type IntroChoice = 'scrutation' | 'breviary_clergy' | 'breviary_lay' | 'draw_word';
+export type IntroChoice = 'scrutation' | 'breviary' | 'litanies' | 'draw_word';
 
 interface IntroSplashProps {
   onSelectChoice: (choice: IntroChoice) => void;
@@ -212,11 +213,11 @@ export const IntroSplash: React.FC<IntroSplashProps> = ({
             </div>
           </button>
 
-          {/* Card 2: Brewiarz dla Duchownych */}
+          {/* Card 2: Brewiarz (Liturgia Godzin) - W JEDEN KAWAŁEK */}
           <button
             type="button"
-            id="intro-btn-breviary-clergy"
-            onClick={() => onSelectChoice('breviary_clergy')}
+            id="intro-btn-breviary"
+            onClick={() => onSelectChoice('breviary')}
             className="group relative rounded-2xl bg-white border-2 border-amber-600/30 hover:border-amber-600 p-5 sm:p-6 text-left transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] shadow-md hover:shadow-lg hover:shadow-amber-700/10 flex flex-col justify-between cursor-pointer overflow-hidden"
           >
             <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-gradient-to-r from-amber-600 to-yellow-500 opacity-90" />
@@ -227,65 +228,65 @@ export const IntroSplash: React.FC<IntroSplashProps> = ({
                   <Church className="w-6 h-6 text-amber-200 group-hover:scale-110 transition-transform" />
                 </div>
                 <span className="px-2 py-0.5 rounded-md text-[10px] font-sans font-bold bg-amber-50 text-amber-900 border border-amber-200 uppercase tracking-wider">
-                  Oficjum
+                  Oficjum Kościoła
                 </span>
               </div>
 
               <div>
                 <h3 className="font-serif text-lg sm:text-xl font-bold text-slate-900 group-hover:text-amber-900 transition-colors">
-                  2. Brewiarz Duchownych
+                  2. Brewiarz (Liturgia Godzin)
                 </h3>
                 <p className="text-[11px] font-sans font-semibold text-amber-800 tracking-wide uppercase mt-0.5">
-                  Liturgia Horarum
+                  Dla Duchownych i Dla Świeckich
                 </p>
               </div>
 
               <p className="text-xs text-slate-600 font-sans leading-relaxed">
-                Pełne Oficjum kapłańskie i zakonne: Wezwanie, Godzina Czytań z patrystyką, Jutrznia, Tercja, Seksta, Nona, Nieszpory, Kompleta.
+                Uświęcenie każdej pory dnia modlitwą psalmów. Po wejściu możliwość bezpośredniego wyboru układu: Dla Duchownych (pełne Oficjum) lub Dla Świeckich (w rodzinie i pracy).
               </p>
             </div>
 
             <div className="pt-4 mt-3 border-t border-slate-100 flex items-center justify-between text-xs font-sans font-bold text-amber-800 group-hover:text-amber-950 relative z-10">
-              <span>Otwórz Brewiarz</span>
+              <span>Wejdź do Brewiarza</span>
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </div>
           </button>
 
-          {/* Card 3: Brewiarz dla Świeckich */}
+          {/* Card 3: Litanie i Nowenny */}
           <button
             type="button"
-            id="intro-btn-breviary-lay"
-            onClick={() => onSelectChoice('breviary_lay')}
-            className="group relative rounded-2xl bg-white border-2 border-indigo-600/30 hover:border-indigo-600 p-5 sm:p-6 text-left transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] shadow-md hover:shadow-lg hover:shadow-indigo-700/10 flex flex-col justify-between cursor-pointer overflow-hidden"
+            id="intro-btn-litanies"
+            onClick={() => onSelectChoice('litanies')}
+            className="group relative rounded-2xl bg-white border-2 border-rose-600/30 hover:border-rose-600 p-5 sm:p-6 text-left transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] shadow-md hover:shadow-lg hover:shadow-rose-700/10 flex flex-col justify-between cursor-pointer overflow-hidden"
           >
-            <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-gradient-to-r from-indigo-600 to-sky-500 opacity-90" />
+            <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-gradient-to-r from-rose-600 to-pink-500 opacity-90" />
 
             <div className="space-y-3 relative z-10">
               <div className="flex items-center justify-between">
-                <div className="w-12 h-12 rounded-xl bg-indigo-700 p-0.5 shadow-sm flex items-center justify-center text-white">
-                  <Users className="w-6 h-6 text-indigo-200 group-hover:scale-110 transition-transform" />
+                <div className="w-12 h-12 rounded-xl bg-rose-700 p-0.5 shadow-sm flex items-center justify-center text-white">
+                  <Heart className="w-6 h-6 text-rose-200 fill-rose-300/40 group-hover:scale-110 transition-transform" />
                 </div>
-                <span className="px-2 py-0.5 rounded-md text-[10px] font-sans font-bold bg-indigo-50 text-indigo-900 border border-indigo-200 uppercase tracking-wider">
-                  Codzienna
+                <span className="px-2 py-0.5 rounded-md text-[10px] font-sans font-bold bg-rose-50 text-rose-900 border border-rose-200 uppercase tracking-wider">
+                  Nowenny • Litanie
                 </span>
               </div>
 
               <div>
-                <h3 className="font-serif text-lg sm:text-xl font-bold text-slate-900 group-hover:text-indigo-900 transition-colors">
-                  3. Brewiarz Świeckich
+                <h3 className="font-serif text-lg sm:text-xl font-bold text-slate-900 group-hover:text-rose-900 transition-colors">
+                  3. Litanie i Nowenny
                 </h3>
-                <p className="text-[11px] font-sans font-semibold text-indigo-800 tracking-wide uppercase mt-0.5">
-                  Dla Rodzin i Wiernych
+                <p className="text-[11px] font-sans font-semibold text-rose-800 tracking-wide uppercase mt-0.5">
+                  Potężne Wstawiennictwo Świętych
                 </p>
               </div>
 
               <p className="text-xs text-slate-600 font-sans leading-relaxed">
-                Przejrzysty układ modlitwy porannej (Jutrznia), w ciągu dnia, wieczornej (Nieszpory) i na sen (Kompleta) dla uświęcenia życia w świecie.
+                Nowenny ze śledzeniem dni i modlitwą na każdy dzień (Nowenna do św. Charbela, św. Rity, Pompejańska) oraz oficjalne Litanie Kościoła z przypomnieniami.
               </p>
             </div>
 
-            <div className="pt-4 mt-3 border-t border-slate-100 flex items-center justify-between text-xs font-sans font-bold text-indigo-800 group-hover:text-indigo-950 relative z-10">
-              <span>Módl się w rodzinie</span>
+            <div className="pt-4 mt-3 border-t border-slate-100 flex items-center justify-between text-xs font-sans font-bold text-rose-800 group-hover:text-rose-950 relative z-10">
+              <span>Odmów Nowennę / Litanię</span>
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </div>
           </button>

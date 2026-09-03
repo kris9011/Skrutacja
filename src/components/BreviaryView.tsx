@@ -56,7 +56,27 @@ export const BreviaryView: React.FC<BreviaryViewProps> = ({
   onOpenPatristicView,
   onSaveVerseToJournal
 }) => {
-  const [audience, setAudience] = useState<BreviaryAudience>(initialAudience);
+  const [showAudienceChooser, setShowAudienceChooser] = useState<boolean>(() => {
+    const saved = localStorage.getItem('scripture_breviary_audience');
+    return !saved;
+  });
+
+  const [audience, setAudience] = useState<BreviaryAudience>(() => {
+    const saved = localStorage.getItem('scripture_breviary_audience');
+    if (saved === 'clergy' || saved === 'lay') return saved;
+    return initialAudience;
+  });
+
+  const handleSelectAudience = (newAudience: BreviaryAudience) => {
+    setAudience(newAudience);
+    localStorage.setItem('scripture_breviary_audience', newAudience);
+    if (newAudience === 'lay' && ['tercia', 'sexta', 'nona'].includes(activeHour)) {
+      setActiveHour('daytime');
+    } else if (newAudience === 'clergy' && activeHour === 'daytime') {
+      setActiveHour('sexta');
+    }
+    setShowAudienceChooser(false);
+  };
   const [activeHour, setActiveHour] = useState<BreviaryHourType>(() => {
     const currentH = new Date().getHours();
     if (initialHour) return initialHour;
@@ -269,21 +289,17 @@ export const BreviaryView: React.FC<BreviaryViewProps> = ({
 
             {/* Controls: Mode Switcher & Tools */}
             <div className="flex items-center gap-2 flex-wrap self-start md:self-center">
-              {/* Audience Pill Toggle */}
-              <div className="inline-flex rounded-xl bg-slate-900/90 p-1 border border-amber-500/30">
+              {/* Audience Pill Toggle & Choice Trigger */}
+              <div className="inline-flex items-center gap-1 rounded-xl bg-slate-900/90 p-1 border border-amber-500/30">
                 <button
                   type="button"
-                  onClick={() => {
-                    setAudience('lay');
-                    if (['tercia', 'sexta', 'nona'].includes(activeHour)) {
-                      setActiveHour('daytime');
-                    }
-                  }}
+                  onClick={() => handleSelectAudience('lay')}
                   className={`px-3 py-1.5 rounded-lg text-xs font-sans font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
                     audience === 'lay'
                       ? 'bg-amber-500 text-slate-950 shadow-sm'
                       : 'text-amber-200/80 hover:text-white'
                   }`}
+                  title="Przełącz na układ dla świeckich i rodzin"
                 >
                   <Users className="w-3.5 h-3.5" />
                   <span>Świeccy</span>
@@ -291,15 +307,30 @@ export const BreviaryView: React.FC<BreviaryViewProps> = ({
 
                 <button
                   type="button"
-                  onClick={() => setAudience('clergy')}
+                  onClick={() => handleSelectAudience('clergy')}
                   className={`px-3 py-1.5 rounded-lg text-xs font-sans font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
                     audience === 'clergy'
                       ? 'bg-amber-500 text-slate-950 shadow-sm'
                       : 'text-amber-200/80 hover:text-white'
                   }`}
+                  title="Przełącz na pełne oficjum rzymskie dla duchownych"
                 >
                   <Church className="w-3.5 h-3.5" />
                   <span>Duchowni</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setShowAudienceChooser(prev => !prev)}
+                  className={`px-2 py-1.5 rounded-lg text-[11px] font-sans font-semibold transition-all cursor-pointer flex items-center gap-1 border ${
+                    showAudienceChooser
+                      ? 'bg-amber-400 text-slate-950 border-amber-300 font-bold'
+                      : 'bg-white/10 hover:bg-white/15 text-amber-200 border-amber-500/20'
+                  }`}
+                  title="Wybierz formę modlitwy i zobacz szczegółowy opis różnic"
+                >
+                  <HelpCircle className="w-3.5 h-3.5" />
+                  <span className="hidden lg:inline">{showAudienceChooser ? 'Ukryj opis' : 'Opis form'}</span>
                 </button>
               </div>
 
@@ -514,6 +545,180 @@ export const BreviaryView: React.FC<BreviaryViewProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Wybór formy Liturgii Godzin po wejściu w brewiarz */}
+      <AnimatePresence>
+        {showAudienceChooser && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="overflow-hidden bg-gradient-to-b from-amber-100/90 via-amber-50/70 to-[#FAF8F5] border-b-2 border-amber-400/50 shadow-md"
+          >
+            <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-amber-200/90 pb-4">
+                <div>
+                  <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-amber-200/80 text-amber-950 text-[11px] font-sans font-bold uppercase tracking-wider border border-amber-300">
+                    <Sparkles className="w-3.5 h-3.5 text-amber-800" />
+                    <span>Forma Liturgii Godzin (Brewiarza)</span>
+                  </div>
+                  <h2 className="font-serif text-xl sm:text-2xl font-bold text-slate-900 mt-1.5">
+                    Wybierz formę modlitwy brewiarzowej
+                  </h2>
+                  <p className="text-xs sm:text-sm text-slate-600 font-sans mt-0.5">
+                    Wybierz układ Oficjum dopasowany do Twojego powołania. Wybór zostanie zapamiętany, a przełączyć formę możesz w każdej chwili u góry ekranu.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowAudienceChooser(false)}
+                  className="self-start sm:self-center px-3.5 py-1.5 rounded-xl bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-sans font-semibold transition-all cursor-pointer shadow-2xs"
+                >
+                  Ukryj ten wybór
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                {/* Opcja 1: Dla Świeckich i Rodzin */}
+                <div
+                  onClick={() => handleSelectAudience('lay')}
+                  className={`p-6 rounded-2xl border-2 transition-all cursor-pointer flex flex-col justify-between space-y-5 bg-white relative overflow-hidden group ${
+                    audience === 'lay'
+                      ? 'border-amber-600 ring-2 ring-amber-400/40 shadow-md'
+                      : 'border-slate-200 hover:border-amber-400 hover:shadow-sm'
+                  }`}
+                >
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500 to-amber-700 text-white flex items-center justify-center shadow-sm">
+                        <Users className="w-6 h-6" />
+                      </div>
+                      {audience === 'lay' ? (
+                        <span className="px-3 py-1 rounded-full text-xs font-sans font-bold bg-amber-100 text-amber-900 border border-amber-300 flex items-center gap-1">
+                          <Check className="w-3.5 h-3.5" />
+                          <span>Aktywny wybór</span>
+                        </span>
+                      ) : (
+                        <span className="px-3 py-1 rounded-full text-xs font-sans font-semibold bg-slate-100 text-slate-600 border border-slate-200">
+                          Dla Wiernych i Rodzin
+                        </span>
+                      )}
+                    </div>
+
+                    <div>
+                      <h3 className="font-serif text-lg sm:text-xl font-bold text-slate-900 group-hover:text-amber-900 transition-colors">
+                        Dla Świeckich i Rodzin
+                      </h3>
+                      <p className="text-xs font-sans font-semibold text-amber-800 uppercase tracking-wide mt-0.5">
+                        Codzienny rytm uświęcenia dnia
+                      </p>
+                    </div>
+
+                    <p className="text-xs sm:text-sm text-slate-600 font-sans leading-relaxed">
+                      Zoptymalizowany dla osób żyjących w świecie, małżeństw i rodzin. Uświęca cztery kluczowe pory: poranek (Jutrznia), środek dnia (Modlitwa w ciągu dnia), wieczór (Nieszpory) oraz spoczynek przed snem (Kompleta).
+                    </p>
+
+                    <div className="pt-2 space-y-1.5 text-xs text-slate-700 font-sans">
+                      <div className="flex items-center gap-2">
+                        <div className="w-1.5 h-1.5 rounded-full bg-amber-600 shrink-0" />
+                        <span>Kluczowe 4 pory dnia: Jutrznia, W ciągu dnia, Nieszpory, Kompleta</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-1.5 h-1.5 rounded-full bg-amber-600 shrink-0" />
+                        <span>Modlitwy domowe, błogosławieństwo stołu i rodziny</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleSelectAudience('lay');
+                    }}
+                    className={`w-full py-3 rounded-xl text-xs font-sans font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                      audience === 'lay'
+                        ? 'bg-amber-600 hover:bg-amber-700 text-white shadow-xs'
+                        : 'bg-slate-100 hover:bg-amber-100 text-slate-800 hover:text-amber-900 border border-slate-300'
+                    }`}
+                  >
+                    <span>{audience === 'lay' ? 'Wybrano: Dla Świeckich' : 'Wybierz: Dla Świeckich'}</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+                </div>
+
+                {/* Opcja 2: Dla Duchownych i Zakonów */}
+                <div
+                  onClick={() => handleSelectAudience('clergy')}
+                  className={`p-6 rounded-2xl border-2 transition-all cursor-pointer flex flex-col justify-between space-y-5 bg-white relative overflow-hidden group ${
+                    audience === 'clergy'
+                      ? 'border-amber-600 ring-2 ring-amber-400/40 shadow-md'
+                      : 'border-slate-200 hover:border-amber-400 hover:shadow-sm'
+                  }`}
+                >
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-slate-900 via-amber-950 to-slate-900 text-amber-200 flex items-center justify-center shadow-sm">
+                        <Church className="w-6 h-6" />
+                      </div>
+                      {audience === 'clergy' ? (
+                        <span className="px-3 py-1 rounded-full text-xs font-sans font-bold bg-amber-100 text-amber-900 border border-amber-300 flex items-center gap-1">
+                          <Check className="w-3.5 h-3.5" />
+                          <span>Aktywny wybór</span>
+                        </span>
+                      ) : (
+                        <span className="px-3 py-1 rounded-full text-xs font-sans font-semibold bg-slate-100 text-slate-600 border border-slate-200">
+                          Pełne Oficjum Rzymskie
+                        </span>
+                      )}
+                    </div>
+
+                    <div>
+                      <h3 className="font-serif text-lg sm:text-xl font-bold text-slate-900 group-hover:text-amber-900 transition-colors">
+                        Dla Duchownych i Zakonów
+                      </h3>
+                      <p className="text-xs font-sans font-semibold text-amber-800 uppercase tracking-wide mt-0.5">
+                        Liturgia Horarum • Wszystkie Godziny
+                      </p>
+                    </div>
+
+                    <p className="text-xs sm:text-sm text-slate-600 font-sans leading-relaxed">
+                      Pełny porządek modlitwy Kościoła Rzymskiego. Obejmuje Wezwanie, obszerną Godzinę Czytań z patrystyką i hymnem Te Deum, oraz kanoniczny podział na modlitwy przedpołudniową (Tercja), południową (Seksta) i popołudniową (Nona).
+                    </p>
+
+                    <div className="pt-2 space-y-1.5 text-xs text-slate-700 font-sans">
+                      <div className="flex items-center gap-2">
+                        <div className="w-1.5 h-1.5 rounded-full bg-amber-600 shrink-0" />
+                        <span>Komplet 8 godzin (Wezwanie, Godzina Czytań, Tercja, Seksta, Nona...)</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-1.5 h-1.5 rounded-full bg-amber-600 shrink-0" />
+                        <span>Lekcje patrystyczne z dzieł Ojców Kościoła i hymn Te Deum</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleSelectAudience('clergy');
+                    }}
+                    className={`w-full py-3 rounded-xl text-xs font-sans font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                      audience === 'clergy'
+                        ? 'bg-amber-600 hover:bg-amber-700 text-white shadow-xs'
+                        : 'bg-slate-100 hover:bg-amber-100 text-slate-800 hover:text-amber-900 border border-slate-300'
+                    }`}
+                  >
+                    <span>{audience === 'clergy' ? 'Wybrano: Dla Duchownych' : 'Wybierz: Dla Duchownych'}</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Point 4: Monastic Silence Banner when Active */}
       <AnimatePresence>
