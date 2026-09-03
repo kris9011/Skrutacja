@@ -99,11 +99,11 @@ export const Header: React.FC<HeaderProps> = ({
                 type="button"
                 id="replay-intro-btn"
                 onClick={onReplayIntro}
-                title="Ekran startowy i wybór drogi modlitwy"
-                className="h-7 px-2.5 rounded-lg bg-amber-50/70 hover:bg-amber-100/80 border border-amber-300 text-amber-950 font-sans font-semibold text-[11px] flex items-center gap-1 transition-all cursor-pointer active:scale-95 group"
+                title="Ekran startowy: Gołębica Ducha Świętego, modlitwa wstępna i wybór drogi modlitwy"
+                className="h-7 px-2.5 rounded-lg bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-950 font-sans font-semibold text-[11px] flex items-center gap-1.5 transition-all cursor-pointer active:scale-95 group shadow-xs"
               >
-                <Sparkles className="w-3.5 h-3.5 text-amber-600" />
-                <span>START</span>
+                <Flame className="w-3.5 h-3.5 text-amber-600 fill-amber-500/30" />
+                <span>Duch Święty</span>
               </button>
             )}
 

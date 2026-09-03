@@ -32,7 +32,7 @@ const LOCAL_STORAGE_ACTIVE_SESSION = 'scrutatio_active_session_v1';
 const LOCAL_STORAGE_JOURNAL = 'scrutatio_journal_v1';
 
 export default function App() {
-  const [showIntro, setShowIntro] = useState<boolean>(false);
+  const [showIntro, setShowIntro] = useState<boolean>(true);
   const [activeTab, setActiveTab] = useState<MainAppTab>('daily');
   const [breviaryAudience, setBreviaryAudience] = useState<BreviaryAudience>('lay');
   const [isDrawWordModalOpen, setIsDrawWordModalOpen] = useState<boolean>(false);

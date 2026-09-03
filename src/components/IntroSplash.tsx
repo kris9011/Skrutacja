@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   Sparkles, 
@@ -10,8 +10,11 @@ import {
   BookOpen, 
   Compass,
   Sunrise,
-  Heart
+  Heart,
+  Volume2,
+  Check
 } from 'lucide-react';
+import { audioEngine } from '../utils/audioContemplationEngine';
 
 export type IntroChoice = 'scrutation' | 'breviary' | 'litanies' | 'draw_word';
 
@@ -24,6 +27,29 @@ export const IntroSplash: React.FC<IntroSplashProps> = ({
   onSelectChoice, 
   onDismiss 
 }) => {
+  const [showFullPrayer, setShowFullPrayer] = useState<boolean>(false);
+  const [bellRung, setBellRung] = useState<boolean>(false);
+
+  const handleChoice = (choice: IntroChoice) => {
+    try {
+      audioEngine.strikeBowl(432);
+    } catch {
+      // Audio autoplay may be guarded
+    }
+    onSelectChoice(choice);
+  };
+
+  const handlePlayBell = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      audioEngine.strikeBowl(432);
+      setBellRung(true);
+      setTimeout(() => setBellRung(false), 2500);
+    } catch {
+      // Ignore audio error
+    }
+  };
+
   return (
     <AnimatePresence>
       <motion.div
@@ -164,6 +190,63 @@ export const IntroSplash: React.FC<IntroSplashProps> = ({
             <p className="font-serif italic text-xs sm:text-sm text-emerald-100/90 tracking-wide max-w-lg mx-auto">
               Modlitwa Słowem Bożym, Liturgią Godzin i Tradycją Kościoła
             </p>
+
+            {/* Holy Spirit Invocation & Sacred Chime */}
+            <div className="pt-2 pb-1 max-w-xl mx-auto">
+              <div className="bg-emerald-950/80 border border-emerald-500/40 rounded-xl p-3 sm:p-3.5 backdrop-blur-xs text-left shadow-lg">
+                <div className="flex items-center justify-between gap-2 mb-1.5">
+                  <div className="flex items-center gap-1.5 text-amber-300 text-xs font-serif font-bold">
+                    <Flame className="w-3.5 h-3.5 text-amber-400 fill-amber-400/40" />
+                    <span>Modlitwa do Ducha Świętego przed czytaniem Słowa</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handlePlayBell}
+                    title="Uderz w dzwon modlitewny 432 Hz"
+                    className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/20 hover:bg-amber-500/30 border border-amber-400/50 text-amber-200 text-[10px] font-sans font-medium transition-all active:scale-95 cursor-pointer"
+                  >
+                    {bellRung ? <Check className="w-3 h-3 text-emerald-300" /> : <Volume2 className="w-3 h-3 text-amber-300" />}
+                    <span>{bellRung ? 'Dzwon 432 Hz' : 'Dzwon pokoju'}</span>
+                  </button>
+                </div>
+
+                <p className="font-serif italic text-xs sm:text-[13px] text-emerald-50 leading-relaxed">
+                  „Przyjdź, Duchu Święty, napełnij serca swoich wiernych i zapal w nich ogień swojej miłości. Ześlij Ducha Twego, a powstanie życie i odnowisz oblicze ziemi.”
+                </p>
+
+                {showFullPrayer ? (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    className="mt-2.5 pt-2.5 border-t border-emerald-800/80 text-[11px] sm:text-xs font-serif text-emerald-100/90 space-y-1.5 leading-relaxed"
+                  >
+                    <p>
+                      <strong>Modlitwa przed lekturą Pisma Świętego:</strong> Duchu Święty, Boże, który oświecasz serca i umysły nasze, ześlij nam Twoje światło, abyśmy czytając to święte Słowo, poznali wolę Bożą, w sercu ją zachowali i wiernie wypełniali każdego dnia. Przez Chrystusa, Pana naszego. Amen.
+                    </p>
+                    <p className="text-[10px] font-mono text-amber-300/80 italic pt-1">
+                      Veni, Sancte Spiritus, reple tuorum corda fidelium, et tui amoris in eis ignem accende.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => setShowFullPrayer(false)}
+                      className="text-[10px] font-sans text-amber-300 underline cursor-pointer hover:text-white pt-1"
+                    >
+                      Zwiń modlitwę
+                    </button>
+                  </motion.div>
+                ) : (
+                  <div className="mt-1.5 flex justify-end">
+                    <button
+                      type="button"
+                      onClick={() => setShowFullPrayer(true)}
+                      className="text-[10px] font-sans text-emerald-300/90 hover:text-amber-200 underline cursor-pointer"
+                    >
+                      Pełna modlitwa przed lekturą Pisma »
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
           </motion.div>
         </div>
 
@@ -172,13 +255,13 @@ export const IntroSplash: React.FC<IntroSplashProps> = ({
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.35, ease: [0.16, 1, 0.3, 1] }}
-          className="w-full max-w-5xl my-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 z-10"
+          className="w-full max-w-5xl my-4 sm:my-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 z-10"
         >
           {/* Card 1: Skrutacja Pisma Świętego */}
           <button
             type="button"
             id="intro-btn-scrutation"
-            onClick={() => onSelectChoice('scrutation')}
+            onClick={() => handleChoice('scrutation')}
             className="group relative rounded-2xl bg-white border-2 border-emerald-600/30 hover:border-emerald-600 p-5 sm:p-6 text-left transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] shadow-md hover:shadow-lg hover:shadow-emerald-700/10 flex flex-col justify-between cursor-pointer overflow-hidden"
           >
             <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-gradient-to-r from-emerald-600 to-teal-500 opacity-90" />
@@ -217,7 +300,7 @@ export const IntroSplash: React.FC<IntroSplashProps> = ({
           <button
             type="button"
             id="intro-btn-breviary"
-            onClick={() => onSelectChoice('breviary')}
+            onClick={() => handleChoice('breviary')}
             className="group relative rounded-2xl bg-white border-2 border-amber-600/30 hover:border-amber-600 p-5 sm:p-6 text-left transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] shadow-md hover:shadow-lg hover:shadow-amber-700/10 flex flex-col justify-between cursor-pointer overflow-hidden"
           >
             <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-gradient-to-r from-amber-600 to-yellow-500 opacity-90" />
@@ -256,7 +339,7 @@ export const IntroSplash: React.FC<IntroSplashProps> = ({
           <button
             type="button"
             id="intro-btn-litanies"
-            onClick={() => onSelectChoice('litanies')}
+            onClick={() => handleChoice('litanies')}
             className="group relative rounded-2xl bg-white border-2 border-rose-600/30 hover:border-rose-600 p-5 sm:p-6 text-left transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] shadow-md hover:shadow-lg hover:shadow-rose-700/10 flex flex-col justify-between cursor-pointer overflow-hidden"
           >
             <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-gradient-to-r from-rose-600 to-pink-500 opacity-90" />
@@ -295,7 +378,7 @@ export const IntroSplash: React.FC<IntroSplashProps> = ({
           <button
             type="button"
             id="intro-btn-draw-word"
-            onClick={() => onSelectChoice('draw_word')}
+            onClick={() => handleChoice('draw_word')}
             className="group relative rounded-2xl bg-white border-2 border-amber-400 hover:border-amber-500 p-5 sm:p-6 text-left transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] shadow-md hover:shadow-lg hover:shadow-amber-500/15 flex flex-col justify-between cursor-pointer overflow-hidden"
           >
             <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500" />
