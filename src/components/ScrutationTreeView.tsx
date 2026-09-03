@@ -29,7 +29,8 @@ import {
   Heart, 
   HelpCircle,
   Clock,
-  Wand2
+  Wand2,
+  X
 } from 'lucide-react';
 import { ScrutationSession, ScrutationNode, CrossReferenceItem } from '../types';
 import { getGuaranteedCrossReferences } from '../data/crossReferenceDatabase';
@@ -295,6 +296,15 @@ export const ScrutationTreeView: React.FC<ScrutationTreeViewProps> = ({
   const [isSaved, setIsSaved] = useState<boolean>(false);
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
 
+  // New Fragment Picker Modal & Last Added feedback banner
+  const [pickerModalNode, setPickerModalNode] = useState<ScrutationNode | null>(null);
+  const [lastAddedNodeInfo, setLastAddedNodeInfo] = useState<{ parentSiglum: string; node: ScrutationNode } | null>(null);
+  const [pickerFilterTestament, setPickerFilterTestament] = useState<'ALL' | 'ST' | 'NT'>('ALL');
+  const [pickerSearchQuery, setPickerSearchQuery] = useState<string>('');
+  const [pickerCustomSiglum, setPickerCustomSiglum] = useState<string>('');
+  const [pickerCustomText, setPickerCustomText] = useState<string>('');
+  const [isFetchingPickerCustom, setIsFetchingPickerCustom] = useState<boolean>(false);
+
   const containerRef = useRef<HTMLDivElement>(null);
 
   const selectedNode = useMemo(() => {
@@ -367,6 +377,23 @@ export const ScrutationTreeView: React.FC<ScrutationTreeViewProps> = ({
     traverse(treeData);
     return list;
   }, [treeData]);
+
+  // Auto-scroll canvas to newly selected or added node smoothly
+  useEffect(() => {
+    if (selectedNodeId && containerRef.current && flatLayoutNodes.length > 0) {
+      const layoutItem = flatLayoutNodes.find(item => item.node.id === selectedNodeId);
+      if (layoutItem) {
+        const container = containerRef.current;
+        const targetX = layoutItem.x * zoomLevel - container.clientWidth / 2 + 135;
+        const targetY = layoutItem.y * zoomLevel - container.clientHeight / 2 + 80;
+        container.scrollTo({
+          left: Math.max(0, targetX),
+          top: Math.max(0, targetY),
+          behavior: 'smooth'
+        });
+      }
+    }
+  }, [selectedNodeId, session.nodes.length, flatLayoutNodes, zoomLevel]);
 
   // Guaranteed fallback references for selected node
   const guaranteedRefs = useMemo(() => {
@@ -462,6 +489,12 @@ export const ScrutationTreeView: React.FC<ScrutationTreeViewProps> = ({
             nodes: [...session.nodes, ...newNodes],
             updatedAt: new Date().toISOString()
           });
+          const lastNode = newNodes[newNodes.length - 1];
+          setSelectedNodeId(lastNode.id);
+          setLastAddedNodeInfo({
+            parentSiglum: selectedNode.siglum,
+            node: lastNode
+          });
           audioEngine.strikeBowl(432);
         }
       }
@@ -473,11 +506,12 @@ export const ScrutationTreeView: React.FC<ScrutationTreeViewProps> = ({
   };
 
   // Add branch from recommendation
-  const handleAddBranchFromRef = (ref: CrossReferenceItem) => {
-    if (!selectedNode) return;
+  const handleAddBranchFromRef = (ref: CrossReferenceItem, parentOverride?: ScrutationNode) => {
+    const parent = parentOverride || selectedNode;
+    if (!parent) return;
     const newNode: ScrutationNode = {
       id: `node_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
-      parentId: selectedNode.id,
+      parentId: parent.id,
       siglum: ref.siglum,
       text: ref.text,
       testament: ref.testament,
@@ -495,7 +529,177 @@ export const ScrutationTreeView: React.FC<ScrutationTreeViewProps> = ({
     });
 
     setSelectedNodeId(newNode.id);
-    audioEngine.playSoftChime();
+    setLastAddedNodeInfo({
+      parentSiglum: parent.siglum,
+      node: newNode
+    });
+    audioEngine.strikeBowl(432);
+  };
+
+  // Directly scrutes a node by finding the next best connected scripture fragment and attaching it to the tree
+  const handleScrutateFromNode = (parentNode: ScrutationNode) => {
+    const refData = getGuaranteedCrossReferences(parentNode.siglum, parentNode.text);
+    const existingSigla = new Set(session.nodes.map(n => n.siglum.toLowerCase().trim()));
+
+    // Available from database & dynamic AI
+    const allCandidates = [
+      ...(refData.crossReferences || []),
+      ...dynamicAiRefs
+    ];
+
+    const available = allCandidates.filter(
+      r => !existingSigla.has(r.siglum.toLowerCase().trim())
+    );
+
+    let chosenRef: CrossReferenceItem;
+
+    if (available.length > 0) {
+      chosenRef = available[0];
+    } else {
+      // Universal pool of theological scripture links for deep scrutation
+      const universalPool: CrossReferenceItem[] = [
+        { siglum: 'J 5, 39', text: 'Badacie Pisma, ponieważ sądzicie, że w nich zawarte jest życie wieczne: to one właśnie dają o Mnie świadectwo.', testament: 'NT', relation: 'Klucz chrystologiczny Pisma Świętego', explanation: 'Chrystus jako cel i centrum całego Pisma Świętego.' },
+        { siglum: 'Łk 24, 27', text: 'I zaczynając od Mojżesza, poprzez wszystkich proroków, wykładał im, co we wszystkich Pismach odnosiło się do Niego.', testament: 'NT', relation: 'Droga do Emaus i wyjaśnianie Pism', explanation: 'Jezus objawia sens Starego Testamentu w Nowym.' },
+        { siglum: 'Iz 55, 10-11', text: 'Zaiste, podobnie jak ulewa i śnieg spadają z nieba i tam nie powracają, dopóki nie nawodnią ziemi (...) tak słowo, które wychodzi z ust moich, nie wraca do Mnie bezowocne.', testament: 'ST', relation: 'Niezawodna skuteczność Słowa Bożego', explanation: 'Boże Słowo zawsze dokonuje tego, co Bóg zamierzył.' },
+        { siglum: 'Hbr 4, 12', text: 'Żywe bowiem jest słowo Boże, skuteczne i ostrzejsze niż wszelki miecz obosieczny, przenikające aż do rozdzielenia duszy i ducha.', testament: 'NT', relation: 'Moc i skuteczność Słowa Bożego', explanation: 'Słowo Boże osądza pragnienia i myśli serca.' },
+        { siglum: 'Ps 119, 105', text: 'Twoje słowo jest lampą dla moich stóp i światłem na mojej ścieżce.', testament: 'ST', relation: 'Słowo jako światło w ciemności', explanation: 'Drogowskaz na każdy dzień życia chrześcijańskiego.' },
+        { siglum: 'Rz 10, 17', text: 'Przeto wiara rodzi się z tego, co się słyszy, tym zaś, co się słyszy, jest słowo Chrystusa.', testament: 'NT', relation: 'Wiara rodzi się ze słuchania Słowa', explanation: 'Głoszone Słowo rozbudza żywą wiarę w sercu.' },
+        { siglum: 'Mt 4, 4', text: 'Nie samym chlebem żyje człowiek, lecz każdym słowem, które pochodzi z ust Bożych.', testament: 'NT', relation: 'Chleb Życia i pokarm Słowa', explanation: 'Człowiek potrzebuje duchowego pokarmu Słowa.' },
+        { siglum: '2 Tm 3, 16', text: 'Wszelkie Pismo od Boga natchnione jest i pożyteczne do nauczania, do przekonywania, do poprawiania, do wychowywania w sprawiedliwości.', testament: 'NT', relation: 'Natchnienie Pisma Świętego', explanation: 'Pismo formuje człowieka Bożego.' },
+        { siglum: 'Jr 15, 16', text: 'Ilekroć otrzymywałem Twoje słowa, pochłaniałem je, a Twoje słowo stawało się dla mnie rozkoszą i radością mego serca.', testament: 'ST', relation: 'Słodkość i zachwyt Słowem Bożym', explanation: 'Rozkoszowanie się Słowem w modlitwie.' },
+        { siglum: 'Ap 3, 20', text: 'Oto stoję u drzwi i kołaczę: jeśli kto posłyszy mój głos i drzwi otworzy, wejdę do niego i będę z nim wieczerzał, a on ze Mną.', testament: 'NT', relation: 'Otwarcie serca na głos Pana', explanation: 'Osobiste spotkanie ze Zmartwychwstałym Chrystusem.' }
+      ];
+      const unusedUniversal = universalPool.find(u => !existingSigla.has(u.siglum.toLowerCase().trim()));
+      chosenRef = unusedUniversal || {
+        siglum: `${parentNode.siglum} (bis)`,
+        text: parentNode.text,
+        testament: parentNode.testament,
+        relation: 'Dalsza kontemplacja wersetu',
+        explanation: 'Pogłębienie medytacji nad tym samym fragmentem.'
+      };
+    }
+
+    const newNodeId = `node_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`;
+    const newNode: ScrutationNode = {
+      id: newNodeId,
+      parentId: parentNode.id,
+      siglum: chosenRef.siglum,
+      text: chosenRef.text,
+      testament: chosenRef.testament,
+      theologicalTheme: chosenRef.relation,
+      crossReferenceReason: chosenRef.relation,
+      order: session.nodes.length,
+      isExpanded: true,
+      createdAt: Date.now()
+    };
+
+    onUpdateSession({
+      ...session,
+      nodes: [...session.nodes, newNode],
+      updatedAt: new Date().toISOString()
+    });
+
+    setSelectedNodeId(newNode.id);
+    setLastAddedNodeInfo({
+      parentSiglum: parentNode.siglum,
+      node: newNode
+    });
+
+    audioEngine.strikeBowl(432);
+  };
+
+  // Filtered references for the interactive Selection Modal
+  const modalReferences = useMemo(() => {
+    if (!pickerModalNode) return [];
+    const refData = getGuaranteedCrossReferences(pickerModalNode.siglum, pickerModalNode.text);
+    const existingSigla = new Set(session.nodes.map(n => n.siglum.toLowerCase().trim()));
+
+    const list: (CrossReferenceItem & { alreadyInTree?: boolean })[] = [];
+
+    // Add guaranteed references
+    (refData.crossReferences || []).forEach(r => {
+      list.push({
+        ...r,
+        alreadyInTree: existingSigla.has(r.siglum.toLowerCase().trim())
+      });
+    });
+
+    // Add universal references to ensure rich choices
+    const universalPool: CrossReferenceItem[] = [
+      { siglum: 'J 5, 39', text: 'Badacie Pisma, ponieważ sądzicie, że w nich zawarte jest życie wieczne: to one właśnie dają o Mnie świadectwo.', testament: 'NT', relation: 'Klucz chrystologiczny Pisma Świętego', explanation: 'Chrystus jako cel i centrum całego Pisma Świętego.' },
+      { siglum: 'Łk 24, 27', text: 'I zaczynając od Mojżesza, poprzez wszystkich proroków, wykładał im, co we wszystkich Pismach odnosiło się do Niego.', testament: 'NT', relation: 'Droga do Emaus i wyjaśnianie Pism', explanation: 'Jezus objawia sens Starego Testamentu w Nowym.' },
+      { siglum: 'Iz 55, 10-11', text: 'Zaiste, podobnie jak ulewa i śnieg spadają z nieba i tam nie powracają, dopóki nie nawodnią ziemi (...) tak słowo, które wychodzi z ust moich, nie wraca do Mnie bezowocne.', testament: 'ST', relation: 'Niezawodna skuteczność Słowa Bożego', explanation: 'Boże Słowo zawsze dokonuje tego, co Bóg zamierzył.' },
+      { siglum: 'Hbr 4, 12', text: 'Żywe bowiem jest słowo Boże, skuteczne i ostrzejsze niż wszelki miecz obosieczny, przenikające aż do rozdzielenia duszy i ducha.', testament: 'NT', relation: 'Moc i skuteczność Słowa Bożego', explanation: 'Słowo Boże osądza pragnienia i myśli serca.' },
+      { siglum: 'Ps 119, 105', text: 'Twoje słowo jest lampą dla moich stóp i światłem na mojej ścieżce.', testament: 'ST', relation: 'Słowo jako światło w ciemności', explanation: 'Drogowskaz na każdy dzień życia chrześcijańskiego.' },
+      { siglum: 'Rz 10, 17', text: 'Przeto wiara rodzi się z tego, co się słyszy, tym zaś, co się słyszy, jest słowo Chrystusa.', testament: 'NT', relation: 'Wiara rodzi się ze słuchania Słowa', explanation: 'Głoszone Słowo rozbudza żywą wiarę w sercu.' },
+      { siglum: 'Mt 4, 4', text: 'Nie samym chlebem żyje człowiek, lecz każdym słowem, które pochodzi z ust Bożych.', testament: 'NT', relation: 'Chleb Życia i pokarm Słowa', explanation: 'Człowiek potrzebuje duchowego pokarmu Słowa.' },
+      { siglum: '2 Tm 3, 16', text: 'Wszelkie Pismo od Boga natchnione jest i pożyteczne do nauczania, do przekonywania, do poprawiania, do wychowywania w sprawiedliwości.', testament: 'NT', relation: 'Natchnienie Pisma Świętego', explanation: 'Pismo formuje człowieka Bożego.' },
+      { siglum: 'Jr 15, 16', text: 'Ilekroć otrzymywałem Twoje słowa, pochłaniałem je, a Twoje słowo stawało się dla mnie rozkoszą i radością mego serca.', testament: 'ST', relation: 'Słodkość i zachwyt Słowem Bożym', explanation: 'Rozkoszowanie się Słowem w modlitwie.' },
+      { siglum: 'Ap 3, 20', text: 'Oto stoję u drzwi i kołaczę: jeśli kto posłyszy mój głos i drzwi otworzy, wejdę do niego i będę z nim wieczerzał, a on ze Mną.', testament: 'NT', relation: 'Otwarcie serca na głos Pana', explanation: 'Osobiste spotkanie ze Zmartwychwstałym Chrystusem.' }
+    ];
+
+    universalPool.forEach(u => {
+      if (!list.some(item => item.siglum.toLowerCase().trim() === u.siglum.toLowerCase().trim())) {
+        list.push({
+          ...u,
+          alreadyInTree: existingSigla.has(u.siglum.toLowerCase().trim())
+        });
+      }
+    });
+
+    return list.filter(item => {
+      if (pickerFilterTestament === 'ST' && item.testament !== 'ST') return false;
+      if (pickerFilterTestament === 'NT' && item.testament !== 'NT') return false;
+      if (pickerSearchQuery.trim()) {
+        const query = pickerSearchQuery.toLowerCase().trim();
+        return item.siglum.toLowerCase().includes(query) ||
+               item.text.toLowerCase().includes(query) ||
+               (item.relation && item.relation.toLowerCase().includes(query));
+      }
+      return true;
+    });
+  }, [pickerModalNode, session.nodes, pickerFilterTestament, pickerSearchQuery]);
+
+  const handleFetchPickerCustomText = async () => {
+    if (!pickerCustomSiglum.trim()) return;
+    setIsFetchingPickerCustom(true);
+    try {
+      const res = await fetch('/api/scrutation/cross-references', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ siglum: pickerCustomSiglum.trim() })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.text) {
+          setPickerCustomText(data.text);
+        }
+      }
+    } catch (e) {
+      console.warn('Error fetching picker custom text:', e);
+    } finally {
+      setIsFetchingPickerCustom(false);
+    }
+  };
+
+  const handleAddCustomFromPicker = () => {
+    if (!pickerModalNode || !pickerCustomSiglum.trim()) return;
+    const isST = pickerCustomSiglum.startsWith('Rdz') || pickerCustomSiglum.startsWith('Wj') || pickerCustomSiglum.startsWith('Kpł') || 
+                 pickerCustomSiglum.startsWith('Lb') || pickerCustomSiglum.startsWith('Pwt') || pickerCustomSiglum.startsWith('Iz') || 
+                 pickerCustomSiglum.startsWith('Jer') || pickerCustomSiglum.startsWith('Ez') || pickerCustomSiglum.startsWith('Ps') ||
+                 pickerCustomSiglum.startsWith('Prz') || pickerCustomSiglum.startsWith('Mdr');
+
+    handleAddBranchFromRef({
+      siglum: pickerCustomSiglum.trim(),
+      text: pickerCustomText.trim() || 'Werset Pisma Świętego do osobistej medytacji',
+      testament: isST ? 'ST' : 'NT',
+      relation: 'Własny odnośnik biblijny',
+      explanation: 'Odnośnik wprowadzony przez użytkownika podczas skrutacji'
+    }, pickerModalNode);
+
+    setPickerCustomSiglum('');
+    setPickerCustomText('');
+    setPickerModalNode(null);
   };
 
   // Fetch Scripture text for manual siglum entry
@@ -753,6 +957,49 @@ export const ScrutationTreeView: React.FC<ScrutationTreeViewProps> = ({
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Left Column: Interactive Graph Canvas (7 cols) */}
         <div className="lg:col-span-7 space-y-3">
+          {/* Newly added branch confirmation banner */}
+          {lastAddedNodeInfo && (
+            <div className="p-3.5 sm:p-4 rounded-2xl bg-emerald-50 border-2 border-emerald-500 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 animate-fade-in">
+              <div className="space-y-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-900 bg-emerald-200/80 px-2 py-0.5 rounded-md">
+                    <Check className="w-3.5 h-3.5 text-emerald-800" />
+                    Nowy fragment dodany do drzewka:
+                  </span>
+                  <span className="font-mono text-xs font-black text-emerald-950 bg-white px-2 py-0.5 rounded-md border border-emerald-300">
+                    {lastAddedNodeInfo.node.siglum} ({lastAddedNodeInfo.node.testament})
+                  </span>
+                  <span className="text-[11px] text-emerald-800 italic">
+                    (z węzła: {lastAddedNodeInfo.parentSiglum})
+                  </span>
+                </div>
+                <p className="font-scripture text-xs text-slate-800 line-clamp-2 italic">
+                  «{lastAddedNodeInfo.node.text}»
+                </p>
+              </div>
+              <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const parent = session.nodes.find(n => n.id === lastAddedNodeInfo.node.parentId) || lastAddedNodeInfo.node;
+                    setPickerModalNode(parent);
+                  }}
+                  className="px-3 py-1.5 rounded-xl bg-white hover:bg-emerald-100 text-emerald-900 border border-emerald-300 font-bold text-xs cursor-pointer transition-colors shadow-2xs"
+                >
+                  Zmień powiązanie
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setLastAddedNodeInfo(null)}
+                  className="p-1.5 rounded-xl text-slate-500 hover:text-slate-800 hover:bg-emerald-100/50 cursor-pointer"
+                  title="Zamknij powiadomienie"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Canvas Controls Bar - Light High Contrast */}
           <div className="flex items-center justify-between gap-2 bg-white text-slate-800 px-4 py-2.5 rounded-2xl border border-slate-200 shadow-xs text-xs">
             {/* Filter Tabs */}
@@ -964,25 +1211,38 @@ export const ScrutationTreeView: React.FC<ScrutationTreeViewProps> = ({
                     </p>
 
                     {/* Footer Actions on Card */}
-                    <div className="pt-2 flex items-center justify-between text-[11px] text-slate-600 border-t border-slate-100 mt-2 font-medium">
-                      <span className="truncate max-w-[150px] font-sans">
+                    <div className="pt-2 flex items-center justify-between gap-1 text-[11px] text-slate-600 border-t border-slate-100 mt-2 font-medium">
+                      <span className="truncate max-w-[105px] font-sans text-[10px] text-slate-500" title={item.node.crossReferenceReason || 'Punkt startowy'}>
                         {item.node.crossReferenceReason || 'Punkt startowy'}
                       </span>
                       
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedNodeId(item.node.id);
-                          setActiveInspectorTab('scrutatio');
-                          handleFetchAiReferences();
-                        }}
-                        className="px-2 py-1 rounded-lg bg-emerald-100 hover:bg-emerald-200 text-emerald-900 border border-emerald-300 font-bold flex items-center gap-1 cursor-pointer transition-colors shadow-2xs text-[10px]"
-                        title="Skrutuj ten werset (znajdź powiązania)"
-                      >
-                        <Plus className="w-3 h-3" />
-                        <span>Skrutuj</span>
-                      </button>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedNodeId(item.node.id);
+                            setPickerModalNode(item.node);
+                          }}
+                          className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 text-[10px] font-bold cursor-pointer transition-colors shadow-2xs"
+                          title="Przeglądaj wszystkie powiązania wersetu"
+                        >
+                          <BookOpen className="w-3.5 h-3.5 text-slate-600" />
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleScrutateFromNode(item.node);
+                          }}
+                          className="px-2.5 py-1 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white font-bold flex items-center gap-1 cursor-pointer transition-all shadow-xs text-[11px] active:scale-95"
+                          title="Dodaj kolejny powiązany werset do drzewka"
+                        >
+                          <Plus className="w-3 h-3" />
+                          <span>Skrutuj</span>
+                        </button>
+                      </div>
                     </div>
                   </div>
                 );
@@ -1099,25 +1359,26 @@ export const ScrutationTreeView: React.FC<ScrutationTreeViewProps> = ({
               {/* Tab 1: Scrutatio (Odnośniki, Badanie i Rozgałęzianie) */}
               {activeInspectorTab === 'scrutatio' && (
                 <div className="space-y-4 animate-fade-in">
-                  {/* AI & Aparat Search Button */}
-                  <div className="flex items-center gap-2">
+                  {/* Actions Bar in Inspector */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     <button
                       type="button"
-                      onClick={handleFetchAiReferences}
-                      disabled={isLoadingAiRefs}
-                      className="flex-1 py-2.5 px-3 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-sans font-bold flex items-center justify-center gap-2 transition-colors cursor-pointer disabled:opacity-50 shadow-sm"
+                      onClick={() => handleScrutateFromNode(selectedNode)}
+                      className="py-2.5 px-3 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-sans font-bold flex items-center justify-center gap-2 transition-all cursor-pointer shadow-sm active:scale-98"
+                      title="Natychmiast dołącz kolejny powiązany werset do drzewka"
                     >
-                      {isLoadingAiRefs ? (
-                        <>
-                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                          <span>Szukanie powiązań w Piśmie Świętym...</span>
-                        </>
-                      ) : (
-                        <>
-                          <Search className="w-3.5 h-3.5" />
-                          <span>Skrutuj ten werset (Szukaj powiązań)</span>
-                        </>
-                      )}
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>+ Dodaj fragment do drzewa</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setPickerModalNode(selectedNode)}
+                      className="py-2.5 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 text-xs font-sans font-bold flex items-center justify-center gap-2 transition-colors cursor-pointer shadow-2xs"
+                      title="Otwórz pełną listę odnośników biblijnych i wybierz werset"
+                    >
+                      <BookOpen className="w-3.5 h-3.5 text-slate-700" />
+                      <span>Wybierz z listy powiązań</span>
                     </button>
                   </div>
 
@@ -1415,6 +1676,215 @@ export const ScrutationTreeView: React.FC<ScrutationTreeViewProps> = ({
           )}
         </div>
       </div>
+
+      {/* Scrutation Fragment Picker Modal */}
+      {pickerModalNode && (
+        <div 
+          className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-3 sm:p-6 overflow-y-auto animate-fade-in"
+          onClick={() => setPickerModalNode(null)}
+        >
+          <div 
+            className="bg-white rounded-3xl border border-slate-200 shadow-2xl max-w-2xl w-full p-4 sm:p-6 space-y-4 max-h-[90vh] flex flex-col my-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="flex items-start justify-between gap-3 pb-3 border-b border-slate-100">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="p-1.5 rounded-xl bg-emerald-100 text-emerald-800 border border-emerald-200">
+                    <BookOpen className="w-4 h-4" />
+                  </span>
+                  <h3 className="font-serif text-lg font-bold text-slate-900">
+                    Wybierz Fragment do Skrutacji
+                  </h3>
+                </div>
+                <p className="text-xs text-slate-600 font-sans">
+                  Rozwiń gałąź ze Słowa: <span className="font-mono font-bold text-emerald-950 bg-emerald-100/60 px-1.5 py-0.5 rounded">{pickerModalNode.siglum}</span> ({pickerModalNode.testament === 'ST' ? 'Stary Testament' : 'Nowy Testament'})
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setPickerModalNode(null)}
+                className="p-2 rounded-xl text-slate-400 hover:text-slate-800 hover:bg-slate-100 cursor-pointer transition-colors"
+                title="Zamknij"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Source Verse Preview */}
+            <div className="p-3 rounded-2xl bg-emerald-50/70 border border-emerald-200 text-xs font-scripture italic text-slate-800 leading-relaxed">
+              «{pickerModalNode.text}»
+            </div>
+
+            {/* Search and Filters */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
+              <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200 text-xs">
+                <button
+                  type="button"
+                  onClick={() => setPickerFilterTestament('ALL')}
+                  className={`px-3 py-1 rounded-lg font-bold transition-all cursor-pointer ${
+                    pickerFilterTestament === 'ALL'
+                      ? 'bg-emerald-700 text-white shadow-xs'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  Wszystkie ({modalReferences.length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPickerFilterTestament('ST')}
+                  className={`px-2.5 py-1 rounded-lg font-bold transition-all cursor-pointer ${
+                    pickerFilterTestament === 'ST'
+                      ? 'bg-amber-700 text-white shadow-xs'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  ST
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPickerFilterTestament('NT')}
+                  className={`px-2.5 py-1 rounded-lg font-bold transition-all cursor-pointer ${
+                    pickerFilterTestament === 'NT'
+                      ? 'bg-emerald-700 text-white shadow-xs'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  NT
+                </button>
+              </div>
+
+              <div className="relative flex-1">
+                <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  value={pickerSearchQuery}
+                  onChange={(e) => setPickerSearchQuery(e.target.value)}
+                  placeholder="Filtruj powiązania (np. psalm, światło, J)..."
+                  className="w-full pl-8 pr-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50 text-xs text-slate-900 focus:outline-emerald-600"
+                />
+              </div>
+            </div>
+
+            {/* References List */}
+            <div className="overflow-y-auto max-h-[42vh] pr-1 space-y-2.5 divide-y divide-slate-100">
+              {modalReferences.length > 0 ? (
+                modalReferences.map((ref, idx) => (
+                  <div 
+                    key={idx} 
+                    className={`pt-2.5 first:pt-0 p-3 rounded-2xl border transition-all ${
+                      ref.alreadyInTree 
+                        ? 'bg-slate-50/80 border-slate-200 opacity-75' 
+                        : 'bg-white hover:bg-emerald-50/30 border-slate-200 hover:border-emerald-300 shadow-2xs'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-2 pb-1.5">
+                      <div className="flex items-center gap-1.5">
+                        <span className={`px-2 py-0.5 rounded-md text-[10px] font-mono font-bold uppercase ${
+                          ref.testament === 'ST'
+                            ? 'bg-amber-100 text-amber-900 border border-amber-300'
+                            : 'bg-emerald-100 text-emerald-900 border border-emerald-300'
+                        }`}>
+                          {ref.testament}
+                        </span>
+                        <span className="font-mono text-xs font-bold text-slate-950">
+                          {ref.siglum}
+                        </span>
+                        {ref.alreadyInTree && (
+                          <span className="text-[10px] font-sans font-medium text-slate-500 bg-slate-200/70 px-1.5 py-0.5 rounded">
+                            (już w drzewie)
+                          </span>
+                        )}
+                      </div>
+
+                      {ref.relation && (
+                        <span className="text-[10px] font-sans font-medium text-emerald-800 bg-emerald-100/70 px-2 py-0.5 rounded-full truncate max-w-[170px]">
+                          {ref.relation}
+                        </span>
+                      )}
+                    </div>
+
+                    <p className="font-scripture text-xs text-slate-800 italic leading-relaxed pb-2">
+                      «{ref.text}»
+                    </p>
+
+                    {ref.explanation && (
+                      <p className="text-[11px] text-slate-600 pb-2 font-sans">
+                        {ref.explanation}
+                      </p>
+                    )}
+
+                    <div className="flex items-center justify-end gap-2 pt-1 border-t border-slate-100">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          handleAddBranchFromRef(ref, pickerModalNode);
+                          setPickerModalNode(null);
+                        }}
+                        className="px-3 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-sans font-bold flex items-center gap-1.5 cursor-pointer transition-colors shadow-2xs active:scale-95"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                        <span>{ref.alreadyInTree ? 'Dodaj ponownie jako nową gałąź' : 'Dodaj ten fragment do drzewka'}</span>
+                      </button>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="p-6 text-center text-xs text-slate-500 font-sans italic">
+                  Brak wersetów pasujących do filtra. Skorzystaj z pola poniżej, aby wpisać dowolny werset.
+                </div>
+              )}
+            </div>
+
+            {/* Custom Siglum Option at bottom of modal */}
+            <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
+              <span className="text-[11px] font-bold text-slate-800 block">
+                Lub wprowadź dowolny inny werset z Pisma Świętego:
+              </span>
+              <div className="flex flex-col sm:flex-row items-stretch gap-2">
+                <input
+                  type="text"
+                  value={pickerCustomSiglum}
+                  onChange={(e) => setPickerCustomSiglum(e.target.value)}
+                  placeholder="Siglum (np. Rdz 22, 1-18)..."
+                  className="flex-1 px-3 py-1.5 rounded-xl border border-slate-300 bg-white font-mono text-xs text-slate-900 focus:outline-emerald-600"
+                />
+                <button
+                  type="button"
+                  onClick={handleFetchPickerCustomText}
+                  disabled={isFetchingPickerCustom || !pickerCustomSiglum.trim()}
+                  className="px-3 py-1.5 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold text-xs cursor-pointer transition-colors disabled:opacity-50 flex items-center justify-center gap-1"
+                >
+                  {isFetchingPickerCustom ? <Loader2 className="w-3 h-3 animate-spin" /> : <Search className="w-3 h-3" />}
+                  <span>Pobierz treść</span>
+                </button>
+              </div>
+
+              {pickerCustomText && (
+                <div className="space-y-2 pt-1">
+                  <textarea
+                    value={pickerCustomText}
+                    onChange={(e) => setPickerCustomText(e.target.value)}
+                    rows={2}
+                    className="w-full p-2 rounded-xl border border-slate-300 bg-white text-xs font-scripture text-slate-900 focus:outline-emerald-600"
+                  />
+                  <div className="flex justify-end">
+                    <button
+                      type="button"
+                      onClick={handleAddCustomFromPicker}
+                      className="px-3.5 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs cursor-pointer transition-colors shadow-2xs"
+                    >
+                      + Dołącz werset do drzewka
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
