@@ -1,5 +1,6 @@
 // Baza danych najpowszechniejszych Nowenn i Litanii Kościoła Katolickiego
 // Zawiera pełne teksty na poszczególne dni nowenn (1–9) oraz autentyczne teksty litanii.
+import { ADDITIONAL_LITANIES } from './additionalLitaniesData';
 
 export interface NovenaDayItem {
   dayNumber: number;
@@ -836,5 +837,6 @@ export const LITANIES_LIST: CatholicLitany[] = [
       'Módl się za nami, święty Charbelu. Abyśmy się stali godnymi obietnic Chrystusowych.',
       'Módlmy się: Boże, Ty powołałeś świętego Charbela, mnicha i pustelnika, do samotności pustelni, aby w nieustannej modlitwie i pokucie zjednoczył się z Twoim Synem, Jezusem Chrystusem, a po śmierci uczyniłeś go potężnym orędownikiem chorych i cierpiących; spraw za jego wstawiennictwem, abyśmy otrzymali potrzebne nam łaski i naśladując jego cnoty, doszli do wiecznej radości w niebie. Przez Chrystusa, Pana naszego. Amen.'
     ]
-  }
+  },
+  ...ADDITIONAL_LITANIES
 ];

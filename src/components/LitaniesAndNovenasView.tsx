@@ -222,10 +222,13 @@ export const LitaniesAndNovenasView: React.FC<LitaniesAndNovenasViewProps> = ({
   });
 
   const filteredLitanies = LITANIES_LIST.filter((l) => {
+    const query = searchQuery.toLowerCase().trim();
     const matchesSearch = 
-      l.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      l.subtitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (l.latinTitle && l.latinTitle.toLowerCase().includes(searchQuery.toLowerCase()));
+      !query ||
+      l.title.toLowerCase().includes(query) ||
+      l.subtitle.toLowerCase().includes(query) ||
+      (l.latinTitle && l.latinTitle.toLowerCase().includes(query)) ||
+      l.description.toLowerCase().includes(query);
     const matchesCat = categoryFilter === 'Wszystkie' || l.category === categoryFilter;
     return matchesSearch && matchesCat;
   });
@@ -235,18 +238,18 @@ export const LitaniesAndNovenasView: React.FC<LitaniesAndNovenasViewProps> = ({
       {/* Top Banner & Header */}
       <div className="text-center max-w-3xl mx-auto space-y-3">
         <div className="inline-flex items-center gap-2 px-3 py-1 bg-amber-50 border border-amber-200/80 text-amber-900 text-xs font-semibold uppercase tracking-wider rounded-full shadow-xs">
-          <Heart className="w-3.5 h-3.5 text-amber-600 fill-amber-500" />
+          <Heart className="w-3.5 h-3.5 text-amber-700" />
           <span>Skarbiec Modlitwy Kościoła</span>
         </div>
         <h1 className="font-serif text-2xl sm:text-4xl font-bold tracking-tight text-slate-900">
           Litanie i Nowenny
         </h1>
         <p className="text-xs sm:text-sm text-slate-600 leading-relaxed max-w-2xl mx-auto">
-          Codzienne 9-dniowe nowenny z zaznaczaniem ukończonych dni, przypomnieniami i pełnymi tekstami oraz najpiękniejsze litanie Kościoła Katolickiego.
+          Codzienne 9-dniowe nowenny z zaznaczaniem ukończonych dni, przypomnieniami i pełnymi tekstami oraz bogaty zbiór litanii Kościoła Katolickiego.
         </p>
 
         {/* Mode Selector Tabs (Nowenny / Litanie) */}
-        <div className="inline-flex p-1 bg-slate-100 rounded-2xl border border-slate-200 mt-2 shadow-xs">
+        <div className="inline-flex p-1 bg-stone-100 rounded-2xl border border-stone-200 mt-2 shadow-inner">
           <button
             id="tab-novenas-btn"
             onClick={() => {
@@ -255,11 +258,11 @@ export const LitaniesAndNovenasView: React.FC<LitaniesAndNovenasViewProps> = ({
             }}
             className={`px-5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ${
               mainMode === 'novenas'
-                ? 'bg-white text-amber-900 shadow-sm border border-amber-200 font-extrabold'
-                : 'text-slate-600 hover:text-slate-900'
+                ? 'bg-white text-emerald-900 shadow-2xs border border-stone-200 font-extrabold'
+                : 'text-stone-600 hover:text-stone-900 hover:bg-stone-200/50'
             }`}
           >
-            <Calendar className="w-4 h-4 text-amber-600" />
+            <Calendar className="w-4 h-4 text-amber-700" />
             <span>Nowenny (9 Dni)</span>
           </button>
           <button
@@ -270,12 +273,12 @@ export const LitaniesAndNovenasView: React.FC<LitaniesAndNovenasViewProps> = ({
             }}
             className={`px-5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ${
               mainMode === 'litanies'
-                ? 'bg-white text-sky-900 shadow-sm border border-sky-200 font-extrabold'
-                : 'text-slate-600 hover:text-slate-900'
+                ? 'bg-white text-emerald-900 shadow-2xs border border-stone-200 font-extrabold'
+                : 'text-stone-600 hover:text-stone-900 hover:bg-stone-200/50'
             }`}
           >
-            <BookOpen className="w-4 h-4 text-sky-600" />
-            <span>Litanie Kościoła</span>
+            <BookOpen className="w-4 h-4 text-emerald-800" />
+            <span>Litanie Kościoła ({LITANIES_LIST.length})</span>
           </button>
         </div>
       </div>
@@ -725,10 +728,10 @@ export const LitaniesAndNovenasView: React.FC<LitaniesAndNovenasViewProps> = ({
             /* Selected Litany Prayer View */
             <div className="space-y-6">
               {/* Back to list & reading controls */}
-              <div className="flex flex-wrap items-center justify-between gap-3 pb-2 border-b border-slate-200">
+              <div className="flex flex-wrap items-center justify-between gap-3 pb-2 border-b border-stone-200">
                 <button
                   onClick={() => setSelectedLitany(null)}
-                  className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-600 hover:text-sky-800 bg-white hover:bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-xl transition-all cursor-pointer shadow-xs"
+                  className="inline-flex items-center gap-1.5 text-xs font-bold text-stone-700 hover:text-emerald-900 bg-white hover:bg-stone-50 border border-stone-200 px-3 py-1.5 rounded-xl transition-all cursor-pointer shadow-2xs"
                 >
                   <ArrowLeft className="w-4 h-4" />
                   <span>Wróć do spisu litanii</span>
@@ -736,24 +739,24 @@ export const LitaniesAndNovenasView: React.FC<LitaniesAndNovenasViewProps> = ({
 
                 {/* Font Size & Copy buttons */}
                 <div className="flex items-center gap-2">
-                  <div className="flex items-center border border-slate-200 rounded-xl overflow-hidden bg-white text-xs">
+                  <div className="flex items-center border border-stone-200 rounded-xl overflow-hidden bg-white text-xs">
                     <button
                       onClick={() => setFontSize('normal')}
-                      className={`px-2.5 py-1 font-bold ${fontSize === 'normal' ? 'bg-sky-100 text-sky-900' : 'text-slate-600 hover:bg-slate-50'}`}
+                      className={`px-2.5 py-1 font-bold ${fontSize === 'normal' ? 'bg-emerald-100 text-emerald-900' : 'text-stone-600 hover:bg-stone-50'}`}
                       title="Domyślna czcionka"
                     >
                       A
                     </button>
                     <button
                       onClick={() => setFontSize('large')}
-                      className={`px-2.5 py-1 font-bold text-sm ${fontSize === 'large' ? 'bg-sky-100 text-sky-900' : 'text-slate-600 hover:bg-slate-50'}`}
+                      className={`px-2.5 py-1 font-bold text-sm ${fontSize === 'large' ? 'bg-emerald-100 text-emerald-900' : 'text-stone-600 hover:bg-stone-50'}`}
                       title="Większa czcionka"
                     >
                       A+
                     </button>
                     <button
                       onClick={() => setFontSize('xlarge')}
-                      className={`px-2.5 py-1 font-bold text-base ${fontSize === 'xlarge' ? 'bg-sky-100 text-sky-900' : 'text-slate-600 hover:bg-slate-50'}`}
+                      className={`px-2.5 py-1 font-bold text-base ${fontSize === 'xlarge' ? 'bg-emerald-100 text-emerald-900' : 'text-stone-600 hover:bg-stone-50'}`}
                       title="Największa czcionka"
                     >
                       A++
@@ -767,7 +770,7 @@ export const LitaniesAndNovenasView: React.FC<LitaniesAndNovenasViewProps> = ({
                         `\n\n${selectedLitany.concludingPrayers.join('\n')}`;
                       handleCopy(selectedLitany.id, allText);
                     }}
-                    className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-xl transition-all cursor-pointer shadow-xs"
+                    className="inline-flex items-center gap-1.5 text-xs font-bold text-stone-700 bg-white hover:bg-stone-50 border border-stone-200 px-3 py-1.5 rounded-xl transition-all cursor-pointer shadow-2xs"
                   >
                     {copiedId === selectedLitany.id ? (
                       <>
@@ -776,7 +779,7 @@ export const LitaniesAndNovenasView: React.FC<LitaniesAndNovenasViewProps> = ({
                       </>
                     ) : (
                       <>
-                        <Copy className="w-3.5 h-3.5 text-slate-500" />
+                        <Copy className="w-3.5 h-3.5 text-stone-500" />
                         <span>Kopiuj</span>
                       </>
                     )}
@@ -785,26 +788,26 @@ export const LitaniesAndNovenasView: React.FC<LitaniesAndNovenasViewProps> = ({
               </div>
 
               {/* Litany Content Card */}
-              <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-10 shadow-sm space-y-8">
+              <div className="bg-white border border-stone-200 rounded-3xl p-6 sm:p-10 shadow-xs space-y-8">
                 <div className="text-center max-w-2xl mx-auto space-y-2">
-                  <span className="text-[10px] uppercase font-bold tracking-wider px-2.5 py-0.5 rounded-full bg-sky-50 text-sky-900 border border-sky-200">
+                  <span className="text-[10px] uppercase font-bold tracking-wider px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-900 border border-emerald-200">
                     {selectedLitany.category}
                   </span>
-                  <h2 className="font-serif text-2xl sm:text-3xl font-bold text-slate-900">
+                  <h2 className="font-serif text-2xl sm:text-3xl font-bold text-stone-900">
                     {selectedLitany.title}
                   </h2>
                   {selectedLitany.latinTitle && (
-                    <div className="text-xs font-serif italic text-slate-500">
+                    <div className="text-xs font-serif italic text-amber-800">
                       {selectedLitany.latinTitle}
                     </div>
                   )}
-                  <p className="text-xs text-slate-600 leading-relaxed pt-1">
+                  <p className="text-xs text-stone-600 leading-relaxed pt-1">
                     {selectedLitany.description}
                   </p>
                 </div>
 
                 {/* Opening Invocations (Kyrie eleison, etc.) */}
-                <div className="bg-slate-50 p-4 sm:p-6 rounded-2xl border border-slate-200 space-y-1.5 text-center font-serif text-sm sm:text-base text-slate-800">
+                <div className="bg-stone-50 p-4 sm:p-6 rounded-2xl border border-stone-200 space-y-1.5 text-center font-serif text-sm sm:text-base text-stone-800">
                   {selectedLitany.openingPrayers.map((op, idx) => (
                     <div key={idx} className="leading-relaxed">
                       {op}
@@ -819,7 +822,7 @@ export const LitaniesAndNovenasView: React.FC<LitaniesAndNovenasViewProps> = ({
                   {selectedLitany.sections.map((section, sIdx) => (
                     <div key={sIdx} className="space-y-3">
                       {section.sectionTitle && (
-                        <div className="font-sans text-xs font-bold uppercase tracking-wider text-slate-400 border-b border-slate-100 pb-1 pt-2">
+                        <div className="font-sans text-xs font-bold uppercase tracking-wider text-amber-900 border-b border-stone-200 pb-1 pt-2">
                           {section.sectionTitle}
                         </div>
                       )}
@@ -827,12 +830,12 @@ export const LitaniesAndNovenasView: React.FC<LitaniesAndNovenasViewProps> = ({
                         {section.invocations.map((inv, iIdx) => (
                           <div 
                             key={iIdx}
-                            className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-1 p-2 rounded-xl hover:bg-sky-50/50 transition-colors border-b border-slate-50"
+                            className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-1 p-2 rounded-xl hover:bg-stone-50 transition-colors border-b border-stone-100"
                           >
-                            <span className="text-slate-900 font-medium">
+                            <span className="text-stone-900 font-medium">
                               {inv.invocation},
                             </span>
-                            <span className="text-sky-800 font-bold italic shrink-0 sm:pl-4">
+                            <span className="text-emerald-900 font-bold italic shrink-0 sm:pl-4">
                               {inv.response}.
                             </span>
                           </div>
@@ -843,8 +846,8 @@ export const LitaniesAndNovenasView: React.FC<LitaniesAndNovenasViewProps> = ({
                 </div>
 
                 {/* Concluding Prayers (Agnus Dei, etc.) */}
-                <div className="bg-sky-50/50 p-5 sm:p-7 rounded-2xl border border-sky-200/80 space-y-3 font-serif text-sm sm:text-base text-slate-900 leading-relaxed">
-                  <div className="font-sans text-xs font-bold uppercase tracking-wider text-sky-900 mb-1">
+                <div className="bg-amber-50/40 p-5 sm:p-7 rounded-2xl border border-amber-200/80 space-y-3 font-serif text-sm sm:text-base text-stone-900 leading-relaxed">
+                  <div className="font-sans text-xs font-bold uppercase tracking-wider text-amber-900 mb-1">
                     Modlitwy końcowe:
                   </div>
                   {selectedLitany.concludingPrayers.map((cp, idx) => (
@@ -861,13 +864,13 @@ export const LitaniesAndNovenasView: React.FC<LitaniesAndNovenasViewProps> = ({
               {/* Search & Category Filter */}
               <div className="flex flex-col sm:flex-row items-center justify-between gap-4 max-w-3xl mx-auto">
                 <div className="relative w-full sm:w-80">
-                  <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
+                  <Search className="w-4 h-4 text-stone-400 absolute left-3.5 top-3" />
                   <input
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Szukaj litanii, np. św. Charbel, Loretańska, Serca..."
-                    className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-300 rounded-xl focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20 text-sm text-slate-900 placeholder-slate-400 shadow-xs"
+                    placeholder="Szukaj litanii (np. Imienia Jezus, Rity, Krwi, Wszystkich Świętych)..."
+                    className="w-full pl-10 pr-4 py-2.5 bg-white border border-stone-300 rounded-xl focus:border-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-600/20 text-sm text-stone-900 placeholder-stone-400 shadow-2xs"
                   />
                 </div>
 
@@ -878,8 +881,8 @@ export const LitaniesAndNovenasView: React.FC<LitaniesAndNovenasViewProps> = ({
                       onClick={() => setCategoryFilter(cat)}
                       className={`px-3 py-1.5 text-xs font-semibold rounded-xl border transition-all cursor-pointer ${
                         categoryFilter === cat
-                          ? 'bg-sky-600 text-white border-sky-600 shadow-xs'
-                          : 'bg-white text-slate-600 hover:text-slate-900 border-slate-200 hover:bg-slate-50'
+                          ? 'bg-emerald-800 text-white border-emerald-800 shadow-2xs'
+                          : 'bg-white text-stone-600 hover:text-stone-900 border-stone-200 hover:bg-stone-50'
                       }`}
                     >
                       {cat}
@@ -893,36 +896,36 @@ export const LitaniesAndNovenasView: React.FC<LitaniesAndNovenasViewProps> = ({
                 {filteredLitanies.map((litany) => (
                   <div
                     key={litany.id}
-                    className="bg-white border border-slate-200 hover:border-sky-400 rounded-3xl p-5 sm:p-6 transition-all shadow-xs hover:shadow-md flex flex-col justify-between space-y-4 group"
+                    className="bg-white border border-stone-200 hover:border-emerald-600 rounded-3xl p-5 sm:p-6 transition-all shadow-2xs hover:shadow-md flex flex-col justify-between space-y-4 group"
                   >
                     <div className="space-y-2">
                       <div className="flex items-center justify-between gap-2">
-                        <span className="text-[10px] uppercase font-bold tracking-wider px-2.5 py-0.5 rounded-full bg-sky-50 text-sky-800 border border-sky-200">
+                        <span className="text-[10px] uppercase font-bold tracking-wider px-2.5 py-0.5 rounded-full bg-stone-100 text-stone-700 border border-stone-200">
                           {litany.category}
                         </span>
                         {litany.latinTitle && (
-                          <span className="text-[10px] italic font-serif text-slate-400 truncate max-w-[120px]">
+                          <span className="text-[10px] italic font-serif text-amber-800/80 truncate max-w-[130px]">
                             {litany.latinTitle}
                           </span>
                         )}
                       </div>
 
-                      <h3 className="font-serif text-lg font-bold text-slate-900 group-hover:text-sky-800 transition-colors">
+                      <h3 className="font-serif text-lg font-bold text-stone-900 group-hover:text-emerald-900 transition-colors">
                         {litany.title}
                       </h3>
-                      <p className="text-xs text-slate-500 italic">
+                      <p className="text-xs text-stone-500 italic">
                         {litany.subtitle}
                       </p>
-                      <p className="text-xs text-slate-600 line-clamp-3 leading-relaxed">
+                      <p className="text-xs text-stone-600 line-clamp-3 leading-relaxed">
                         {litany.description}
                       </p>
                     </div>
 
                     <button
                       onClick={() => setSelectedLitany(litany)}
-                      className="w-full py-2.5 bg-sky-50 hover:bg-sky-600 hover:text-white text-sky-900 text-xs font-sans font-bold uppercase tracking-wider transition-all rounded-xl flex items-center justify-center gap-1.5 cursor-pointer border border-sky-200 hover:border-sky-600 shadow-xs"
+                      className="w-full py-2.5 bg-stone-50 hover:bg-emerald-800 hover:text-white text-emerald-950 text-xs font-sans font-bold uppercase tracking-wider transition-all rounded-xl flex items-center justify-center gap-1.5 cursor-pointer border border-stone-200 hover:border-emerald-800 shadow-2xs"
                     >
-                      <BookOpen className="w-3.5 h-3.5" />
+                      <BookOpen className="w-3.5 h-3.5 text-amber-700 group-hover:text-white" />
                       <span>Módl się litanią</span>
                     </button>
                   </div>
