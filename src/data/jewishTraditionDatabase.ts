@@ -83,19 +83,6 @@ export function getGuaranteedJewishTradition(siglum: string): JewishTraditionCom
 
   if (match) return match;
 
-  // Generic fallback if not matched
-  return {
-    id: `jewish_custom_${Date.now()}`,
-    siglum: siglum,
-    hebrewText: 'שְׁמַע יִשְׂרָאֵל יְהוָה אֱלֹהֵינוּ יְהוָה אֶחָד',
-    hebrewTransliteration: 'Szema Jisrael Adonai Eloheinu Adonai Echad',
-    targumArameicText: 'שְׁמַע יִשְׂרָאֵל יְיָ אֱלָהַנָא יְיָ חָד',
-    targumPolish: 'Słuchaj, Izraelu, Pan jest naszym Bogiem, Pan jest Jedyny...',
-    sourceName: 'Tradycja Halachiczna & Midrasze Tannaitów',
-    era: 'Okres Drugiej Świątyni',
-    theologicalConcept: 'Kabbalat Ol Malchut Szamajim (Przyjęcie Jarzma Królestwa Niebios)',
-    rabbinicInterpretation: 'W tradycji żydowskiej każdy werset Pisma posiada "siedemdziesiąt oblicz" (Sziwim Panim la-Tora). Werset ten jest badany przez pryzmat czterech poziomów PaRDeS: Pszat (znaczenie dosłowne), Remez (aluzja alegoryczna), Drasz (poszukiwanie homiletyczne) oraz Sod (tajemnica mistyczna).',
-    christianTypology: 'Nowy Testament nieustannie ukazuje, że Pisma Pierwszego Przymierza świadczą o Chrystusie: "Badacie Pisma, ponieważ sądzicie, że w nich zawarte jest życie wieczne: to one właśnie dają o Mnie świadectwo" (J 5, 39).',
-    scrutationQuestion: 'W jaki sposób ten werset z Pierwszego Przymierza rozjaśnia Twoją drogę nawrócenia i spotkania ze Zmartwychwstałym Chrystusem?'
-  };
+  // Zero imagination: If no authentic curated record exists in database, return null
+  return null;
 }

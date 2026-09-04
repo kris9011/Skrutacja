@@ -98,7 +98,42 @@ export function parseBiblicalVerses(rawText: string, siglum: string): ParsedVers
   const { startVerse, endVerse, baseSiglum } = extractVerseRangeFromSiglum(siglum);
   const cleanInput = rawText.trim();
 
-  // 1. Sprawdź, czy tekst zawiera numery w nawiasach (np. (1), (2), [1], [2])
+  // 1. Sprawdź, czy tekst zawiera nagłówki rozdziałów, np. [ROZDZIAŁ 1 ...] lub Rozdział 1:
+  if (cleanInput.includes('[ROZDZIAŁ') || cleanInput.includes('[Rozdział') || /(?:^|\n)Rozdział\s+\d+/i.test(cleanInput)) {
+    const sections = cleanInput.split(/(?=\[ROZDZIAŁ|\bROZDZIAŁ|(?:\n|^)Rozdział\s+\d+)/i).filter(Boolean);
+    const resultVerses: ParsedVerse[] = [];
+    
+    // Extract base book name without chapter/verse range (e.g. "Jon 1–4" -> "Jon", "Am (Cała księga)" -> "Am")
+    const bookNameOnly = baseSiglum.replace(/\s*\d+.*$/, '').replace(/\s*\(.*$/, '').trim();
+
+    sections.forEach((section, sIdx) => {
+      const headerMatch = section.match(/^\[([^\]]+)\]/) || section.match(/^(Rozdział\s+\d+[^:\n]*[:\n]?)/i);
+      const header = headerMatch ? headerMatch[1].replace(/[:\n]$/, '').trim() : undefined;
+      const sectionContent = headerMatch ? section.substring(headerMatch[0].length).trim() : section.trim();
+      
+      // Determine chapter number if possible from header
+      let chapterNum = sIdx + 1;
+      if (header) {
+        const numMatch = header.match(/\d+/);
+        if (numMatch) {
+          chapterNum = parseInt(numMatch[0], 10);
+        }
+      }
+
+      const chapterSiglum = `${bookNameOnly || baseSiglum} ${chapterNum}`;
+      const subVerses = parseBiblicalVerses(sectionContent, chapterSiglum);
+      if (subVerses.length > 0) {
+        if (header) {
+          subVerses[0].chapterHeader = header;
+        }
+        resultVerses.push(...subVerses);
+      }
+    });
+
+    if (resultVerses.length > 0) return resultVerses;
+  }
+
+  // 2. Sprawdź, czy tekst zawiera numery w nawiasach (np. (1), (2), [1], [2])
   const bracketRegex = /(?:\((\d+)\)|\[(\d+)\])\s*([^()\[\]]+)/g;
   const bracketMatches: { vNum: number; text: string }[] = [];
   let m;
@@ -111,7 +146,7 @@ export function parseBiblicalVerses(rawText: string, siglum: string): ParsedVers
   }
 
   if (bracketMatches.length >= 2) {
-    return bracketMatches.map(item => {
+    return bracketMatches.map((item, idx) => {
       const verseSig = `${baseSiglum}, ${item.vNum}`;
       return {
         verseNum: item.vNum,
@@ -120,28 +155,6 @@ export function parseBiblicalVerses(rawText: string, siglum: string): ParsedVers
         words: item.text.split(/\s+/).filter(Boolean)
       };
     });
-  }
-
-  // 2. Sprawdź, czy tekst zawiera nagłówki rozdziałów, np. [ROZDZIAŁ 1 ...]
-  if (cleanInput.includes('[ROZDZIAŁ') || cleanInput.includes('[Rozdział')) {
-    const sections = cleanInput.split(/(?=\[ROZDZIAŁ|\bROZDZIAŁ)/i).filter(Boolean);
-    const resultVerses: ParsedVerse[] = [];
-    
-    sections.forEach((section, sIdx) => {
-      const headerMatch = section.match(/^\[([^\]]+)\]/);
-      const header = headerMatch ? headerMatch[1] : undefined;
-      const sectionContent = headerMatch ? section.substring(headerMatch[0].length).trim() : section.trim();
-      
-      const subVerses = parseBiblicalVerses(sectionContent, `${baseSiglum} ${sIdx + 1}`);
-      if (subVerses.length > 0) {
-        if (header) {
-          subVerses[0].chapterHeader = header;
-        }
-        resultVerses.push(...subVerses);
-      }
-    });
-
-    if (resultVerses.length > 0) return resultVerses;
   }
 
   // 3. Sprawdź numerację w formacie "1 ", "2 " lub "1. ", "2. " na początku zdań, linii lub w tekście

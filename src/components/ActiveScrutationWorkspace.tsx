@@ -879,7 +879,7 @@ export const ActiveScrutationWorkspace: React.FC<ActiveScrutationWorkspaceProps>
                 const isCurrent = session.activeStep === step.step;
                 return (
                   <button
-                    key={step.step}
+                    key={`workspace-footer-step-${step.step}`}
                     onClick={() => {
                       onUpdateSession({ ...session, activeStep: step.step });
                       playBellChime();
@@ -1048,7 +1048,7 @@ export const ActiveScrutationWorkspace: React.FC<ActiveScrutationWorkspaceProps>
             const isPassed = session.activeStep > step.step;
             return (
               <button
-                key={step.step}
+                key={`workspace-track-step-${step.step}`}
                 id={`workspace-step-track-${step.step}`}
                 onClick={() => {
                   onUpdateSession({ ...session, activeStep: step.step });
@@ -1510,7 +1510,7 @@ export const ActiveScrutationWorkspace: React.FC<ActiveScrutationWorkspaceProps>
                       .filter(res => testamentFilter === 'all' || res.testament === testamentFilter)
                       .map((res, i) => (
                         <div
-                          key={i}
+                          key={`ws-search-${res.siglum}-${i}`}
                           className="p-4 rounded-2xl bg-slate-50 border border-slate-200 hover:border-emerald-400 transition-all space-y-2.5 group shadow-xs hover:shadow-sm"
                         >
                           <div className="flex items-start justify-between gap-3">

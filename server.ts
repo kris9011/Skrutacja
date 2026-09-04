@@ -44,6 +44,11 @@ function noteGeminiQuotaDepleted(err: any) {
   }
 }
 
+function getRemainingCooldownSeconds(): number {
+  const diff = geminiQuotaCooldownUntil - Date.now();
+  return diff > 0 ? Math.ceil(diff / 1000) : 60;
+}
+
 // Lazy initialization of Gemini client
 let aiClient: GoogleGenAI | null = null;
 function getGeminiClient(): GoogleGenAI | null {
@@ -70,10 +75,13 @@ function getGeminiClient(): GoogleGenAI | null {
 const dailyReadingsCache = new Map<string, any>();
 const crossRefCache = new Map<string, any>();
 const passageCommentaryCache = new Map<string, any>();
+const wordLookupCache = new Map<string, any>();
+const jewishLookupCache = new Map<string, any>();
+const patristicLookupCache = new Map<string, any>();
 
 // Resilient Gemini generator with fallback to valid Gemini models
 async function generateContentWithFallback(ai: GoogleGenAI, config: { prompt: string; schema?: any; systemInstruction?: string }): Promise<any> {
-  const modelsToTry = ['gemini-3.8-flash', 'gemini-flash-latest', 'gemini-3.1-flash-lite'];
+  const modelsToTry = ['gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemini-3.8-flash'];
   let lastError = null;
 
   for (const model of modelsToTry) {
@@ -147,12 +155,20 @@ app.post('/api/scrutation/cross-references', async (req, res) => {
   try {
     const ai = getGeminiClient();
     if (!ai) {
-      return res.json({
-        source: 'biblical-library',
-        siglum: guaranteed.siglum,
-        text: guaranteed.fullText,
-        theologicalContext: guaranteed.theologicalContext,
-        crossReferences: guaranteed.crossReferences
+      if (guaranteed) {
+        return res.json({
+          source: 'biblical-library',
+          siglum: guaranteed.siglum,
+          text: guaranteed.fullText,
+          theologicalContext: guaranteed.theologicalContext,
+          crossReferences: guaranteed.crossReferences
+        });
+      }
+      return res.status(429).json({
+        status: 429,
+        error: 'QUOTA_DEPLETED',
+        message: 'Limit kredytów AI został wyczerpany, a dla tego wersetu brak autentycznego wpisu w podręcznej bibliotece. Zgodnie z zasadą Zero Imaginacji nie tworzymy zmyślonych odnośników. Proszę odczekać około 60 sekund przed ponowną próbą.',
+        retryAfterSeconds: getRemainingCooldownSeconds()
       });
     }
 
@@ -191,34 +207,51 @@ Podaj:
 
     const parsed = await generateContentWithFallback(ai, { prompt, schema });
     if (!parsed || !parsed.crossReferences || parsed.crossReferences.length === 0) {
-      return res.json({
-        source: 'biblical-library',
-        siglum: guaranteed.siglum,
-        text: guaranteed.fullText,
-        theologicalContext: guaranteed.theologicalContext,
-        crossReferences: guaranteed.crossReferences
+      if (guaranteed) {
+        return res.json({
+          source: 'biblical-library',
+          siglum: guaranteed.siglum,
+          text: guaranteed.fullText,
+          theologicalContext: guaranteed.theologicalContext,
+          crossReferences: guaranteed.crossReferences
+        });
+      }
+      return res.status(429).json({
+        status: 429,
+        error: 'QUOTA_DEPLETED',
+        message: 'Brak zweryfikowanych danych biblijnych, a limit kredytów AI jest niedostępny. Zgodnie z zasadą Zero Imaginacji nie generujemy sztucznych odnośników. Proszę odczekać pewien czas.',
+        retryAfterSeconds: getRemainingCooldownSeconds()
       });
     }
 
     const result = {
       source: 'gemini',
       siglum: parsed.siglum || siglum,
-      text: parsed.fullText || text || guaranteed.fullText,
-      theologicalContext: parsed.theologicalContext || guaranteed.theologicalContext,
-      crossReferences: parsed.crossReferences || guaranteed.crossReferences
+      text: parsed.fullText || text || (guaranteed ? guaranteed.fullText : ''),
+      theologicalContext: parsed.theologicalContext || (guaranteed ? guaranteed.theologicalContext : ''),
+      crossReferences: parsed.crossReferences || (guaranteed ? guaranteed.crossReferences : [])
     };
     crossRefCache.set(cacheKey, result);
     res.json(result);
   } catch (error) {
-    const fallback = {
-      source: 'biblical-library',
-      siglum: guaranteed.siglum,
-      text: guaranteed.fullText,
-      theologicalContext: guaranteed.theologicalContext,
-      crossReferences: guaranteed.crossReferences
-    };
-    crossRefCache.set(cacheKey, fallback);
-    res.json(fallback);
+    noteGeminiQuotaDepleted(error);
+    if (guaranteed) {
+      const fallback = {
+        source: 'biblical-library',
+        siglum: guaranteed.siglum,
+        text: guaranteed.fullText,
+        theologicalContext: guaranteed.theologicalContext,
+        crossReferences: guaranteed.crossReferences
+      };
+      crossRefCache.set(cacheKey, fallback);
+      return res.json(fallback);
+    }
+    return res.status(429).json({
+      status: 429,
+      error: 'QUOTA_DEPLETED',
+      message: 'Wyczerpano limit kredytów AI. Zgodnie z zasadą Zero Imaginacji nie tworzymy zmyślonych odnośników. Proszę odczekać pewien czas.',
+      retryAfterSeconds: getRemainingCooldownSeconds()
+    });
   }
 });
 
@@ -290,16 +323,29 @@ app.post('/api/scrutation/patristic-commentaries', async (req, res) => {
     return res.status(400).json({ error: 'Siglum jest wymagane' });
   }
 
-  const guaranteedData = getGuaranteedPatristicData(siglum, text);
+  const cleanSiglum = siglum.trim();
+  if (patristicLookupCache.has(cleanSiglum)) {
+    return res.json(patristicLookupCache.get(cleanSiglum));
+  }
+
+  const guaranteedData = getGuaranteedPatristicData(cleanSiglum, text);
 
   try {
     const ai = getGeminiClient();
     if (!ai) {
-      return res.json({
-        source: 'patristic-library',
-        siglum: guaranteedData.siglum,
-        originalScripture: guaranteedData.originalScripture,
-        commentaries: guaranteedData.commentaries
+      if (guaranteedData) {
+        return res.json({
+          source: 'patristic-library',
+          siglum: guaranteedData.siglum,
+          originalScripture: guaranteedData.originalScripture,
+          commentaries: guaranteedData.commentaries
+        });
+      }
+      return res.status(429).json({
+        status: 429,
+        error: 'QUOTA_DEPLETED',
+        message: 'Limit kredytów AI został wyczerpany, a dla tego wersetu brak autentycznego wpisu w podręcznej bibliotece patrystycznej. Zgodnie z zasadą Zero Imaginacji nie generujemy zmyślonych cytatów Ojców Kościoła. Proszę odczekać pewien czas.',
+        retryAfterSeconds: getRemainingCooldownSeconds()
       });
     }
 
@@ -374,6 +420,36 @@ Dla każdego Ojca Kościoła podaj:
 
     const parsed = await generateContentWithFallback(ai, { prompt, schema });
     if (!parsed || !parsed.commentaries || parsed.commentaries.length === 0) {
+      if (guaranteedData) {
+        return res.json({
+          source: 'patristic-library',
+          siglum: guaranteedData.siglum,
+          originalScripture: guaranteedData.originalScripture,
+          commentaries: guaranteedData.commentaries
+        });
+      }
+      return res.status(429).json({
+        status: 429,
+        error: 'QUOTA_DEPLETED',
+        message: 'Brak wpisu w podręcznej bibliotece patrystycznej, a limit kredytów AI jest niedostępny. Zgodnie z zasadą Zero Imaginacji nie tworzymy zmyślonych komentarzy. Proszę odczekać pewien czas.',
+        retryAfterSeconds: getRemainingCooldownSeconds()
+      });
+    }
+
+    const patristicResult = {
+      source: 'gemini',
+      siglum,
+      originalScripture: parsed.originalScripture || (guaranteedData ? guaranteedData.originalScripture : null),
+      commentaries: (parsed.commentaries || (guaranteedData ? guaranteedData.commentaries : [])).map((c: Record<string, any>, idx: number) => ({
+        ...c,
+        id: c.id || `patristic_${Date.now()}_${idx}`
+      }))
+    };
+    patristicLookupCache.set(cleanSiglum, patristicResult);
+    res.json(patristicResult);
+  } catch (error) {
+    noteGeminiQuotaDepleted(error);
+    if (guaranteedData) {
       return res.json({
         source: 'patristic-library',
         siglum: guaranteedData.siglum,
@@ -381,23 +457,11 @@ Dla każdego Ojca Kościoła podaj:
         commentaries: guaranteedData.commentaries
       });
     }
-
-    res.json({
-      source: 'gemini',
-      siglum,
-      originalScripture: parsed.originalScripture || guaranteedData.originalScripture,
-      commentaries: (parsed.commentaries || guaranteedData.commentaries).map((c: Record<string, any>, idx: number) => ({
-        ...c,
-        id: c.id || `patristic_${Date.now()}_${idx}`
-      }))
-    });
-  } catch (error) {
-    noteGeminiQuotaDepleted(error);
-    res.json({
-      source: 'patristic-library',
-      siglum: guaranteedData.siglum,
-      originalScripture: guaranteedData.originalScripture,
-      commentaries: guaranteedData.commentaries
+    return res.status(429).json({
+      status: 429,
+      error: 'QUOTA_DEPLETED',
+      message: 'Wyczerpano limit kredytów AI. Zgodnie z zasadą Zero Imaginacji nie generujemy sztucznych cytatów Ojców Kościoła. Proszę odczekać pewien czas.',
+      retryAfterSeconds: getRemainingCooldownSeconds()
     });
   }
 });
@@ -544,13 +608,25 @@ app.post('/api/scrutation/passage-commentary', async (req, res) => {
     return res.json(passageCommentaryCache.get(cacheKey));
   }
 
-  const fallbackResult = generateComprehensiveFallbackCommentary(siglum, text, label, liturgicalContext);
+  const remainingCd = getRemainingCooldownSeconds();
+  if (remainingCd > 0) {
+    return res.status(429).json({
+      status: 429,
+      error: 'QUOTA_DEPLETED',
+      message: 'Wyczerpano limit kredytów AI. Zgodnie z zasadą Zero Imaginacji prosimy odczekać pewien czas przed ponowną analizą perykopy.',
+      retryAfterSeconds: remainingCd
+    });
+  }
 
   try {
     const ai = getGeminiClient();
     if (!ai) {
-      passageCommentaryCache.set(cacheKey, fallbackResult);
-      return res.json(fallbackResult);
+      return res.status(429).json({
+        status: 429,
+        error: 'QUOTA_DEPLETED',
+        message: 'Klucz API Gemini nie jest skonfigurowany. Zgodnie z regułą Zero Imaginacji nie generujemy zmyślonych komentarzy.',
+        retryAfterSeconds: 60
+      });
     }
 
     const prompt = `Jesteś wybitnym katolickim biblistą, profesorem egzegezy, znawcą Tradycji Kościoła, teologii św. Tomasza z Akwinu oraz klasycznych komentarzy biblijnych (w tym Jamieson-Fausset-Brown i tradycji pastoralnej).
@@ -671,8 +747,13 @@ Nie spiesz się. Przeprowadź pełną, wyczerpującą, scholastyczną i duchową
     res.json(fullResult);
   } catch (error) {
     noteGeminiQuotaDepleted(error);
-    passageCommentaryCache.set(cacheKey, fallbackResult);
-    res.json(fallbackResult);
+    const cd = getRemainingCooldownSeconds() || 60;
+    return res.status(429).json({
+      status: 429,
+      error: 'QUOTA_DEPLETED',
+      message: 'Wyczerpano limit kredytów AI. Zgodnie z zasadą Zero Imaginacji nie generujemy zmyślonych komentarzy. Proszę odczekać pewien czas.',
+      retryAfterSeconds: cd
+    });
   }
 });
 
@@ -946,18 +1027,29 @@ Podaj:
 
 // API: Biblical Word Lexicon, Strong Concordance & Occurrences across Scripture
 app.post('/api/scrutation/word-lookup', async (req, res) => {
-  const { word, verseSiglum, verseText } = req.body;
+  const { word, strongNumber, verseSiglum, verseText } = req.body;
   if (!word || typeof word !== 'string') {
     return res.status(400).json({ error: 'Słowo do analizy jest wymagane' });
   }
 
   const cleanWord = word.trim();
-  const guaranteed = findBiblicalLexiconEntry(cleanWord, verseSiglum);
+  const guaranteed = findBiblicalLexiconEntry(cleanWord, verseSiglum, strongNumber);
+
+  // If we have an authentic lexicon entry in our verified database, return it immediately (0 AI credits used & completely immune to quota exhaustion)
+  if (guaranteed) {
+    return res.json(guaranteed);
+  }
+
+  // Check in-memory cache for previously analyzed words
+  const cacheKey = `${cleanWord.toLowerCase()}_${strongNumber || ''}_${verseSiglum || 'any'}`;
+  if (wordLookupCache.has(cacheKey)) {
+    return res.json(wordLookupCache.get(cacheKey));
+  }
 
   try {
     const ai = getGeminiClient();
     if (!ai) {
-      return res.json(guaranteed);
+      return res.status(404).json({ error: 'Słowo nie zostało znalezione w leksykonie' });
     }
 
     const prompt = `Jesteś wybitnym filologiem biblijnym (znawcą hebrajszczyzny biblijnej, aramejskiego, greki Koine oraz łaciny Wulgaty) i przewodnikiem po Skrutacji Pisma Świętego.
@@ -1016,10 +1108,12 @@ BARDZO WAŻNE: Pole 'text' w 'occurrences' MUSI zawierać dokładny, prawdziwy t
       return res.json(guaranteed);
     }
 
-    res.json({
+    const finalResult = {
       ...parsed,
       id: parsed.id || `lex_${Date.now()}`
-    });
+    };
+    wordLookupCache.set(cacheKey, finalResult);
+    res.json(finalResult);
   } catch (error) {
     noteGeminiQuotaDepleted(error);
     res.json(guaranteed);
@@ -1034,6 +1128,9 @@ app.post('/api/scrutation/jewish-lookup', async (req, res) => {
   }
 
   const cleanSiglum = siglum.trim();
+  if (jewishLookupCache.has(cleanSiglum)) {
+    return res.json(jewishLookupCache.get(cleanSiglum));
+  }
   const guaranteed = getGuaranteedJewishTradition(cleanSiglum);
 
   try {
@@ -1078,10 +1175,12 @@ Przygotuj głęboką analizę w świetle Tradycji Żydowskiej Pierwszego Przymie
       return res.json(guaranteed);
     }
 
-    res.json({
+    const finalResult = {
       ...parsed,
       id: parsed.id || `jewish_${Date.now()}`
-    });
+    };
+    jewishLookupCache.set(cleanSiglum, finalResult);
+    res.json(finalResult);
   } catch (error) {
     noteGeminiQuotaDepleted(error);
     res.json(guaranteed);
@@ -1097,10 +1196,28 @@ app.post('/api/scrutation/original-text', async (req, res) => {
 
   const guaranteed = getGuaranteedPatristicData(siglum, text);
 
+  const cooldown = getRemainingCooldownSeconds();
+  if (cooldown > 0 && (!guaranteed || !guaranteed.originalScripture)) {
+    return res.status(429).json({
+      status: 429,
+      error: 'QUOTA_DEPLETED',
+      message: 'Wyczerpano limit kredytów AI dla tekstu oryginalnego. Zgodnie z zasadą Zero Imaginacji prosimy odczekać.',
+      retryAfterSeconds: cooldown
+    });
+  }
+
   try {
     const ai = getGeminiClient();
     if (!ai) {
-      return res.json(guaranteed.originalScripture);
+      if (guaranteed && guaranteed.originalScripture) {
+        return res.json(guaranteed.originalScripture);
+      }
+      return res.status(429).json({
+        status: 429,
+        error: 'QUOTA_DEPLETED',
+        message: 'Klucz API Gemini nie jest skonfigurowany.',
+        retryAfterSeconds: 60
+      });
     }
 
     const isNT = ['Mt', 'Mk', 'Łk', 'J', 'Dz', 'Rz', '1 Kor', '2 Kor', 'Ga', 'Ef', 'Flp', 'Kol', '1 Tes', '2 Tes', '1 Tm', '2 Tm', 'Tt', 'Flm', 'Hbr', 'Jk', '1 P', '2 P', '1 J', '2 J', '3 J', 'Jud', 'Ap'].some(b => siglum.startsWith(b));
@@ -1152,7 +1269,15 @@ Twoim zadaniem jest podać KOMPLETNY, PEŁNY tekst oryginalny dla WSZYSTKICH wer
     });
   } catch (error) {
     noteGeminiQuotaDepleted(error);
-    res.json(guaranteed.originalScripture);
+    if (guaranteed && guaranteed.originalScripture) {
+      return res.json(guaranteed.originalScripture);
+    }
+    return res.status(429).json({
+      status: 429,
+      error: 'QUOTA_DEPLETED',
+      message: 'Wyczerpano limit kredytów AI. Zgodnie z zasadą Zero Imaginacji nie generujemy sztucznego tekstu oryginalnego. Proszę odczekać.',
+      retryAfterSeconds: getRemainingCooldownSeconds() || 60
+    });
   }
 });
 

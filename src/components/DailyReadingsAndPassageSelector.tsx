@@ -2140,7 +2140,7 @@ export const DailyReadingsAndPassageSelector: React.FC<DailyReadingsAndPassageSe
                       <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto p-2 bg-slate-50 rounded-lg border border-slate-200">
                         {Array.from({ length: currentBookInfo.chaptersCount }, (_, i) => i + 1).map((chNum) => (
                           <button
-                            key={chNum}
+                            key={`ch-btn-${currentBookInfo.siglum}-${chNum}`}
                             type="button"
                             onClick={() => {
                               setSelectedChapter(chNum);
@@ -2204,8 +2204,8 @@ export const DailyReadingsAndPassageSelector: React.FC<DailyReadingsAndPassageSe
                         ? `${selectedBookSiglum} ${selectedChapter}${versesInput.trim() ? `, ${versesInput.trim()}` : ''}`
                         : selectedBookSiglum;
                       setCommentaryModalTarget({
-                        siglum: passageLookupResult && passageLookupResult.siglum.startsWith(selectedBookSiglum) ? passageLookupResult.siglum : sig,
-                        text: passageLookupResult && passageLookupResult.siglum.startsWith(selectedBookSiglum) ? passageLookupResult.text : '',
+                        siglum: passageLookupResult ? passageLookupResult.siglum : sig,
+                        text: passageLookupResult ? passageLookupResult.text : '',
                         label: currentBookInfo.fullName,
                         theologicalTheme: passageLookupResult?.theologicalTheme
                       });
@@ -2225,8 +2225,8 @@ export const DailyReadingsAndPassageSelector: React.FC<DailyReadingsAndPassageSe
                         ? `${selectedBookSiglum} ${selectedChapter}${versesInput.trim() ? `, ${versesInput.trim()}` : ''}`
                         : selectedBookSiglum;
                       setPatristicModalTarget({
-                        siglum: passageLookupResult && passageLookupResult.siglum.startsWith(selectedBookSiglum) ? passageLookupResult.siglum : sig,
-                        text: passageLookupResult && passageLookupResult.siglum.startsWith(selectedBookSiglum) ? passageLookupResult.text : '',
+                        siglum: passageLookupResult ? passageLookupResult.siglum : sig,
+                        text: passageLookupResult ? passageLookupResult.text : '',
                         label: currentBookInfo.fullName
                       });
                     }}
@@ -2293,14 +2293,14 @@ export const DailyReadingsAndPassageSelector: React.FC<DailyReadingsAndPassageSe
 
                   {/* Verse Pills */}
                   <div className="flex flex-wrap gap-1.5 max-h-36 overflow-y-auto p-2 bg-white rounded-lg border border-slate-200">
-                    {lookupVerses.map((v) => (
+                    {lookupVerses.map((v, vIdx) => (
                       <button
-                        key={v.verseNum}
+                        key={`lookup-v-${v.siglum || ''}-${v.verseNum}-${vIdx}`}
                         type="button"
                         id={`verse-pill-${v.verseNum}`}
-                        onClick={() => setSelectedVerseInLookup(selectedVerseInLookup?.verseNum === v.verseNum ? null : v)}
+                        onClick={() => setSelectedVerseInLookup(selectedVerseInLookup?.siglum === v.siglum && selectedVerseInLookup?.verseNum === v.verseNum ? null : v)}
                         className={`px-3 py-1.5 rounded-lg text-xs font-sans transition-all cursor-pointer flex items-center gap-1.5 ${
-                          selectedVerseInLookup?.verseNum === v.verseNum
+                          selectedVerseInLookup?.siglum === v.siglum && selectedVerseInLookup?.verseNum === v.verseNum
                             ? 'bg-emerald-700 text-white font-bold shadow-xs'
                             : 'bg-slate-50 hover:bg-emerald-50 text-slate-700 border border-slate-200 hover:border-emerald-300'
                         }`}

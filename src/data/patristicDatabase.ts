@@ -319,14 +319,15 @@ export const PATRISTIC_REPOSITORIES: Record<string, PatristicVerseData> = {
 };
 
 /**
- * Universal dynamic fallback generator that builds authentic Patristic-style commentaries
- * and Greek/Hebrew text metadata for ANY Scripture passage.
+ * Retrieve authentic curated Patristic repository entries.
+ * ZERO IMAGINATION: If no authentic curated record exists in PATRISTIC_REPOSITORIES,
+ * returns null. Never invents quotes or attributes synthetic texts to Church Fathers.
  */
-export function getGuaranteedPatristicData(siglum: string, verseText?: string): PatristicVerseData {
+export function findCuratedPatristicData(siglum: string): PatristicVerseData | null {
   const normalizedSiglum = (siglum || '').trim();
+  if (!normalizedSiglum) return null;
   const token = normalizeSiglumTokens(normalizedSiglum);
 
-  // 1. Direct match in curated repository (by token or prefix)
   if (token) {
     for (const [key, data] of Object.entries(PATRISTIC_REPOSITORIES)) {
       const keyToken = normalizeSiglumTokens(key);
@@ -336,254 +337,12 @@ export function getGuaranteedPatristicData(siglum: string, verseText?: string): 
     }
   }
 
-  // 2. Identify Book and Category
-  const lower = normalizedSiglum.toLowerCase();
-  const isNT = ['mt','mk','łk','lk','j','jan','dz','rz','rom','kor','ga','gal','ef','eph','flp','kol','tes','tm','tt','flm','hbr','heb','jk','jak','p','pet','jud','ap','apok'].some(prefix => 
-    lower.startsWith(prefix)
-  );
+  return null;
+}
 
-  const cleanText = verseText && verseText.length > 5 
-    ? verseText 
-    : `Słowo Boże z ${normalizedSiglum}: «W Twoim Słowie jest życie i światłość dla moich kroków».`;
-
-  const aquinas = getAquinasCommentaryForQuote(normalizedSiglum, undefined, cleanText);
-
-  // Book-specific Patristic distributions:
-  if (lower.startsWith('ap')) {
-    // Apocalypse
-    return {
-      siglum: normalizedSiglum,
-      originalScripture: {
-        siglum: normalizedSiglum,
-        polishText: cleanText,
-        originalLanguage: 'Greka (Koine)',
-        originalScript: 'Ἀποκάλυψις Ἰησοῦ Χριστοῦ... Μακάριος ὁ ἀναγινώσκων καὶ οἱ ἀκούοντες τοὺς λόγους τῆς προφητείας.',
-        transliteration: 'Apokalypsis Iēsou Christou... Makarios ho anaginōskōn kai hoi akouontes tous logous tēs prophēteias.',
-        latinVulgate: `Apocalypsis Iesu Christi... Beatus qui legit et qui audiunt verba prophetiae huius (${normalizedSiglum}).`,
-        interlinearWords: [
-          { original: 'Ἀποκάλυψις', transliteration: 'Apokalypsis', polish: 'Objawienie / Odsłonięcie', grammarNote: 'rzeczownik r. żeński' },
-          { original: 'τὸ Ἀρνίον', transliteration: 'to Arnion', polish: 'Baranek (zwycięski)', grammarNote: 'mianownik r. nijaki' },
-          { original: 'ἡ νίκη', transliteration: 'hē nikē', polish: 'zwycięstwo / wierność', grammarNote: 'cel chrześcijanina' },
-          { original: 'Μαράνα θά', transliteration: 'Marana tha', polish: 'Przyjdź, Panie nasz!', grammarNote: 'aramejskie wołanie Kościoła' }
-        ]
-      },
-      commentaries: [
-        {
-          id: `pat_ap_${Date.now()}_1`,
-          author: 'Św. Wiktoryn z Petawium',
-          century: 'III w. (zm. 304)',
-          tradition: 'Łacińska (Zachodnia)',
-          workTitle: 'Commentarii in Apocalypsim Ioannis',
-          originalLanguage: 'Łacina',
-          originalText: '«In Apocalypsi non solum futura nuntiantur, sed praesentia consolantur fideles in persecutionibus.»',
-          polishTranslation: `«Św. Wiktoryn z Petawium wyjaśnia werset ${normalizedSiglum}: Apokalipsa nie jest księgą grozy, lecz pocieszenia. Baranek zabity i uwielbiony panuje nad dziejami świata, a każda próba staje się dla wierzącego okazją do zjednoczenia z chwałą Zmartwychwstałego».`,
-          theologicalSense: 'Alegoryczny / Typologiczny (Allegoricus)',
-          spiritualInsight: `Werset ten przypomina ci, że ostateczne słowo w twoim życiu i w dziejach świata należy do miłości Chrystusa, a nie do ciemności czy lęku.`
-        },
-        {
-          id: `pat_ap_${Date.now()}_2`,
-          author: 'Św. Beda Czcigodny',
-          century: 'VII/VIII w. (672–735)',
-          tradition: 'Łacińska (Zachodnia)',
-          workTitle: 'Explanatio Apocalypsis',
-          originalLanguage: 'Łacina',
-          originalText: '«Ecclesia per passiones ad palmam victoriae pervenit, sequens Agnum quocumque ierit.»',
-          polishTranslation: `«Św. Beda komentuje: Słowa te z Apokalipsy (${normalizedSiglum}) kierują nasz wzrok ku niebiańskiej liturgii. Kto słucha głosu Baranka i zachowuje wierność w codzienności, już teraz ma udział w zwycięstwie świętych w nowym Jeruzalem».`,
-          theologicalSense: 'Anagogiczny (Anagogicus)',
-          spiritualInsight: `Niech perspektywa wieczności rozjaśnia twoje dzisiejsze trudy: Bóg ociera z oczu swych sług wszelką łzę.`
-        },
-        {
-          id: `pat_ap_${Date.now()}_3`,
-          author: 'Św. Tomasz z Akwinu (Doctor Angelicus)',
-          century: 'XIII w. (1225–1274)',
-          tradition: 'Łacińska (Zachodnia)',
-          workTitle: aquinas.workTitle,
-          originalLanguage: 'Łacina',
-          originalText: aquinas.originalText || '«Finis Scripturae est beatitudo aeterna in visione Dei.»',
-          polishTranslation: aquinas.polishTranslation,
-          theologicalSense: mapToPatristicSense(aquinas.theologicalSense),
-          spiritualInsight: aquinas.spiritualInsight
-        }
-      ]
-    };
-  }
-
-  if (lower.startsWith('ps')) {
-    // Psalms
-    return {
-      siglum: normalizedSiglum,
-      originalScripture: {
-        siglum: normalizedSiglum,
-        polishText: cleanText,
-        originalLanguage: 'Hebrajski',
-        originalScript: 'מִזְמוֹר לְדָוִד... יְהוָה רֹעִי לֹא אֶחְסָר... בְּטַח בַּיהוָה וַעֲשֵׂה־טוֹב.',
-        transliteration: 'Mizmor l-David... Adonaj ro’i lo echsar... B’tach ba-Adonaj va-aseh-tov.',
-        latinVulgate: `Psalmus David. Dominus regit me... Confide in Domino et fac bonitatem (${normalizedSiglum}).`,
-        interlinearWords: [
-          { original: 'מִזְמוֹר', transliteration: 'mizmor', polish: 'Psalm / Pieśń natchniona', grammarNote: 'modlitwa serca' },
-          { original: 'יְהוָה', transliteration: 'JAHWE', polish: 'Pan, Bóg Przymierza', grammarNote: 'Imię Boga żywego' },
-          { original: 'חֶסֶד', transliteration: 'chesed', polish: 'wierna miłość / miłosierdzie', grammarNote: 'fundament ufności' },
-          { original: 'שָׁלוֹם', transliteration: 'szalom', polish: 'pokój i pełnia łaski', grammarNote: 'owoc Ducha' }
-        ]
-      },
-      commentaries: [
-        {
-          id: `pat_ps_${Date.now()}_1`,
-          author: 'Św. Augustyn z Hippony',
-          century: 'IV/V w. (354–430)',
-          tradition: 'Łacińska (Zachodnia)',
-          workTitle: 'Enarrationes in Psalmos (Objaśnienia Psalmów)',
-          originalLanguage: 'Łacina',
-          originalText: '«Totus Christus caput et corpus orat in Psalmis. Clamat caput pro membris, clamant membra in capite.»',
-          polishTranslation: `«Św. Augustyn wyjaśnia Psalm (${normalizedSiglum}): Kiedy modlisz się tymi słowami, to sam Chrystus – Głowa i Ciało – modli się w tobie. Twoja słabość zostaje włączona w Jego wołanie do Ojca, a Jego Boska moc staje się twoją obroną».`,
-          theologicalSense: 'Moralny / Tropologiczny (Tropologicus)',
-          spiritualInsight: `Oddaj Panu swoje niepokoje. Ten Psalm jest balsamem dla twojej duszy: Bóg zna każde uderzenie twojego serca.`
-        },
-        {
-          id: `pat_ps_${Date.now()}_2`,
-          author: 'Św. Atanazy Wielki z Aleksandrii',
-          century: 'IV w. (296–373)',
-          tradition: 'Grecka (Wschodnia)',
-          workTitle: 'Epistula ad Marcellinum de interpretatione Psalmorum',
-          originalLanguage: 'Greka',
-          originalText: '«Ὁ ψαλμὸς ὥσπερ ἔσοπτρον ἐστὶ τῷ ἀνθρώπῳ, ἵνα ἑαυτὸν καὶ τὰ κινήματα τῆς ψυχῆς θεωρῇ.»',
-          polishTranslation: `«Św. Atanazy pisze: Psałterz jest jak duchowe zwierciadło, w którym człowiek odkrywa stan własnej duszy. W wersecie ${normalizedSiglum} odnajdujesz lekarstwo na smutek i lęk, gdyż Słowo uczy cię wychwalać Boga nawet pośród ciemności».`,
-          theologicalSense: 'Alegoryczny / Typologiczny (Allegoricus)',
-          spiritualInsight: `Śpiewaj lub powtarzaj ten werset w duchu przez cały dzień jako broń przeciwko pokusom zniechęcenia.`
-        },
-        {
-          id: `pat_ps_${Date.now()}_3`,
-          author: 'Św. Tomasz z Akwinu (Doctor Angelicus)',
-          century: 'XIII w. (1225–1274)',
-          tradition: 'Łacińska (Zachodnia)',
-          workTitle: aquinas.workTitle,
-          originalLanguage: 'Łacina',
-          originalText: aquinas.originalText || '«Psalterium est canticum spei et dilectionis.»',
-          polishTranslation: aquinas.polishTranslation,
-          theologicalSense: mapToPatristicSense(aquinas.theologicalSense),
-          spiritualInsight: aquinas.spiritualInsight
-        }
-      ]
-    };
-  }
-
-  if (isNT) {
-    // New Testament Greek & Latin Vulgate (Gospels, Paul, Catholic Epistles)
-    return {
-      siglum: normalizedSiglum,
-      originalScripture: {
-        siglum: normalizedSiglum,
-        polishText: cleanText,
-        originalLanguage: 'Greka (Koine)',
-        originalScript: 'Χάρις ὑμῖν καὶ εἰρήνη ἀπὸ θεοῦ πατρὸς ἡμῶν καὶ κυρίου Ἰησοῦ Χριστοῦ... Ὁ δὲ δίκαιος ἐκ πίστεως ζήσεται.',
-        transliteration: 'Charis hymin kai eirēnē apo theou patros hēmōn kai kyriou Iēsou Christou... Ho de dikaios ek pisteōs zēsetai.',
-        latinVulgate: `Gratia vobis et pax a Deo Patre nostro et Domino Iesu Christo (${normalizedSiglum}). Iustus autem ex fide vivit.`,
-        interlinearWords: [
-          { original: 'ὁ λόγος', transliteration: 'ho logos', polish: 'Słowo Boże / Prawda', grammarNote: 'mianownik lp.' },
-          { original: 'ἡ χάρις', transliteration: 'hē charis', polish: 'darmowa łaska / dar', grammarNote: 'źródło zbawienia' },
-          { original: 'ἡ πίστις', transliteration: 'hē pistis', polish: 'żywa wiara serca', grammarNote: 'odpowiedź człowieka' },
-          { original: 'ἡ ἀγάπη', transliteration: 'hē agapē', polish: 'miłość ofiarna', grammarNote: 'owoc Ducha Świętego' }
-        ]
-      },
-      commentaries: [
-        {
-          id: `pat_nt_${Date.now()}_1`,
-          author: 'Św. Jan Chryzostom (Złotousty)',
-          century: 'IV w. (ok. 349–407)',
-          tradition: 'Grecka (Wschodnia)',
-          workTitle: 'Homiliae in Scripturam Sacram (Homilie na Nowy Testament)',
-          originalLanguage: 'Greka',
-          originalText: '«Πᾶσα ἡ Γραφὴ θεόπνευστος οὐ πρὸς ἐπίδειξιν, ἀλλὰ πρὸς ψυχῆς σωτηρίαν καὶ διόρθωσιν δέδοται.»',
-          polishTranslation: `«Św. Jan Chryzostom naucza o wersecie ${normalizedSiglum}: Słowa Nowego Testamentu nie zostały spisane po to, by podziwiać ich kunszt, lecz by uzdrowić rany duszy. Chrystus przemawia w nich z mocą, zapraszając cię do porzucenia grzechu i wejścia w wolność dzieci Bożych».`,
-          theologicalSense: 'Dosłowny (Litteralis)',
-          spiritualInsight: `Rozważ ten werset jako lekarstwo dla twojego serca: to, co po ludzku niemożliwe, staje się możliwe dzięki łasce Zmartwychwstałego.`
-        },
-        {
-          id: `pat_nt_${Date.now()}_2`,
-          author: 'Św. Augustyn z Hippony',
-          century: 'IV/V w. (354–430)',
-          tradition: 'Łacińska (Zachodnia)',
-          workTitle: 'Tractatus in Scripturas & De Doctrina Christiana',
-          originalLanguage: 'Łacina',
-          originalText: '«Novum Testamentum in Vetere latet, et Vetus in Novo patet. Dilige et quod vis fac.»',
-          polishTranslation: `«Św. Augustyn komentuje fragment ${normalizedSiglum}: W Nowym Przymierzu Prawo zostało wpisane nie na kamiennych tablicach, lecz w sercach przez Ducha Świętego. Kto przyjmuje to Słowo w wierze, ten otrzymuje moc do miłowania Boga i bliźniego».`,
-          theologicalSense: 'Moralny / Tropologiczny (Tropologicus)',
-          spiritualInsight: `Niech to Słowo stanie się kompasem dla twoich dzisiejszych czynów: wybieraj miłość, pokorę i przebaczenie.`
-        },
-        {
-          id: `pat_nt_${Date.now()}_3`,
-          author: 'Św. Tomasz z Akwinu (Doctor Angelicus)',
-          century: 'XIII w. (1225–1274)',
-          tradition: 'Łacińska (Zachodnia)',
-          workTitle: aquinas.workTitle,
-          originalLanguage: 'Łacina',
-          originalText: aquinas.originalText || '«Omnis Scriptura divinitus inspirata utilis est ad docendum veritatem.»',
-          polishTranslation: aquinas.polishTranslation,
-          theologicalSense: mapToPatristicSense(aquinas.theologicalSense),
-          spiritualInsight: aquinas.spiritualInsight
-        }
-      ]
-    };
-  } else {
-    // Old Testament Hebrew & Latin Vulgate (Torah, Prophets, Wisdom)
-    return {
-      siglum: normalizedSiglum,
-      originalScripture: {
-        siglum: normalizedSiglum,
-        polishText: cleanText,
-        originalLanguage: 'Hebrajski',
-        originalScript: 'שְׁמַע יִשְׂרָאֵל יְהוָה אֱלֹהֵינוּ יְהוָה אֶחָד... כִּי לֹא־עַל־הַלֶּחֶם לְבַדּוֹ יִחְיֶה הָאָדָם.',
-        transliteration: 'Shema Yisrael Adonaj Eloheinu Adonaj Echad... Ki lo al-halechem levado yichyeh ha-adam.',
-        latinVulgate: `Audi Israel, Dominus Deus noster Dominus unus est (${normalizedSiglum}). Non in solo pane vivit homo.`,
-        interlinearWords: [
-          { original: 'יְהוָה', transliteration: 'Adonaj / JAHWE', polish: 'Pan Bóg Przymierza', grammarNote: 'Imię Własne Boga' },
-          { original: 'בְּרִית', transliteration: 'berit', polish: 'Przymierze / Sojusz łaski', grammarNote: 'rzeczownik r. żeński' },
-          { original: 'חֶסֶד', transliteration: 'chesed', polish: 'miłosierdzie / wierna miłość', grammarNote: 'atrybut Boży' },
-          { original: 'אֱמֶת', transliteration: 'emet', polish: 'prawda / wierność i stałość', grammarNote: 'fundament obietnicy' }
-        ]
-      },
-      commentaries: [
-        {
-          id: `pat_ot_${Date.now()}_1`,
-          author: 'Św. Hieronim ze Strydonu',
-          century: 'IV/V w. (347–420)',
-          tradition: 'Łacińska (Zachodnia)',
-          workTitle: 'Commentarii in Vetus Testamentum (Komentarze do Starego Testamentu)',
-          originalLanguage: 'Łacina',
-          originalText: '«Ignoratio Scripturarum ignoratio Christi est. In Hebraica veritate fons purissimus invenitur.»',
-          polishTranslation: `«Św. Hieronim naucza o fragmencie ${normalizedSiglum}: Cały Stary Testament zapowiada i przygotowuje nadejście Chrystusa. Kto bada te słowa w duchu wiary, ten widzi, jak Bóg w historii zbawienia prowadzi swój lud od cienia do pełnego blasku Prawdy».`,
-          theologicalSense: 'Dosłowny (Litteralis)',
-          spiritualInsight: `Wierność Boga wobec Izraela jest gwarancją Jego wierności wobec ciebie: On nigdy nie cofa swoich obietnic.`
-        },
-        {
-          id: `pat_ot_${Date.now()}_2`,
-          author: 'Orygenes z Aleksandrii',
-          century: 'III w. (185–253)',
-          tradition: 'Grecka (Wschodnia)',
-          workTitle: 'Homiliae in Vetus Testamentum (Homilie na Stary Testament)',
-          originalLanguage: 'Greka',
-          originalText: '«Πᾶσα ἡ Γραφὴ ἓν σῶμά ἐστι τοῦ Λόγου. Ὁ ζητῶν εὑρήσει ἐν αὐτῇ τὸν κεκρυμμένον θησαυρόν.»',
-          polishTranslation: `«Orygenes objaśnia werset ${normalizedSiglum}: Całe Pismo Święte jest jednym Ciałem Słowa Bożego. Pod literą tekstu kryje się głęboki sens duchowy, który Duch Święty odsłania przed pokornym i szukającym sercem».`,
-          theologicalSense: 'Alegoryczny / Typologiczny (Allegoricus)',
-          spiritualInsight: `Przez pryzmat ${normalizedSiglum} odkrywamy typologię zbawczą: wydarzenia historii zbawienia są duchową mapą dla naszego dzisiejszego wyzwolenia z niewoli grzechu.`
-        },
-        {
-          id: `pat_ot_${Date.now()}_3`,
-          author: 'Św. Tomasz z Akwinu (Doctor Angelicus)',
-          century: 'XIII w. (1225–1274)',
-          tradition: 'Łacińska (Zachodnia)',
-          workTitle: aquinas.workTitle,
-          originalLanguage: 'Łacina',
-          originalText: aquinas.originalText || '«Omnia quae in Veteri Testamento scripta sunt, ad nostram doctrinam scripta sunt.»',
-          polishTranslation: aquinas.polishTranslation,
-          theologicalSense: mapToPatristicSense(aquinas.theologicalSense),
-          spiritualInsight: aquinas.spiritualInsight
-        }
-      ]
-    };
-  }
+export function getGuaranteedPatristicData(siglum: string, verseText?: string): PatristicVerseData | null {
+  return findCuratedPatristicData(siglum);
 }
 
 /** Exported alias for compatibility */
 export const getPatristicDataForSiglum = getGuaranteedPatristicData;
-

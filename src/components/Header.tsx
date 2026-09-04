@@ -1,5 +1,5 @@
 import React from 'react';
-import { BookOpen, Compass, BookmarkCheck, Library, Flame, Sparkles, CalendarDays, Droplets, Leaf, Network, Scroll, Smartphone, Download, RotateCcw, BellRing, Bell, Church, Heart } from 'lucide-react';
+import { BookOpen, Compass, BookmarkCheck, Library, Flame, Sparkles, CalendarDays, Droplets, Leaf, Network, Scroll, Smartphone, Download, RotateCcw, BellRing, Bell, Church, Heart, Layers } from 'lucide-react';
 import { ScrutationReminderSettings, MainAppTab } from '../types';
 
 interface HeaderProps {
@@ -182,7 +182,7 @@ export const Header: React.FC<HeaderProps> = ({
             </div>
           </div>
 
-          {/* Navigation Links - Unified White, Green, Gold Theme */}
+          {/* Navigation Links - All features directly accessible */}
           <nav className="flex items-center gap-1 sm:gap-1.5 overflow-x-auto py-1 font-sans text-xs text-stone-600 custom-scrollbar">
             <button
               id="nav-daily-btn"
@@ -270,6 +270,21 @@ export const Header: React.FC<HeaderProps> = ({
             >
               <BookOpen className={`w-3.5 h-3.5 ${activeTab === 'workspace' ? 'text-white' : 'text-emerald-800'}`} />
               <span>Odnośniki</span>
+            </button>
+
+            {/* Słownik Stronga & Aparat Interlinearny */}
+            <button
+              id="nav-dictionary-btn"
+              onClick={() => setActiveTab('dictionary')}
+              className={`py-1.5 px-2.5 text-xs transition-all rounded-xl flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
+                activeTab === 'dictionary'
+                  ? 'text-white bg-emerald-800 font-semibold shadow-2xs'
+                  : 'text-stone-700 hover:text-stone-900 hover:bg-stone-100 font-medium'
+              }`}
+              title="Rozszerzony słownik Stronga, język hebrajski/grecki i układ interlinearny"
+            >
+              <Layers className={`w-3.5 h-3.5 ${activeTab === 'dictionary' ? 'text-white' : 'text-amber-700'}`} />
+              <span>Słownik Stronga</span>
             </button>
 
             <button

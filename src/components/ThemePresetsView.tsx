@@ -102,7 +102,7 @@ export const ThemePresetsView: React.FC<ThemePresetsViewProps> = ({ onSelectThem
                     {preset.initialSiglum}
                   </span>
                   {preset.suggestedChain.slice(0, 3).map((c, i) => (
-                    <React.Fragment key={i}>
+                    <React.Fragment key={`chain-${preset.id}-${c.siglum}-${i}`}>
                       <span className="text-slate-400 text-xs">→</span>
                       <span className="px-2 py-0.5 rounded text-[11px] font-mono bg-slate-100 text-slate-800 border border-slate-200">
                         {c.siglum}

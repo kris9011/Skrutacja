@@ -23,9 +23,12 @@ import { ResetAppModal } from './components/ResetAppModal';
 import { DailyReminderModal } from './components/DailyReminderModal';
 import { InstallAppModal } from './components/InstallAppModal';
 import { PrayerToolsBar } from './components/PrayerToolsBar';
+import { BiblicalDictionaryPage } from './components/BiblicalDictionaryPage';
+import { BiblicalWordModal } from './components/BiblicalWordModal';
+import { findBiblicalLexiconEntry, BiblicalLexiconEntry } from './data/biblicalLexiconDatabase';
 import { ScrutationSession, BiblicalThemePreset, ScrutationReminderSettings, BreviaryAudience, MainAppTab } from './types';
 import { THEME_PRESETS } from './data/biblicalData';
-import { CheckCircle2, Flame, BookOpen, CalendarDays, Sparkles, BookmarkCheck, Network, Scroll, RotateCcw, Church, Heart } from 'lucide-react';
+import { CheckCircle2, Flame, BookOpen, CalendarDays, Sparkles, BookmarkCheck, Network, Scroll, RotateCcw, Church, Heart, Layers } from 'lucide-react';
 import { initNotificationScheduler, getStoredReminderSettings } from './utils/notificationService';
 
 const LOCAL_STORAGE_ACTIVE_SESSION = 'scrutatio_active_session_v1';
@@ -47,6 +50,51 @@ export default function App() {
   const [installPlatform, setInstallPlatform] = useState<'ios' | 'android'>('ios');
   const [reminderSettings, setReminderSettings] = useState<ScrutationReminderSettings>(getStoredReminderSettings);
   const [isPrayerToolsOpen, setIsPrayerToolsOpen] = useState<boolean>(false);
+
+  // Global word modal state for dictionary page and general search
+  const [modalWord, setModalWord] = useState<string | null>(null);
+  const [modalLexiconData, setModalLexiconData] = useState<BiblicalLexiconEntry | null>(null);
+  const [isModalWordLoading, setIsModalWordLoading] = useState<boolean>(false);
+  const [modalWordStatus, setModalWordStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
+
+  const handleOpenWordLookup = async (word: string, strongNumber?: string) => {
+    const trimmed = word.trim().replace(/[.,;!?:«»"()—]/g, '');
+    if (!trimmed) return;
+
+    setModalWord(trimmed);
+    setIsModalWordLoading(true);
+    setModalWordStatus('loading');
+
+    const localEntry = findBiblicalLexiconEntry(trimmed, activeSession?.initialSiglum || '1 Kor 4, 1', strongNumber);
+    setModalLexiconData(localEntry);
+
+    try {
+      const response = await fetch('/api/scrutation/word-lookup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          word: trimmed,
+          strongNumber: strongNumber,
+          verseSiglum: activeSession?.initialSiglum || '1 Kor 4, 1',
+          verseText: activeSession?.initialText || ''
+        })
+      });
+
+      if (response.ok) {
+        const liveData = await response.json();
+        if (liveData && liveData.wordPolish) {
+          setModalLexiconData(liveData);
+          setModalWordStatus('ready');
+          return;
+        }
+      }
+      setModalWordStatus('ready');
+    } catch {
+      setModalWordStatus('ready');
+    } finally {
+      setIsModalWordLoading(false);
+    }
+  };
 
   // Load from localStorage on mount & initialize daily reminder scheduler
   useEffect(() => {
@@ -656,6 +704,62 @@ export default function App() {
             }}
           />
         )}
+
+        {/* Słownik Stronga & Aparat Interlinearny */}
+        {activeTab === 'dictionary' && (
+          <div className="p-4 sm:p-8">
+            <BiblicalDictionaryPage
+              onSelectWordForScrutation={(sig, txt, keyword) => {
+                const isNT = sig.startsWith('Mt') || sig.startsWith('Mk') || sig.startsWith('Łk') || sig.startsWith('J') || sig.startsWith('Dz') || sig.startsWith('Rz') || sig.startsWith('1 Kor') || sig.startsWith('2 Kor') || sig.startsWith('Ga') || sig.startsWith('Ef') || sig.startsWith('Flp') || sig.startsWith('Kol') || sig.startsWith('1 Tes') || sig.startsWith('2 Tes') || sig.startsWith('1 Tm') || sig.startsWith('2 Tm') || sig.startsWith('Tt') || sig.startsWith('Flm') || sig.startsWith('Hbr') || sig.startsWith('Jk') || sig.startsWith('1 P') || sig.startsWith('2 P') || sig.startsWith('1 J') || sig.startsWith('2 J') || sig.startsWith('3 J') || sig.startsWith('Jud') || sig.startsWith('Ap');
+                const newSession: ScrutationSession = {
+                  id: 'session_' + Date.now(),
+                  title: `Skrutacja: ${keyword} (${sig})`,
+                  theme: `Słownik Stronga: ${keyword}`,
+                  initialSiglum: sig,
+                  initialText: txt,
+                  nodes: [
+                    {
+                      id: 'node_root',
+                      parentId: null,
+                      siglum: sig,
+                      text: txt,
+                      testament: isNT ? 'NT' : 'ST',
+                      crossReferenceReason: `Werset ze słownika Stronga: «${keyword}»`,
+                      order: 0,
+                      isExpanded: true,
+                      createdAt: Date.now()
+                    }
+                  ],
+                  activeStep: 0,
+                  prayerNotes: {
+                    statio: '',
+                    invocatio: '',
+                    lectio: txt,
+                    meditatio: '',
+                    oratio: '',
+                    contemplatio: '',
+                    actio: '',
+                    wordOfLife: keyword
+                  },
+                  durationSeconds: 0,
+                  isCompleted: false,
+                  createdAt: new Date().toISOString(),
+                  updatedAt: new Date().toISOString()
+                };
+                handleUpdateSession(newSession);
+                setActiveTab('tree');
+                showToast(`Rozpoczęto skrutację z pojęcia «${keyword}»: ${sig}`);
+              }}
+              onOpenWordModal={handleOpenWordLookup}
+              currentPassageSiglum={activeSession?.initialSiglum || '1 Kor 4, 1'}
+              currentPassageText={activeSession?.initialText || 'Niechaj uważają nas ludzie za sługi Chrystusa i za szafarzy tajemnic Bożych!'}
+              onOpenScrutationSiglum={(sig) => {
+                setActiveTab('tree');
+                showToast(`Wybrano werset ${sig} do badania w drzewku`);
+              }}
+            />
+          </div>
+        )}
       </main>
 
       {/* Mobile Sticky Bottom Navigation */}
@@ -686,6 +790,9 @@ export default function App() {
         >
           <Network className="w-4 h-4 mb-0.5" />
           <span className="text-[9px] uppercase">Drzewko</span>
+          {activeSession && (
+            <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-emerald-600 animate-pulse" />
+          )}
         </button>
 
         <button
@@ -717,6 +824,28 @@ export default function App() {
         >
           <Sparkles className="w-4 h-4 mb-0.5 text-amber-500 animate-pulse" />
           <span className="text-[9px] uppercase">Losuj</span>
+        </button>
+
+        <button
+          id="mobile-nav-workspace"
+          onClick={() => setActiveTab('workspace')}
+          className={`flex flex-col items-center justify-center min-h-[44px] px-1.5 rounded-lg transition-colors cursor-pointer shrink-0 ${
+            activeTab === 'workspace' ? 'text-emerald-700 font-bold' : 'text-slate-500'
+          }`}
+        >
+          <BookOpen className="w-4 h-4 mb-0.5" />
+          <span className="text-[9px] uppercase">Odnośniki</span>
+        </button>
+
+        <button
+          id="mobile-nav-dictionary"
+          onClick={() => setActiveTab('dictionary')}
+          className={`flex flex-col items-center justify-center min-h-[44px] px-1.5 rounded-lg transition-colors cursor-pointer shrink-0 ${
+            activeTab === 'dictionary' ? 'text-emerald-700 font-bold' : 'text-slate-500'
+          }`}
+        >
+          <Layers className="w-4 h-4 mb-0.5 text-amber-700" />
+          <span className="text-[9px] uppercase font-bold">Słownik</span>
         </button>
 
         <button
@@ -762,6 +891,33 @@ export default function App() {
           <span className="text-[9px] uppercase font-bold">Wyzeruj</span>
         </button>
       </div>
+
+      {/* Global Biblical Word Modal (Strong Dictionary & Occurrences) */}
+      <BiblicalWordModal
+        isOpen={Boolean(modalWord)}
+        onClose={() => {
+          setModalWord(null);
+          setModalLexiconData(null);
+        }}
+        word={modalWord || ''}
+        lexiconData={modalLexiconData}
+        isLoading={isModalWordLoading}
+        status={modalWordStatus}
+        onSelectForScrutation={(wordToScrutate) => {
+          setModalWord(null);
+          if (activeSession) {
+            setActiveTab('tree');
+            showToast(`Skrutuj pojęcie «${wordToScrutate}»`);
+          } else {
+            setActiveTab('daily');
+          }
+        }}
+        onOpenVerseSiglum={(targetSiglum) => {
+          setModalWord(null);
+          setActiveTab('workspace');
+          showToast(`Przejście do wersetu: ${targetSiglum}`);
+        }}
+      />
 
       {/* Random Scripture Draw Modal with animated card opening & context */}
       <RandomScriptureDrawModal

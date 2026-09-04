@@ -252,87 +252,22 @@ export const KNOWN_CROSS_REFERENCES: Record<string, ScripturalNodeFallback> = {
 };
 
 /**
- * Universal fallback cross-reference generator for ANY verse siglum.
+ * Retrieve curated cross-reference repository entries according to the apparatus
+ * of Jerusalem Bible and Millennium Bible.
+ * ZERO IMAGINATION: If no curated record exists, returns null. Never invents synthetic cross-references.
  */
-export function getGuaranteedCrossReferences(siglum: string, inputExcerpt?: string): ScripturalNodeFallback {
+export function findCuratedCrossReferences(siglum: string): ScripturalNodeFallback | null {
   const norm = (siglum || '').trim();
+  if (!norm) return null;
 
   for (const [key, val] of Object.entries(KNOWN_CROSS_REFERENCES)) {
     if (norm.toLowerCase().startsWith(key.toLowerCase()) || key.toLowerCase().startsWith(norm.toLowerCase())) {
       return val;
     }
   }
+  return null;
+}
 
-  const isNT = ['mt','mk','łk','lk','j','jan','dz','rz','rom','kor','ga','gal','ef','eph','flp','kol','tes','tm','tt','flm','hbr','heb','jk','jak','p','pet','jud','ap','apok'].some(prefix => 
-    norm.toLowerCase().startsWith(prefix)
-  );
-
-  const fallbackText = inputExcerpt && inputExcerpt.length > 8 
-    ? inputExcerpt 
-    : `Tekst z ${norm} według Biblii Tysiąclecia. Słowo Boga skierowane do człowieka, objawiające zamysł miłości i zbawienia w historii.`;
-
-  return {
-    siglum: norm,
-    fullText: fallbackText,
-    theologicalContext: `Fragment ${norm} w metodzie Skrutacji Pisma Świętego (Scrutatio Scripturae) łączy historię Przymierza z tajemnicą Paschalną Chrystusa.`,
-    crossReferences: isNT ? [
-      {
-        siglum: 'Ps 119, 105',
-        text: 'Twoje słowo jest lampą dla moich stóp i światłem na mojej ścieżce.',
-        testament: 'ST',
-        relation: 'Słowo jako Przewodnik',
-        explanation: 'Słowo Boże rozjaśnia drogę człowieka w ciemnościach lęku i wątpliwości.'
-      },
-      {
-        siglum: 'Hbr 4, 12',
-        text: 'Żywe bowiem jest słowo Boże, skuteczne i ostrzejsze niż wszelki miecz obosieczny.',
-        testament: 'NT',
-        relation: 'Moc i Skuteczność Słowa',
-        explanation: 'Słowo przenikające do głębi serce i odsłaniające Bożą wolę.'
-      },
-      {
-        siglum: 'Iz 55, 10-11',
-        text: 'Podobnie jak ulewa i śnieg spadają z nieba... tak słowo, które wychodzi z ust moich, nie wraca do Mnie bezowocne.',
-        testament: 'ST',
-        relation: 'Obietnica Owocności',
-        explanation: 'Bóg gwarantuje, że Jego Słowo wyda owoc w życiu każdego, kto je przyjmuje z wiarą.'
-      },
-      {
-        siglum: 'J 14, 6',
-        text: 'Odpowiedział mu Jezus: «Ja jestem drogą i prawdą, i życiem. Nikt nie przychodzi do Ojca inaczej jak tylko przeze Mnie».',
-        testament: 'NT',
-        relation: 'Chrystus — Pełnia Objawienia',
-        explanation: 'Wszystkie drogi Pisma Świętego prowadzą do osoby i zmartwychwstania Jezusa.'
-      }
-    ] : [
-      {
-        siglum: 'J 5, 39',
-        text: 'Badacie Pisma, ponieważ sądzicie, że w nich zawarte jest życie wieczne: to one właśnie dają o Mnie świadectwo.',
-        testament: 'NT',
-        relation: 'Klucz chrystocentryczny',
-        explanation: 'Jezus wskazuje, że cały Stary Testament ma swój głęboki sens w Jego misji i ofierze.'
-      },
-      {
-        siglum: 'Łk 24, 27',
-        text: 'I zaczynając od Mojżesza, poprzez wszystkich proroków, wykładał im, co we wszystkich Pismach odnosiło się do Niego.',
-        testament: 'NT',
-        relation: 'Droga do Emaus',
-        explanation: 'Zmartwychwstały wyjaśnia uczniom, jak wydarzenia Starego Przymierza zapowiadały Jego Paschę.'
-      },
-      {
-        siglum: 'Ps 119, 130',
-        text: 'Przystępność Twoich słów oświeca i naucza prostaczków.',
-        testament: 'ST',
-        relation: 'Mądrość dla Pokornych',
-        explanation: 'Bóg objawia głębię swego orędzia ludziom o sercu otwartym i cichym.'
-      },
-      {
-        siglum: 'Rz 15, 4',
-        text: 'Wszystko bowiem, co niegdyś zostało napisane, napisane zostało dla naszego pouczenia, abyśmy przez cierpliwość i pociechę z Pism mieli nadzieję.',
-        testament: 'NT',
-        relation: 'Nadzieja z Pisma',
-        explanation: 'Wersety Starego Testamentu umacniają wiarę i dają nadzieję w codziennych zmaganiach.'
-      }
-    ]
-  };
+export function getGuaranteedCrossReferences(siglum: string, inputExcerpt?: string): ScripturalNodeFallback | null {
+  return findCuratedCrossReferences(siglum);
 }

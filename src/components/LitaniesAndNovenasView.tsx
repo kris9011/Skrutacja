@@ -408,7 +408,7 @@ export const LitaniesAndNovenasView: React.FC<LitaniesAndNovenasViewProps> = ({
 
                       return (
                         <button
-                          key={day.dayNumber}
+                          key={`novena-${selectedNovena.id}-day-${day.dayNumber}`}
                           onClick={() => setSelectedDayNumber(day.dayNumber)}
                           className={`p-2.5 rounded-2xl border transition-all flex flex-col items-center justify-center gap-1 cursor-pointer text-center relative ${
                             isCurrent
@@ -671,7 +671,7 @@ export const LitaniesAndNovenasView: React.FC<LitaniesAndNovenasViewProps> = ({
                             const done = completedDays.includes(d.dayNumber);
                             return (
                               <div
-                                key={d.dayNumber}
+                                key={`novena-${novena.id}-dot-${d.dayNumber}`}
                                 title={`Dzień ${d.dayNumber}: ${done ? 'Odmówiono' : 'Do odmówienia'}`}
                                 className={`w-5 h-5 rounded-full text-[9px] font-mono flex items-center justify-center border transition-all ${
                                   done

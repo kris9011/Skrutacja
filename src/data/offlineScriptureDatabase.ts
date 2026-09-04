@@ -237,16 +237,6 @@ export function resolveAuthenticScripture(requestedSiglum: string, bookParam?: s
     return AUTHENTIC_SCRIPTURE_TEXTS['Lb 1, 29-34'];
   }
 
-  // 4. Fallback ogólny: Zwróć czysty, godny tekst bez żadnego "został przygotowany"
-  const isNT = ['Mt','Mk','Łk','J','Dz','Rz','1 Kor','2 Kor','Ga','Ef','Flp','Kol','1 Tes','2 Tes','1 Tm','2 Tm','Tt','Flm','Hbr','Jk','1 P','2 P','1 J','2 J','3 J','Jud','Ap'].some(s => norm.startsWith(s));
-  return {
-    siglum: norm,
-    bookFullName: bookParam || norm.split(' ')[0] || 'Pismo Święte',
-    testament: isNT ? 'NT' : 'ST',
-    pericopeTitle: `Czytanie ze Słowa Bożego: ${norm}`,
-    text: `«Głos Pana ponad wodami, Bóg chwały grzmi, Pan ponad wód bezmiarem! Głos Pana pełen potęgi, głos Pana pełen dostojeństwa... W Jego świątyni wszystko woła: Chwała!» (Ps 29). Pismo Święte jest żywym głosem Ducha Świętego do Kościoła.`,
-    theologicalTheme: 'Żywe Słowo Boga oświecające kroki człowieka',
-    keyWords: ['Słowo Boże', 'Duch Święty', 'Wiara', 'Światłość'],
-    suggestedScrutationTheme: `Odkrywanie zamysłu Bożego w ${norm}`
-  };
+  // Zero imagination: If verse is not in authentic offline database, return null
+  return null;
 }

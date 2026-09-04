@@ -45,8 +45,10 @@ import {
   ParsedVerse, 
   toSuperscript 
 } from '../utils/bibleVerseParser';
+import { BiblicalWordModal } from './BiblicalWordModal';
+import { InterlinearStrongDictionaryView } from './InterlinearStrongDictionaryView';
 
-export type ScriptureDisplayMode = 'polski' | 'oryginal' | 'bilingwistyczny';
+export type ScriptureDisplayMode = 'polski' | 'strong' | 'oryginal' | 'bilingwistyczny';
 
 interface BilingualScriptureReaderProps {
   siglum: string;
@@ -80,7 +82,7 @@ export const BilingualScriptureReader: React.FC<BilingualScriptureReaderProps> =
   const [lexiconStatus, setLexiconStatus] = useState<'idle' | 'loading' | 'slow_loading' | 'ready' | 'error'>('idle');
   const [isExactCurated, setIsExactCurated] = useState<boolean>(false);
   const [isCopied, setIsCopied] = useState<boolean>(false);
-  const [hoveredWordIndex, setHoveredWordIndex] = useState<number | null>(null);
+  const [isWordModalOpen, setIsWordModalOpen] = useState<boolean>(false);
 
   // Dynamic full original scripture details
   const [fetchedOriginal, setFetchedOriginal] = useState<{
@@ -364,6 +366,7 @@ export const BilingualScriptureReader: React.FC<BilingualScriptureReaderProps> =
     if (!trimmed || trimmed.length < 2) return;
 
     setSelectedWord(trimmed);
+    setIsWordModalOpen(true);
     setIsLoadingLexicon(true);
     setLexiconStatus('loading');
 
@@ -413,6 +416,7 @@ export const BilingualScriptureReader: React.FC<BilingualScriptureReaderProps> =
   const handleReset = () => {
     setDisplayMode('polski');
     setSelectedWord(null);
+    setIsWordModalOpen(false);
     setLexiconData(null);
     setLexiconStatus('idle');
   };
@@ -436,7 +440,7 @@ export const BilingualScriptureReader: React.FC<BilingualScriptureReaderProps> =
           </span>
         </div>
 
-        {/* Clean Pill Toggle: [ POLSKI | ORYGINAŁ | BILINGWISTYCZNY ] */}
+        {/* Clean Pill Toggle: [ POLSKI | SŁOWNIK STRONGA | ORYGINAŁ ] */}
         <div className="flex items-center gap-1.5 w-full sm:w-auto justify-between sm:justify-end overflow-x-auto no-scrollbar">
           <div className="inline-flex items-center p-0.5 sm:p-1 bg-stone-100 rounded-full border border-stone-200 shadow-inner w-full sm:w-auto justify-around sm:justify-start">
             <button
@@ -452,6 +456,19 @@ export const BilingualScriptureReader: React.FC<BilingualScriptureReaderProps> =
             </button>
             <button
               type="button"
+              onClick={() => setDisplayMode('strong')}
+              className={`px-3 sm:px-4 py-1 rounded-full text-[11px] sm:text-xs font-sans font-bold uppercase tracking-wider transition-all duration-200 cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
+                displayMode === 'strong' || displayMode === 'bilingwistyczny'
+                  ? 'bg-amber-600 text-white shadow-xs'
+                  : 'text-stone-600 hover:text-emerald-950'
+              }`}
+              title="Rozszerzony słownik Stronga i widok interlinearny jak w biblia.oblubienica.eu"
+            >
+              <BookOpen className="w-3.5 h-3.5" />
+              <span>Słownik Stronga</span>
+            </button>
+            <button
+              type="button"
               onClick={() => setDisplayMode('oryginal')}
               className={`px-3 sm:px-4 py-1 rounded-full text-[11px] sm:text-xs font-sans font-bold uppercase tracking-wider transition-all duration-200 cursor-pointer whitespace-nowrap ${
                 displayMode === 'oryginal'
@@ -460,17 +477,6 @@ export const BilingualScriptureReader: React.FC<BilingualScriptureReaderProps> =
               }`}
             >
               Oryginał
-            </button>
-            <button
-              type="button"
-              onClick={() => setDisplayMode('bilingwistyczny')}
-              className={`px-3 sm:px-4 py-1 rounded-full text-[11px] sm:text-xs font-sans font-bold uppercase tracking-wider transition-all duration-200 cursor-pointer whitespace-nowrap ${
-                displayMode === 'bilingwistyczny'
-                  ? 'bg-emerald-800 text-white shadow-xs'
-                  : 'text-stone-600 hover:text-emerald-950'
-              }`}
-            >
-              Bilingwistyczny
             </button>
           </div>
 
@@ -874,14 +880,14 @@ export const BilingualScriptureReader: React.FC<BilingualScriptureReaderProps> =
             /* 1) DOMYŚLNY UKŁAD: KAŻDY WERSET OD NOWEJ LINIJKI (1 -> nowa linijka, 2 -> nowa linijka...) */
             <div className="p-5 sm:p-7 rounded-2xl bg-white border border-stone-200 shadow-2xs space-y-2">
               <div className="space-y-1 sm:space-y-1.5 divide-y divide-stone-100">
-                {parsedVerses.map((verse) => {
+                {parsedVerses.map((verse, vIdx) => {
                   const isVerseActive = activeVersePopup?.verseNum === verse.verseNum;
                   const isVerseHovered = hoveredVerseNum === verse.verseNum;
                   const isVerseHighlighted = highlightedVerseNum === verse.verseNum;
                   const isVerseSpeaking = currentAudioVerseNum === verse.verseNum && (isPlayingAudio || isPausedAudio);
 
                   return (
-                    <div key={verse.verseNum} className="pt-2 sm:pt-2.5 first:pt-0">
+                    <div key={`bilingual-line-${verse.siglum || ''}-${verse.verseNum}-${vIdx}`} className="pt-2 sm:pt-2.5 first:pt-0">
                       {/* Chapter Header if present */}
                       {verse.chapterHeader && (
                         <div className="font-sans font-bold text-xs uppercase tracking-widest text-emerald-900 bg-emerald-50 px-3.5 py-2 rounded-lg border border-emerald-200/80 my-3">
@@ -951,16 +957,12 @@ export const BilingualScriptureReader: React.FC<BilingualScriptureReaderProps> =
                                 {isWord ? (
                                   <span
                                     onClick={() => handleWordClick(coreToken)}
-                                    onMouseEnter={() => setHoveredWordIndex(wIdx)}
-                                    onMouseLeave={() => setHoveredWordIndex(null)}
                                     className={`inline cursor-pointer px-0.5 py-0.5 rounded transition-all duration-150 ${
                                       isSelected
-                                        ? 'bg-emerald-100 text-emerald-950 font-bold shadow-2xs ring-1 ring-emerald-600 underline decoration-emerald-600 decoration-2 underline-offset-4'
-                                        : hoveredWordIndex === wIdx
-                                        ? 'bg-emerald-50 text-emerald-900 underline decoration-emerald-500 decoration-1 underline-offset-4'
-                                        : 'hover:bg-amber-50 hover:text-amber-950'
+                                        ? 'bg-amber-200/90 text-amber-950 font-bold shadow-2xs ring-1 ring-amber-500 underline decoration-amber-600 decoration-2 underline-offset-4'
+                                        : 'hover:bg-amber-100/70 hover:text-amber-950'
                                     }`}
-                                    title={`Kliknij słowo «${coreToken}», aby zbadać w słowniku grecko-hebrajskim`}
+                                    title={`Kliknij słowo «${coreToken}», aby otworzyć okno powiązań ze słownikiem Stronga`}
                                   >
                                     {coreToken}
                                   </span>
@@ -1021,14 +1023,14 @@ export const BilingualScriptureReader: React.FC<BilingualScriptureReaderProps> =
           ) : polishLayoutMode === 'cards' ? (
             /* 2) UKŁAD: KARTY WERSETÓW (Studyjny: Biel, Zieleń, Złoto) */
             <div className="space-y-3">
-              {parsedVerses.map((verse) => {
+              {parsedVerses.map((verse, vIdx) => {
                 const isVerseActive = activeVersePopup?.verseNum === verse.verseNum;
                 const isVerseHighlighted = highlightedVerseNum === verse.verseNum;
                 const isVerseSpeaking = currentAudioVerseNum === verse.verseNum && (isPlayingAudio || isPausedAudio);
 
                 return (
                   <div
-                    key={verse.verseNum}
+                    key={`bilingual-card-${verse.siglum || ''}-${verse.verseNum}-${vIdx}`}
                     id={`verse-card-${verse.verseNum}`}
                     className={`p-3.5 sm:p-4 rounded-xl border transition-all ${
                       isVerseSpeaking
@@ -1158,7 +1160,7 @@ export const BilingualScriptureReader: React.FC<BilingualScriptureReaderProps> =
                         : 'text-xl sm:text-2xl leading-loose'
                     } text-stone-900 text-justify space-y-1`}
                   >
-                    {paragraph.verses.map((verse) => {
+                    {paragraph.verses.map((verse, vIdx) => {
                       const isVerseActive = activeVersePopup?.verseNum === verse.verseNum;
                       const isVerseHovered = hoveredVerseNum === verse.verseNum;
                       const isVerseHighlighted = highlightedVerseNum === verse.verseNum;
@@ -1166,7 +1168,7 @@ export const BilingualScriptureReader: React.FC<BilingualScriptureReaderProps> =
 
                       return (
                         <span
-                          key={verse.verseNum}
+                          key={`bilingual-flow-${verse.siglum || ''}-${verse.verseNum}-${pIdx}-${vIdx}`}
                           className={`inline transition-colors duration-150 rounded px-0.5 py-0.5 ${
                             isVerseSpeaking
                               ? 'bg-emerald-50/90 ring-2 ring-emerald-600 shadow-2xs'
@@ -1221,16 +1223,12 @@ export const BilingualScriptureReader: React.FC<BilingualScriptureReaderProps> =
                                 {isWord ? (
                                   <span
                                     onClick={() => handleWordClick(coreToken)}
-                                    onMouseEnter={() => setHoveredWordIndex(wIdx)}
-                                    onMouseLeave={() => setHoveredWordIndex(null)}
                                     className={`inline cursor-pointer px-0.5 py-0.5 rounded transition-all duration-150 ${
                                       isSelected
-                                        ? 'bg-emerald-100 text-emerald-950 font-bold shadow-2xs ring-1 ring-emerald-600 underline decoration-emerald-600 decoration-2 underline-offset-4'
-                                        : hoveredWordIndex === wIdx
-                                        ? 'bg-emerald-50 text-emerald-900 underline decoration-emerald-500 decoration-1 underline-offset-4'
-                                        : 'hover:bg-amber-50 hover:text-amber-950'
+                                        ? 'bg-amber-200/90 text-amber-950 font-bold shadow-2xs ring-1 ring-amber-500 underline decoration-amber-600 decoration-2 underline-offset-4'
+                                        : 'hover:bg-amber-100/70 hover:text-amber-950'
                                     }`}
-                                    title={`Kliknij słowo «${coreToken}», aby zbadać w słowniku grecko-hebrajskim`}
+                                    title={`Kliknij słowo «${coreToken}», aby otworzyć okno powiązań ze słownikiem Stronga`}
                                   >
                                     {coreToken}
                                   </span>
@@ -1268,9 +1266,9 @@ export const BilingualScriptureReader: React.FC<BilingualScriptureReaderProps> =
               </p>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 pt-1">
-                {parsedVerses.map((v) => (
+                {parsedVerses.map((v, vIdx) => (
                   <div
-                    key={v.verseNum}
+                    key={`bilingual-grid-${v.siglum || ''}-${v.verseNum}-${vIdx}`}
                     onClick={() => {
                       setActiveVersePopup(v);
                       setHighlightedVerseNum(v.verseNum);
@@ -1369,63 +1367,14 @@ export const BilingualScriptureReader: React.FC<BilingualScriptureReaderProps> =
         </div>
       )}
 
-      {/* 3. MODE: BILINGWISTYCZNY (Interlinear / Word-by-Word Analysis) */}
-      {displayMode === 'bilingwistyczny' && (
-        <div className="p-5 sm:p-7 rounded-2xl bg-white border border-stone-200 shadow-2xs space-y-4">
-          <div className="flex items-center justify-between text-xs font-sans uppercase font-bold text-stone-800 pb-2 border-b border-stone-200">
-            <span className="flex items-center gap-1.5 text-emerald-950">
-              <Layers className="w-4 h-4 text-emerald-800" />
-              Układ Interlinearny (Słowo w słowo)
-            </span>
-            <span className="text-stone-500 font-normal">Kliknij blok, aby wyświetlić konkordancję</span>
-          </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2.5">
-            {rawWords
-              .map(w => w.replace(/^[«„"'(]+|[.,;!?:»”"')—]+$/g, ''))
-              .filter(w => /^[a-zęóąśłżźćńA-ZĘÓĄŚŁŻŹĆŃ0-9]+$/.test(w))
-              .map((word, wIdx) => {
-              const previewLex = findBiblicalLexiconEntry(word, siglum);
-              const isSelected = selectedWord?.toLowerCase() === word.toLowerCase();
-
-              return (
-                <div
-                  key={wIdx}
-                  onClick={() => handleWordClick(word)}
-                  className={`p-3 rounded-xl border transition-all cursor-pointer flex flex-col justify-between gap-1.5 ${
-                    isSelected
-                      ? 'bg-emerald-50 border-emerald-400 ring-2 ring-emerald-300 shadow-xs'
-                      : 'bg-white hover:bg-emerald-50/50 border-stone-200 hover:border-emerald-300'
-                  }`}
-                >
-                  <div className="flex items-center justify-between gap-1">
-                    <span className="font-mono text-[10px] font-bold text-amber-900 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">
-                      {previewLex.strongNumber}
-                    </span>
-                    <span className="text-[10px] text-stone-400 font-sans truncate">
-                      {previewLex.originalLanguage.split(' ')[0]}
-                    </span>
-                  </div>
-
-                  {/* Original script */}
-                  <div className="font-serif text-base font-bold text-stone-900">
-                    {previewLex.originalWord}
-                  </div>
-
-                  {/* Transliteration */}
-                  <div className="font-mono text-[11px] text-stone-500 italic">
-                    {previewLex.transliteration}
-                  </div>
-
-                  {/* Polish Translation */}
-                  <div className="font-sans text-xs font-bold text-emerald-950 pt-1 border-t border-stone-100">
-                    {word}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
+      {/* 3. MODE: SŁOWNIK STRONGA & UKŁAD INTERLINEARNY (ze screenu 2 biblia.oblubienica.eu) */}
+      {(displayMode === 'strong' || displayMode === 'bilingwistyczny') && (
+        <InterlinearStrongDictionaryView
+          siglum={siglum}
+          parsedVerses={parsedVerses}
+          onWordClick={handleWordClick}
+          onOpenWordModal={(w) => handleWordClick(w)}
+        />
       )}
 
       {/* WORD LEXICON & SCRIPTURE OCCURRENCES DRAWER / MODAL - White, Green, Gold */}
@@ -1602,6 +1551,31 @@ export const BilingualScriptureReader: React.FC<BilingualScriptureReaderProps> =
           </div>
         </div>
       )}
+
+      {/* OVERARCHING MODAL WINDOW FOR BIBLICAL WORD CONNECTIONS & STRONG DICTIONARY */}
+      <BiblicalWordModal
+        isOpen={isWordModalOpen && Boolean(selectedWord)}
+        onClose={() => {
+          setIsWordModalOpen(false);
+          setSelectedWord(null);
+        }}
+        word={selectedWord || ''}
+        lexiconData={lexiconData}
+        isLoading={isLoadingLexicon}
+        status={lexiconStatus}
+        onSelectForScrutation={(wordToScrutate) => {
+          if (onSelectWordForScrutation) {
+            onSelectWordForScrutation(siglum, polishText, wordToScrutate);
+          } else if (onOpenFullScrutation) {
+            onOpenFullScrutation(siglum, polishText);
+          }
+        }}
+        onOpenVerseSiglum={(targetSiglum) => {
+          if (onOpenFullScrutation) {
+            onOpenFullScrutation(targetSiglum, '');
+          }
+        }}
+      />
     </div>
   );
 };

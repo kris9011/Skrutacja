@@ -35,6 +35,7 @@ export type MainAppTab =
   | 'daily' 
   | 'workspace' 
   | 'tree' 
+  | 'dictionary'
   | 'patristic' 
   | 'jewish' 
   | 'journal' 

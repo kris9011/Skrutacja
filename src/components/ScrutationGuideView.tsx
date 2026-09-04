@@ -155,7 +155,7 @@ export const ScrutationGuideView: React.FC<ScrutationGuideViewProps> = ({
             const isSelected = activeStepTab === step.step;
             return (
               <button
-                key={step.step}
+                key={`guide-step-${step.step}`}
                 id={`guide-step-tab-${step.step}`}
                 onClick={() => setActiveStepTab(step.step)}
                 className={`px-3.5 py-2 text-xs font-sans uppercase tracking-wider whitespace-nowrap transition-all rounded-xl flex items-center gap-2 cursor-pointer border font-semibold ${
@@ -230,7 +230,7 @@ export const ScrutationGuideView: React.FC<ScrutationGuideViewProps> = ({
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {HOLY_SPIRIT_PRAYERS.map((prayer, idx) => (
-            <div key={idx} className="p-5 border border-slate-200 bg-slate-50/70 rounded-2xl flex flex-col justify-between space-y-4 hover:border-emerald-300 hover:bg-white transition-all shadow-xs">
+            <div key={`guide-prayer-${prayer.title || idx}`} className="p-5 border border-slate-200 bg-slate-50/70 rounded-2xl flex flex-col justify-between space-y-4 hover:border-emerald-300 hover:bg-white transition-all shadow-xs">
               <div>
                 <div className="flex items-start justify-between gap-2 mb-2">
                   <h3 className="font-serif text-base font-bold text-slate-900">
@@ -274,7 +274,7 @@ export const ScrutationGuideView: React.FC<ScrutationGuideViewProps> = ({
             const isOpen = openFaqIndex === index;
             return (
               <div
-                key={index}
+                key={`guide-faq-${index}`}
                 className="border border-slate-200 rounded-2xl bg-white overflow-hidden transition-all shadow-xs"
               >
                 <button
