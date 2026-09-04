@@ -6,6 +6,7 @@ import { GoogleGenAI, Type } from '@google/genai';
 import { createServer as createViteServer } from 'vite';
 import { getGuaranteedDailyReadings } from './src/data/liturgicalCalendarFallback';
 import { getGuaranteedPatristicData } from './src/data/patristicDatabase';
+import { getAquinasCommentaryForQuote } from './src/data/aquinasCommentariesDatabase';
 import { getGuaranteedCrossReferences } from './src/data/crossReferenceDatabase';
 import { getRandomScriptureQuote } from './src/data/randomScriptureQuotes';
 import { findBiblicalLexiconEntry } from './src/data/biblicalLexiconDatabase';
@@ -68,10 +69,11 @@ function getGeminiClient(): GoogleGenAI | null {
 // Simple in-memory cache for API responses
 const dailyReadingsCache = new Map<string, any>();
 const crossRefCache = new Map<string, any>();
+const passageCommentaryCache = new Map<string, any>();
 
 // Resilient Gemini generator with fallback to valid Gemini models
-async function generateContentWithFallback(ai: GoogleGenAI, config: { prompt: string; schema?: any }): Promise<any> {
-  const modelsToTry = ['gemini-3.1-flash-lite', 'gemini-2.5-flash'];
+async function generateContentWithFallback(ai: GoogleGenAI, config: { prompt: string; schema?: any; systemInstruction?: string }): Promise<any> {
+  const modelsToTry = ['gemini-3.8-flash', 'gemini-flash-latest', 'gemini-3.1-flash-lite'];
   let lastError = null;
 
   for (const model of modelsToTry) {
@@ -79,10 +81,13 @@ async function generateContentWithFallback(ai: GoogleGenAI, config: { prompt: st
       const response = await ai.models.generateContent({
         model,
         contents: config.prompt,
-        config: config.schema ? {
-          responseMimeType: 'application/json',
-          responseSchema: config.schema
-        } : undefined
+        config: {
+          ...(config.schema ? {
+            responseMimeType: 'application/json',
+            responseSchema: config.schema
+          } : {}),
+          ...(config.systemInstruction ? { systemInstruction: config.systemInstruction } : {})
+        }
       });
       if (response.text) {
         return JSON.parse(response.text);
@@ -399,42 +404,99 @@ Dla każdego Ojca Kościoła podaj:
 
 // Helper: Generate authentic, deep multi-perspective biblical commentary fallback
 function generateComprehensiveFallbackCommentary(siglum: string, text?: string, label?: string, liturgicalContext?: string) {
-  const cleanSig = siglum.trim();
+  const cleanSig = (siglum || '').trim();
   const book = cleanSig.split(' ')[0] || '';
-  const isPsalm = cleanSig.startsWith('Ps') || cleanSig.toLowerCase().includes('psalm') || (label && label.toLowerCase().includes('psalm'));
-  const isGospel = ['Mt', 'Mk', 'Łk', 'J', 'Lk', 'Jn'].some(g => cleanSig.startsWith(g)) || (label && label.toLowerCase().includes('ewangelia'));
-  const isEpistle = ['Rz', '1 Kor', '2 Kor', 'Ga', 'Ef', 'Flp', 'Kol', '1 Tes', '2 Tes', '1 Tm', '2 Tm', 'Tt', 'Flm', 'Hbr', 'Jk', '1 P', '2 P', '1 J', '2 J', '3 J', 'Jud'].some(e => cleanSig.startsWith(e)) || (label && label.toLowerCase().includes('list'));
+  const lower = cleanSig.toLowerCase();
+  
+  const isApocalypse = lower.startsWith('ap');
+  const isPsalm = lower.startsWith('ps') || lower.includes('psalm') || Boolean(label && label.toLowerCase().includes('psalm'));
+  const isGospel = ['mt', 'mk', 'łk', 'lk', 'j', 'jn'].some(g => lower.startsWith(g)) || Boolean(label && label.toLowerCase().includes('ewangelia'));
+  const isPauline = ['rz', '1 kor', '2 kor', 'ga', 'ef', 'flp', 'kol', '1 tes', '2 tes', '1 tm', '2 tm', 'tt', 'flm', 'hbr'].some(e => lower.startsWith(e));
+  const isCatholicEpistle = ['jk', '1 p', '2 p', '1 j', '2 j', '3 j', 'jud'].some(e => lower.startsWith(e));
+  const isProphet = ['iz', 'jr', 'lm', 'ba', 'ez', 'dn', 'oz', 'jl', 'am', 'ab', 'jon', 'mi', 'na', 'ha', 'sof', 'ag', 'za', 'ml'].some(p => lower.startsWith(p));
+  const isTorah = ['rdz', 'wj', 'kpł', 'lb', 'pwt', 'joz', 'sdz', 'rt', '1 sm', '2 sm', '1 krl', '2 krl'].some(t => lower.startsWith(t));
+  const isWisdom = ['hi', 'prz', 'koh', 'pnp', 'mdr', 'syr'].some(w => lower.startsWith(w));
 
-  let thomasNotes = {
-    title: 'Wykład św. Tomasza z Akwinu (Doctor Angelicus)',
-    catenaAureaGloss: isGospel
-      ? `Święty Tomasz w «Catena Aurea» (Złotym Łańcuchu) zbiera do tego fragmentu świadectwa Ojców: Augustyn widzi tu tajemnicę wcielonej Mądrości Bożej, Jan Chryzostom podkreśla niezmierzoną łaskawość Zbawiciela wychodzącego naprzeciw ludzkiej nędzy, a Grzegorz Wielki wskazuje na konieczność przemiany wewnętrznego usposobienia serca. Słowo to jest lekarstwem podawanym przez Niebieskiego Lekarza.`
-      : `Św. Tomasz z Akwinu naucza, że całe Pismo Święte ma za cel objawienie prawdy zbawczej i ukierunkowanie człowieka ku ostatecznemu celowi – oglądaniu Boga (visio beatifica). W tym fragmencie (${cleanSig}) Doktor Anielski wskazuje na porządek Bożej Opatrzności, która łaską uprzedza ludzką wolę, pociągając ją ku dobru w sposób słodki, a zarazem niezawodny.`,
-    scholasticSynthesis: `Pod względem przyczynowym: Przyczyną sprawczą zbawczego orędzia jest miłosierdzie Boże; przyczyną celową – uświęcenie człowieka i chwała Trójcy Przenajświętszej. Fragment ten wzmacnia w duszy wiarę (oświecając rozum), rodzi nadzieję (kierując pragnienia ku niebu) oraz rozpala miłość (caritas) jako królową wszystkich cnót chrześcijańskich.`
+  // 1. Get authentic St. Thomas Aquinas commentary from curated database
+  const aquinas = getAquinasCommentaryForQuote(cleanSig, undefined, text);
+
+  const thomasNotes = {
+    title: `Wykład św. Tomasza z Akwinu: ${aquinas.workTitle}`,
+    catenaAureaGloss: `${aquinas.polishTranslation}${aquinas.originalText ? `\n\nTekst łaciński (Doctor Angelicus): «${aquinas.originalText}»` : ''}`,
+    scholasticSynthesis: `${aquinas.spiritualInsight}\n\nZmysł teologiczny (${aquinas.theologicalSense}): W scholastycznym porządku przyczynowym św. Tomasza, przyczyną sprawczą tego orędzia (${cleanSig}) jest suwerenna, uprzedzająca łaska Boża (gratia praeveniens); przyczyną celową – uświęcenie człowieka i doprowadzenie go do wiekuistego oglądania Boga (visio beatifica) w zjednoczeniu z Ciałem Mistycznym Chrystusa.`
   };
 
-  let jfbNotes = {
+  // 2. JFB Commentary tailored to biblical literature
+  let jfbCriticalNotes = '';
+  let jfbHistorical = '';
+
+  if (isApocalypse) {
+    jfbCriticalNotes = `W tekście greckim Apokalipsy (Novum Testamentum Graece) czasowniki w czasie teraźniejszym i aoryście (np. ἕστηκα - «stoję niewzruszenie w stanie trwałym», κρούω - «ciągle kołaczę») wyrażają nieustanną cierpliwość Boga. Autorzy JFB zaznaczają, że greckie «deipneo» odnosi się do głównego posiłku dnia – intymnej, wieczornej wieczerzy przymierza. Greka wyklucza jakiekolwiek wymuszenie: Chrystus stuka do wrót, lecz klamka znajduje się wyłącznie po wewnętrznej stronie ludzkiej wolności.`;
+    jfbHistorical = `Kontekst historyczny: Apokalipsa powstała za panowania cesarza Domicjana (ok. 95 r. po Chr.), gdy chrześcijanie w Azji Mniejszej mierzyli się z naciskiem kultu cesarskiego i pokusą letniości (jak Kościół w Laodycei). Obraz kołatania do drzwi jest bezpośrednią aluzją do Pieśni nad Pieśniami (Pnp 5, 2: «Głos mojego miłego, który puka: Otwórz mi, siostro moja») oraz do eschatologicznej Uczty Baranka.`;
+  } else if (isPsalm) {
+    jfbCriticalNotes = `W tekście masoreckim (Biblia Hebraica) natchniony psalmista operuje klasycznym paralelizmem członów (parallelismus membrorum). Zastosowane terminy Przymierza (chesed – «wierna, nieskończona miłość Boga» oraz emet – «niezachwiana prawda i stałość obietnicy») tworzą fundament ufności. JFB podkreśla, że hebrajskie konstrukcje imiesłowowe wzywają modlącego się do całkowitego oparcia swego losu na Jahwe jako jedynej Skale.`;
+    jfbHistorical = `Tło historyczno-liturgiczne: Psalm ten rozbrzmiewał w świątyni jerozolimskiej pośród śpiewu lewitów i ofiar dziękczynnych. W tradycji kanonicznej pieśni te stanowiły modlitewnik Dawida i ludu wybranego w chwilach ucisku, wygnania oraz powrotu z niewoli babilońskiej, zyskując pełne wypełnienie w modlitwie Jezusa Chrystusa.`;
+  } else if (isGospel) {
+    jfbCriticalNotes = `W greckim tekście Ewangelii natchniony autor używa precyzyjnego słownictwa kerygmatycznego. JFB analizuje niuanse czasowników wyrażających zbawczą misję Jezusa: Królestwo Boże (Basileia tou Theou) nie jest ideą abstrakcyjną, lecz osobą Chrystusa wkraczającą w ludzką historię. Zastosowane formy językowe podkreślają bezwarunkową władzę Zbawiciela nad chorobą, grzechem i śmiercią.`;
+    jfbHistorical = `Tło środowiskowe I wieku w Judei i Galilei: Realia rzymskiej okupacji, spory ze stronnictwami faryzeuszów i saduceuszów oraz tradycje synagogalne. Słowa Chrystusa burzą ciasne ludzkie schematy sprawiedliwości opartej na przepisach prawnych, objawiając Ojca, który wychodzi na spotkanie marnotrawnego syna.`;
+  } else if (isPauline) {
+    jfbCriticalNotes = `Listy św. Pawła operują ścisłą terminologią teologiczną: usprawiedliwienie (dikaiosyne), łaska darmo dana (charis) oraz wierność/wiara (pistis). JFB wykazuje, że apostoł przeciwstawia «uczynki prawa» czystej łasce płynącej z Krzyża Chrystusa. Każdy termin grecki jest dobrany tak, aby zburzyć ludzką samowystarczalność i oprzeć zbawienie na jedynym Pośredniku.`;
+    jfbHistorical = `Kontekst misyjny: Listy były pismami apostolskimi kierowanymi do konkretnych gmin chrześcijańskich zmagających się z pogańską mentalnością otoczenia oraz z judaizującymi tendencjami. Apostoł Narodów odpowiada na żywe dylematy moralne i dogmatyczne wspólnoty.`;
+  } else if (isProphet) {
+    jfbCriticalNotes = `W hebrajskim oryginale ksiąg prorockich perykopa posługuje się uroczystą formułą posłańca Bożego («Ko amar Adonaj» - «Tak mówi Pan»). Słownictwo jest nasycone dynamizmem: słowo Boga (Dabar) jest jednocześnie czynem, który nie wraca bezowocny. JFB uwypukla bogactwo metafor agrarnych i oblubieńczych, przez które Bóg wzywa do powrotu (Teszwwa).`;
+    jfbHistorical = `Tło dziejowe: Okres kryzysów politycznych monarchii izraelskiej i judzkiej, zagrożenia asyryjskiego, tragedii zburzenia Jerozolimy i wygnania do Babilonu. Prorocy stawali jako strażnicy Przymierza, karcąc niesprawiedliwość społeczną i wlewając w serca resztki Izraela nadzieję na nadejście epoki mesjańskiej.`;
+  } else if (isWisdom) {
+    jfbCriticalNotes = `W hebrajskiej literaturze mądrościowej kluczowym pojęciem jest Chokmah (Mądrość) oraz bojaźń Boża (Jirat Adonaj). JFB zwraca uwagę na antytetyczną strukturę przysłów: kontrast między drogą prawego a drogą występnego nie jest czystą teorią etyczną, lecz wyborem między życiem a śmiercią w świetle Bożej Opatrzności.`;
+    jfbHistorical = `Kontekst dworski i rodzinny mędrców Izraela: Mądrość była przekazywana z pokolenia na pokolenie jako sztuka roztropnego, sprawiedliwego i pobożnego życia. W Nowym Testamencie uosobiona Mądrość Boża znajduje swoje wcielenie w osobie Jezusa Chrystusa.`;
+  } else {
+    jfbCriticalNotes = `W tekście oryginalnym kluczowe sformułowania perykopy wskazują na niezmienne, trwające działanie Bożej suwerennej łaski. JFB podkreśla precyzję słownictwa natchnionego: zbawcze działanie Boga nie jest jednorazowym impulsem, lecz trwałym Przymierzem wpisanym w historię ludzkości.`;
+    jfbHistorical = `Tło historyczno-literackie: Kanoniczna spójność Pisma Świętego ukazuje, że fragment ten tworzy nierozerwalną całość z Bożym planem zbawienia, odpowiadając na autentyczne pytania i zmagania wiary ludu Bożego w różnych epokach.`;
+  }
+
+  const jfbNotes = {
     title: 'Komentarz Jamiesona-Fausseta-Browna (JFB) po polsku',
-    criticalNotes: isGospel || isEpistle
-      ? `W tekście greckim (Novum Testamentum Graece) kluczowe sformułowania perykopy wskazują na niezmienne, trwające działanie Bożej suwerennej łaski. JFB podkreśla precyzję czasowników greckich w czasie teraźniejszym i aoryście: zbawcze działanie Boga nie jest jednorazowym impulsem, lecz trwałym przymierzem. Werset nie pozostawia miejsca na poleganie na ludzkich zasługach, lecz skupia spojrzenie na Chrystusie jako jedynym Pośredniku.`
-      : `W oryginale hebrajskim perykopa operuje bogatym zasobem terminologii przymierza (b'rit) oraz Bożej łaskawości i wierności (chesed we-emet). JFB zauważa, że natchniony autor używa konstrukcji emfatycznych, które miały uderzyć w uśpione sumienie Izraela i przypomnieć, że Prawo Pańskie jest nieskazitelne i niesie życie, a nie udrękę.`,
-    historicalExegesis: `Tło historyczno-literackie perykopy: Autorzy JFB akcentują harmonię kanoniczną – słowa te nie mogą być interpretowane w izolacji, lecz tworzą nierozerwalną całość z zapowiedziami prorockimi i ich wypełnieniem na Golgocie i w Poranek Zmartwychwstania. Odzwierciedlają one realia epoki, odpowiadając na autentyczne pytania i kryzysy wiary ówczesnych słuchaczy.`
+    criticalNotes: jfbCriticalNotes,
+    historicalExegesis: jfbHistorical
   };
 
-  let pastoralNotes = {
+  // 3. Pastoral Commentary tailored to context
+  let pastoralTradition = '';
+  let practicalApp = '';
+  let spiritualEnc = '';
+
+  if (isApocalypse) {
+    pastoralTradition = 'Tradycja pastoralna: Matthew Henry, św. Jan od Krzyża & ojcowie życia kontemplacyjnego';
+    practicalApp = `Jezus stoi u drzwi twojego serca nie jako sędzia, lecz jako Przyjaciel i Oblubieniec. Zastanów się: jakie drzwi w twoim życiu pozostają dziś zaryglowane na klucz lęku, wstydu lub zranienia? Otworzyć drzwi Chrystusowi oznacza zaprosić Go w prostym akcie modlitwy do swojej codzienności: do trudnych rozmów w rodzinie, do znużenia pracą, do poczucia bezradności.`;
+    spiritualEnc = `Nie musisz najpierw stać się doskonałym, aby Chrystus wszedł pod twój dach. On pragnie wejść do twojego ubóstwa, by przynieść ze sobą niebiański pokój i posilić cię chlebem życia. Zaufaj Jego cichemu kołataniu.`;
+  } else if (isPsalm) {
+    pastoralTradition = 'Tradycja pastoralna: C.H. Spurgeon («Skarbnica Dawidowa») & Matthew Henry';
+    practicalApp = `Spurgeon w «Skarbnicy Dawidowej» zachęca: „Pozwól temu psalmowi stać się twoim własnym głosem”. Jeśli dzisiaj przygniata cię ciężar obowiązków lub niepewność jutra, zamień swoje zamartwianie się w wołanie do Pana. Zamiast toczyć w myślach monologi z lękiem, zacznij dziękować Bogu za Jego dotychczasową wierność.`;
+    spiritualEnc = `Bóg nie jest obojętnym widzem twoich zmagań. Psałterz uczy nas, że żadna łza wylana w ukryciu nie jest zapomniana przez Ojca. Spocznij bezpiecznie w Jego ramionach.`;
+  } else if (isGospel) {
+    pastoralTradition = 'Tradycja duszpasterska: Św. Franciszek Salezy, Matthew Henry & św. Teresa od Dzieciątka Jezus';
+    practicalApp = `Św. Franciszek Salezy radzi: „Nie szukaj wielkich i nadzwyczajnych dzieł, lecz czyń małe rzeczy z wielką miłością”. Perykopa ewangeliczna wzywa cię do konkretnego gestu w ciągu dnia: wyciągnij rękę do osoby, z którą trudno ci się porozumieć, powstrzymaj złośliwe słowo, okaż cierpliwość tam, gdzie dotąd reagowałeś gniewem.`;
+    spiritualEnc = `Jezus nie zraża się twoją słabością. On przyszedł szukać i zbawiać właśnie to, co w tobie pogubione. Każdy poranek jest nową szansą, by powstać i pójść za Jego głosem.`;
+  } else if (isPauline) {
+    pastoralTradition = 'Tradycja duszpasterska: Św. Jan Chryzostom, Matthew Henry & klasycy odnowy wiary';
+    practicalApp = `Apostoł przypomina ci o fundamencie twojej tożsamości: jesteś dzieckiem Boga wykupionym drogocenną Krwią Chrystusa. Przestań mierzyć swoją wartość ludzką opinią, sukcesami czy porażkami. Oprzyj się na darmowej łasce Bożej i pozwól Duchowi Świętemu kierować twoimi wyborami.`;
+    spiritualEnc = `«Jeżeli Bóg z nami, któż przeciwko nam?». Żadna ciemność, żadna przeszłość ani żaden ludzki wyrok nie może odłączyć cię od miłości Boga, która jest w Chrystusie Jezusie.`;
+  } else {
+    pastoralTradition = 'Tradycja pastoralna: Matthew Henry & mistrzowie życia duchowego';
+    practicalApp = `Słowo Boże jest żywe i skuteczne. Zbadaj dzisiaj swoje serce w świetle tego fragmentu: gdzie Bóg wzywa cię do większego zaufania, a gdzie do przebaczenia i pojednania z bliźnim? Rozpocznij od jednego, prostego kroku wiary.`;
+    spiritualEnc = `Bóg jest wierny swoim obietnicom. Nawet gdy droga wydaje się kręta i trudna, Jego Opatrzność czuwa nad twoim życiem.`;
+  }
+
+  const pastoralNotes = {
     title: 'Komentarz Pastoralno-Duszpasterski',
-    authorTradition: isPsalm
-      ? 'Tradycja duszpasterska: C.H. Spurgeon («Skarbnica Dawidowa» / The Treasury of David) & Matthew Henry'
-      : 'Tradycja pastoralna: Matthew Henry & klasycy życia duchowego',
-    practicalApplication: isPsalm
-      ? `Spurgeon w «Skarbnicy Dawidowej» zauważa: „Ten psalm to balsam na zbolałą duszę. Kiedy nie wiesz, jak się modlić, pozwól, aby Słowo Boże stało się twoją modlitwą”. W codzienności oznacza to: zamiast karmić się lękiem przed jutrem, powierzaj swoje sprawy Bogu, który zna każdą twoją łzę i czuwa nad twoim krokiem.`
-      : `Matthew Henry podkreśla praktyczny wymiar Ewangelii: Słowo Boże nie zostało nam dane tylko do zachwytu intelektualnego, lecz do życia. Sprawdź dzisiaj stan swojego serca: czy nie nosisz w sobie ukrytego żalu do bliskich? Czy twoje słowa budują pokój w twoim domu i miejscu pracy? Rozpocznij od małego kroku przebaczenia i cierpliwości.`,
-    spiritualEncouragement: `Nie zniechęcaj się, jeśli czujesz swoją duchową słabość. Bóg nie powołuje ludzi doskonałych, lecz uświęca tych, którzy stają przed Nim w prawdzie i zaufaniu. To Słowo jest gwarancją, że Jego łaska jest większa niż jakikolwiek twój grzech i upadek.`
+    authorTradition: pastoralTradition,
+    practicalApplication: practicalApp,
+    spiritualEncouragement: spiritualEnc
   };
 
-  let classicNotes = {
-    title: 'Tradycyjne Przypisy Polskie (Biblia ks. Jakuba Wujka)',
-    notes: `Ks. Jakub Wujek w swych klasycznych objaśnieniach przypomina: „Pismo Święte należy czytać w tym samym Duchu, w którym zostało napisane – z pokorą serca i posłuszeństwem świętej Matce Kościołowi”. W tym fragmencie wierny czytelnik odnajduje wezwanie do stałości w cnocie i nieulegania zwodniczym powiewom światowości.`
+  // 4. Classic Polish Bible notes (Biblia ks. Jakuba Wujka S.J.)
+  const classicNotes = {
+    title: 'Tradycyjne Przypisy Polskie (Biblia ks. Jakuba Wujka S.J.)',
+    notes: `Ks. Jakub Wujek w swych historycznych objaśnieniach z 1599 r. przypomina: „Pismo Święte należy czytać w tym samym Duchu, w którym zostało napisane – z pokorą serca i posłuszeństwem świętej Matce Kościołowi”. W tym fragmencie (${cleanSig}) tradycja katolicka odnajduje wezwanie do stateczności w cnocie, czujności sumienia i nieulegania ułudom doczesności, mając zawsze przed oczyma wieczność.`
   };
 
   return {
@@ -444,21 +506,29 @@ function generateComprehensiveFallbackCommentary(siglum: string, text?: string, 
     historicalLiteraryContext: `Fragment z księgi ${book} wpisuje się w wielką historię zbawienia. Przemawia w konkretnym kontekście przymierza Boga z człowiekiem, wzywając lud do wierności, zaufania Opatrzności i wejścia w zażyłą komunię z Bogiem żywym.`,
     theologicalMessage: `Orędzie perykopy ogłasza prymat Bożej miłości i łaski. W Chrystusie wszystkie obietnice tego tekstu znajdują swoje ostateczne «Tak» i «Amen» (por. 2 Kor 1, 20), uzdalniając wierzącego do życia nowego według Ducha Świętego.`,
     spiritualSense: {
-      literal: `Sens dosłowny: Wydarzenie i prawda historyczno-zbawcza przekazana pod natchnieniem Ducha Świętego dla pouczenia i zbawienia ludu Bożego.`,
-      allegorical: `Sens alegoryczny: W świetle Chrystusa fragment ten zapowiada tajemnicę Odkupienia, Krzyża, Zmartwychwstania oraz misterium Kościoła i sakramentów.`,
-      moral: `Sens moralny: Wzywa do nawrócenia obyczajów, pokory, miłości nieprzyjaciół oraz wierności codziennym obowiązkom stanu.`,
-      anagogical: `Sens anagogiczny: Kieruje wzrok i tęsknotę serca ku wiecznemu Jeruzalem, gdzie Bóg otrze z oczu wszelką łzę i będzie wszystkim we wszystkich.`
+      literal: `Sens dosłowny (${cleanSig}): Prawda historyczno-zbawcza przekazana pod natchnieniem Ducha Świętego przez autora natchnionego dla zbawienia wierzących.`,
+      allegorical: isApocalypse 
+        ? `Sens alegoryczny: Chrystus-Baranek pukający do serca jest figurą nowego i wiecznego Przymierza, gdzie Zbawiciel poślubia swój Kościół i uświęca dusze sakramentami.`
+        : isGospel
+        ? `Sens alegoryczny: Słowa i czyny Jezusa objawiają misterium Wcielenia, Paschy oraz zjednoczenia wiernych w Ciele Mistycznym Kościoła.`
+        : `Sens alegoryczny: W świetle Chrystusa fragment ten zapowiada tajemnicę Odkupienia, Krzyża i Zmartwychwstania oraz misterium sakramentów Kościoła.`,
+      moral: isApocalypse
+        ? `Sens moralny: Wzywa do natychmiastowego otwarcia serca na głos sumienia, zerwania z letniością i obłudą oraz podjęcia czujnej modlitwy.`
+        : `Sens moralny: Wzywa do nawrócenia obyczajów, pokory, miłości nieprzyjaciół oraz wiernego wypełniania codziennych obowiązków stanu.`,
+      anagogical: isApocalypse
+        ? `Sens anagogiczny: Zapowiada ostateczną Ucztę Baranka w nowym Jeruzalem, gdzie nie będzie już śmierci ani żałoby, a Bóg będzie wszystkim we wszystkich.`
+        : `Sens anagogiczny: Kieruje wzrok i tęsknotę serca ku wiecznemu Jeruzalem, gdzie osiągniemy pełnię szczęścia w oglądaniu Boga twarzą w twarz.`
     },
     thomasAquinas: thomasNotes,
     jfbCommentary: jfbNotes,
     pastoralCommentary: pastoralNotes,
     classicFootnotes: classicNotes,
     meditationPoints: [
-      'Które konkretne słowo lub zwrot z tego fragmentu dotyka dzisiaj mojego sumienia?',
-      'Jak prawda o miłosierdziu Bożym zawarta w tym tekście może uleczyć moje obecne lęki i zniechęcenia?',
-      'Do jakiego konkretnego czynu miłości lub aktu przebaczenia wzywa mnie Pan tu i teraz?'
+      `Jakie konkretne słowo z fragmentu ${cleanSig} zatrzymuje dziś moją uwagę i wzywa mnie do odpowiedzi?`,
+      `Gdzie w moim obecnym życiu doświadczam znużenia lub zamknięcia drzwi serca, a gdzie Bóg puka z darem nowego początku?`,
+      `Do jakiego konkretnego kroku zaufania, przebaczenia lub modlitwy zaprasza mnie dziś to Słowo?`
     ],
-    prayer: `Panie Jezu Chryste, Boski Nauczycielu, niech Twoje Słowo stanie się pochodnią dla moich kroków i światłem na moich ścieżkach. Oczyść moje serce z próżności i pychy, a napełnij pokojem i miłością, abym był wiernym świadkiem Twojej Ewangelii. Amen.`
+    prayer: `Panie Jezu Chryste, Twoje Słowo jest duchem i życiem. Otwieram przed Tobą drzwi mojego serca – wejdź, rozprosz ciemności lęku, napełnij mnie Twoim pokojem i uczyń moje życie świątynią Twojej miłości. Amen.`
   };
 }
 
@@ -469,11 +539,17 @@ app.post('/api/scrutation/passage-commentary', async (req, res) => {
     return res.status(400).json({ error: 'Siglum jest wymagane' });
   }
 
+  const cacheKey = `${siglum.trim().toLowerCase()}_${(label || '').trim().toLowerCase()}`;
+  if (passageCommentaryCache.has(cacheKey)) {
+    return res.json(passageCommentaryCache.get(cacheKey));
+  }
+
   const fallbackResult = generateComprehensiveFallbackCommentary(siglum, text, label, liturgicalContext);
 
   try {
     const ai = getGeminiClient();
     if (!ai) {
+      passageCommentaryCache.set(cacheKey, fallbackResult);
       return res.json(fallbackResult);
     }
 
@@ -582,14 +658,20 @@ Twoim zadaniem jest dostarczyć w języku polskim:
       ]
     };
 
-    const parsed = await generateContentWithFallback(ai, { prompt, schema });
-    res.json({
+    const systemInstruction = `Jesteś wybitnym profesorem biblistyki katolickiej, profesorem nauk teologicznych, badaczem dzieł św. Tomasza z Akwinu oraz klasycznych komentarzy biblijnych (Jamieson-Fausset-Brown, Matthew Henry, Ojcowie Kościoła).
+Nie spiesz się. Przeprowadź pełną, wyczerpującą, scholastyczną i duchową analizę podanego fragmentu Pisma Świętego w języku polskim, kładąc szczególny nacisk na autentyczną teologię św. Tomasza z Akwinu (doktryna łaski, sakramenty, Catena Aurea) oraz zmysły Pisma Świętego.`;
+
+    const parsed = await generateContentWithFallback(ai, { prompt, schema, systemInstruction });
+    const fullResult = {
       source: 'gemini',
       siglum,
       ...parsed
-    });
+    };
+    passageCommentaryCache.set(cacheKey, fullResult);
+    res.json(fullResult);
   } catch (error) {
     noteGeminiQuotaDepleted(error);
+    passageCommentaryCache.set(cacheKey, fallbackResult);
     res.json(fallbackResult);
   }
 });

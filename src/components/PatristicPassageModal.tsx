@@ -36,30 +36,21 @@ export const PatristicPassageModal: React.FC<PatristicPassageModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-950/70 backdrop-blur-sm animate-fade-in overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-6 bg-slate-950/75 backdrop-blur-sm animate-fade-in">
       <div
-        className="relative w-full max-w-4xl bg-white rounded-3xl shadow-2xl border border-sky-200 overflow-hidden my-auto max-h-[92vh] flex flex-col"
+        className="relative w-full max-w-4xl bg-white rounded-2xl sm:rounded-3xl shadow-2xl border border-sky-200 overflow-y-auto max-h-[96dvh] sm:max-h-[90vh] flex flex-col overscroll-contain"
         role="dialog"
         aria-modal="true"
       >
-        {/* Top Header */}
-        <div className="bg-gradient-to-r from-sky-900 via-slate-900 to-emerald-950 text-white p-5 sm:p-6 flex items-start justify-between gap-4 border-b border-sky-700/50 shrink-0">
-          <div className="space-y-1.5">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="px-2.5 py-0.5 rounded-full bg-sky-400/20 border border-sky-400/30 text-[10px] uppercase font-sans font-bold tracking-widest text-sky-200">
-                {label ? `Ojcowie Kościoła • ${label}` : 'Ojcowie Kościoła (Catena Aurea)'}
-              </span>
-              <span className="font-mono text-xs font-bold text-white bg-sky-950/70 px-2.5 py-0.5 rounded-md border border-sky-500/30">
-                {activeSiglum}
-              </span>
-            </div>
-            <h2 className="font-serif text-xl sm:text-2xl font-bold tracking-tight text-white flex items-center gap-2">
-              <Scroll className="w-5 h-5 text-sky-400 shrink-0" />
-              <span>Komentarze Ojców Kościoła do fragmentu</span>
-            </h2>
-            <p className="text-xs text-sky-200/90 font-sans">
-              Święty Augustyn, Jan Chryzostom, Hieronim, Tomasz z Akwinu i starożytna Tradycja Kościoła
-            </p>
+        {/* Compact Sticky Top Bar */}
+        <div className="sticky top-0 z-30 bg-slate-950/95 backdrop-blur-md text-slate-50 px-3.5 sm:px-5 py-2.5 flex items-center justify-between border-b border-sky-700/50 shadow-xs">
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="px-2 py-0.5 rounded-full bg-sky-400/20 border border-sky-400/30 text-[10px] uppercase font-sans font-bold tracking-wider text-sky-200 shrink-0">
+              {label ? `Ojcowie • ${label}` : 'Ojcowie Kościoła'}
+            </span>
+            <span className="font-mono text-xs sm:text-sm font-bold text-white bg-sky-950/80 px-2 py-0.5 rounded border border-sky-500/30 shrink-0">
+              {activeSiglum}
+            </span>
           </div>
 
           <div className="flex items-center gap-1.5 shrink-0">
@@ -70,7 +61,7 @@ export const PatristicPassageModal: React.FC<PatristicPassageModalProps> = ({
                   onClose();
                   onOpenFullPatristicView(activeSiglum);
                 }}
-                className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-sky-800/80 hover:bg-sky-700 text-xs font-sans font-bold text-sky-100 transition-colors cursor-pointer border border-sky-600/40"
+                className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-sky-800/80 hover:bg-sky-700 text-xs font-sans font-bold text-sky-100 transition-colors cursor-pointer border border-sky-600/40"
                 title="Otwórz w pełnej zakładce Ojców Kościoła"
               >
                 <span>Pełna zakładka</span>
@@ -80,20 +71,36 @@ export const PatristicPassageModal: React.FC<PatristicPassageModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="p-2 rounded-xl bg-sky-950/60 hover:bg-sky-900 text-sky-200 hover:text-white transition-colors cursor-pointer"
+              className="p-1.5 sm:p-2 rounded-lg bg-slate-900/80 hover:bg-slate-800 text-sky-200 hover:text-white transition-colors cursor-pointer"
               title="Zamknij"
             >
-              <X className="w-5 h-5" />
+              <X className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
           </div>
         </div>
 
+        {/* Rich Header Banner (scrolls naturally with content) */}
+        <div className="bg-gradient-to-r from-sky-900 via-slate-900 to-emerald-950 text-white p-4 sm:p-6 border-b border-sky-700/50 space-y-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="px-2 py-0.5 rounded bg-sky-950/60 text-[10px] sm:text-xs font-sans font-semibold text-sky-200 border border-sky-500/30">
+              Catena Aurea & Patrologia Graeca et Latina
+            </span>
+          </div>
+          <h2 className="font-serif text-lg sm:text-2xl font-bold tracking-tight text-white flex items-center gap-2">
+            <Scroll className="w-5 h-5 text-sky-400 shrink-0" />
+            <span>Komentarze Ojców Kościoła do fragmentu</span>
+          </h2>
+          <p className="text-xs sm:text-sm text-sky-200/90 font-sans">
+            Święty Augustyn, Jan Chryzostom, Hieronim, Tomasz z Akwinu i starożytna Tradycja Kościoła
+          </p>
+        </div>
+
         {/* Navigation Switch Bar: Ojcowie Kościoła vs Komentarze Najnowsze */}
-        <div className="bg-sky-950/30 border-b border-slate-200 px-4 py-2.5 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 shrink-0">
+        <div className="bg-sky-950/20 border-b border-slate-200 px-3.5 sm:px-5 py-2.5 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
           <div className="inline-flex rounded-xl p-1 bg-slate-100 border border-slate-200 self-start">
             <button
               type="button"
-              className="px-3.5 py-1.5 rounded-lg text-xs font-sans font-bold bg-sky-700 text-white shadow-xs flex items-center gap-1.5"
+              className="px-3 py-1.5 rounded-lg text-xs font-sans font-bold bg-sky-700 text-white shadow-xs flex items-center gap-1.5"
             >
               <Scroll className="w-3.5 h-3.5" />
               <span>Ojcowie Kościoła (Tradycja)</span>
@@ -105,7 +112,7 @@ export const PatristicPassageModal: React.FC<PatristicPassageModalProps> = ({
                   onClose();
                   onOpenModernCommentary(activeSiglum, verseText, label);
                 }}
-                className="px-3.5 py-1.5 rounded-lg text-xs font-sans font-medium text-slate-700 hover:text-slate-900 hover:bg-white/80 transition-colors flex items-center gap-1.5 cursor-pointer"
+                className="px-3 py-1.5 rounded-lg text-xs font-sans font-medium text-slate-700 hover:text-slate-900 hover:bg-white/80 transition-colors flex items-center gap-1.5 cursor-pointer"
                 title="Przełącz na najnowsze komentarze biblijno-egzegetyczne"
               >
                 <MessageSquareQuote className="w-3.5 h-3.5 text-amber-600" />
@@ -116,7 +123,7 @@ export const PatristicPassageModal: React.FC<PatristicPassageModalProps> = ({
 
           {/* Quick Siglum / Phrase Search */}
           <form onSubmit={handleSearch} className="flex items-center gap-1.5">
-            <div className="relative flex-1 sm:w-64">
+            <div className="relative flex-1 sm:w-60">
               <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
@@ -135,8 +142,8 @@ export const PatristicPassageModal: React.FC<PatristicPassageModalProps> = ({
           </form>
         </div>
 
-        {/* Scrollable Content Body */}
-        <div className="p-5 sm:p-7 overflow-y-auto space-y-6 flex-1 text-slate-900">
+        {/* Content Body (flows naturally in the scrollable card) */}
+        <div className="p-4 sm:p-7 space-y-6 text-slate-900">
           <PatristicCommentarySection
             siglum={activeSiglum}
             verseText={verseText}

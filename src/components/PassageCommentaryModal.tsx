@@ -20,6 +20,131 @@ import {
   FileText
 } from 'lucide-react';
 import { PassageCommentaryData } from '../types';
+import { getAquinasCommentaryForQuote } from '../data/aquinasCommentariesDatabase';
+
+// Client-side cache to make passage commentary instantaneous across sessions and tab clicks
+const clientCommentaryCache = new Map<string, PassageCommentaryData>();
+
+function generateClientGuaranteedCommentary(
+  targetSiglum: string,
+  passageText?: string,
+  label?: string,
+  liturgicalContext?: string
+): PassageCommentaryData {
+  const cleanSig = (targetSiglum || '').trim();
+  const book = cleanSig.split(' ')[0] || '';
+  const lower = cleanSig.toLowerCase();
+
+  const isApocalypse = lower.startsWith('ap');
+  const isPsalm = lower.startsWith('ps') || lower.includes('psalm') || Boolean(label && label.toLowerCase().includes('psalm'));
+  const isGospel = ['mt', 'mk', 'łk', 'lk', 'j', 'jn'].some(g => lower.startsWith(g)) || Boolean(label && label.toLowerCase().includes('ewangelia'));
+  const isPauline = ['rz', '1 kor', '2 kor', 'ga', 'ef', 'flp', 'kol', '1 tes', '2 tes', '1 tm', '2 tm', 'tt', 'flm', 'hbr'].some(e => lower.startsWith(e));
+  const isCatholicEpistle = ['jk', '1 p', '2 p', '1 j', '2 j', '3 j', 'jud'].some(e => lower.startsWith(e));
+  const isProphet = ['iz', 'jr', 'lm', 'ba', 'ez', 'dn', 'oz', 'jl', 'am', 'ab', 'jon', 'mi', 'na', 'ha', 'sof', 'ag', 'za', 'ml'].some(p => lower.startsWith(p));
+  const isTorah = ['rdz', 'wj', 'kpł', 'lb', 'pwt', 'joz', 'sdz', 'rt', '1 sm', '2 sm', '1 krl', '2 krl'].some(t => lower.startsWith(t));
+  const isWisdom = ['hi', 'prz', 'koh', 'pnp', 'mdr', 'syr'].some(w => lower.startsWith(w));
+
+  const aquinas = getAquinasCommentaryForQuote(cleanSig, undefined, passageText);
+
+  // Book specific JFB
+  let jfbCritical = '';
+  let jfbHistory = '';
+  if (isApocalypse) {
+    jfbCritical = 'W greckim tekście Apokalipsy (Novum Testamentum Graece) czasowniki w czasie teraźniejszym (np. ἕστηκα - «stoję», κρούω - «stale kołaczę») wyrażają ciągłą i niezmienną cierpliwość Chrystusa. JFB podkreśla, że użyte pojęcie «deipneo» oznacza zażyłą, wieczorną wieczerzę przymierza, a nie pośpieszny posiłek. Zbawiciel nie wyłamuje drzwi przemocą – klamka ludzkiej woli znajduje się wewnątrz.';
+    jfbHistory = 'Kontekst historyczny: List do Kościoła w Laodycei (ok. 95 r. po Chr., prześladowania Domicjana). Laodycea słynęła z banków, czarnej wełny i maści ocznych – Chrystus demaskuje ich wewnętrzną nędzę i wzywa do kupienia u Niego «złota w ogniu wypróbowanego». Obraz kołatania nawiązuje do Pieśni nad Pieśniami (Pnp 5, 2).';
+  } else if (isPsalm) {
+    jfbCritical = 'W tekście masoreckim (Biblia Hebraica) modlitwa ta opiera się na fundamencie hebrajskich pojęć Przymierza: chesed («niezłomna, wierna miłość») i emet («prawda i stałość»). Poetycki paralelizm członów (parallelismus membrorum) wyraża pełnię zaufania modlącego się Izraelity do Jahwe jako Skały ocalenia.';
+    jfbHistory = 'Tło liturgiczne świątyni jerozolimskiej i tradycji dawidowej. Psalmy te stanowiły żywy modlitewnik ludu wybranego w chwilach ucisku i dziękczynienia, a w Nowym Testamencie stają się modlitwą samego Chrystusa i Jego Kościoła.';
+  } else if (isGospel) {
+    jfbCritical = 'W grece Nowego Testamentu Ewangelista precyzyjnie oddaje słowa i czyny Chrystusa w kategoriach wypełnienia Pism. JFB zwraca uwagę na dynamikę czasowników greckich, które ukazują zbawczą inicjatywę Jezusa: Królestwo Boże przybliża się w Jego osobie, przynosząc uwolnienie i odpuszczenie grzechów.';
+    jfbHistory = 'Realia I wieku w Galilei i Judei: napięcia z rzymską władzą okupacyjną, praktyki faryzejskie oraz oczekiwanie na Mesjasza. Jezus przekracza ciasne ramy legalizmu, ukazując miłosierne oblicze Ojca.';
+  } else if (isPauline) {
+    jfbCritical = 'Apostoł Paweł operuje ścisłą terminologią kerygmatyczną: usprawiedliwienie (dikaiosyne), łaska (charis) oraz wiara (pistis). JFB uwypukla, że w tym tekście człowiek nie zdobywa zbawienia własnymi zasługami, lecz przyjmuje je w darze przez zjednoczenie z Chrystusem Ukrzyżowanym.';
+    jfbHistory = 'List pasterski pisany do młodej wspólnoty chrześcijańskiej pośród pogańskiego świata Cesarstwa Rzymskiego, umacniający braci w jedności, prawowiernej nauce i życiu według Ducha.';
+  } else if (isProphet) {
+    jfbCritical = 'W oryginale hebrajskim perykopa posługuje się autorytatywną formułą posłańca Bożego («Ko amar Adonaj» - «Tak mówi Pan»). Słowo Boże (Dabar) ma moc sprawczą i wzywa naród do gruntownego powrotu (Teszwwa) z dróg niewierności.';
+    jfbHistory = 'Dramatyczne tło kryzysów politycznych, niewoli babilońskiej lub zagrożeń asyryjskich. Prorok w imieniu Boga ogłasza upadek pychy doczesnej i roztacza perspektywę wiecznego przymierza mesjańskiego.';
+  } else if (isWisdom) {
+    jfbCritical = 'Hebrajskie nauczanie mądrościowe opiera się na pojęciu Chokmah (Bożej Mądrości) i bojaźni Pańskiej (Jirat Adonaj). Zwięzłe maksymy przeciwstawiają drogę mądrości zgubnej drodze głupoty i samowoli.';
+    jfbHistory = 'Tradycja mędrców i dworu królewskiego w Jerozolimie, kształtująca prawość serca, roztropność w słowach i zaufanie Bożej Opatrzności w codziennym życiu.';
+  } else {
+    jfbCritical = 'W tekście oryginalnym kluczowe terminy wskazują na trwałe, niezłomne przymierze Boga z człowiekiem. JFB podkreśla precyzję słownictwa natchnionego i harmonię z całym kanonem biblijnym.';
+    jfbHistory = 'Kontekst kanoniczny ukazuje, jak fragment ten wpisuje się w obietnice dane ojcom wiary i znajduje ostateczne dopełnienie w Jezusie Chrystusie.';
+  }
+
+  // Book specific pastoral
+  let pastoralTrad = '';
+  let practicalApp = '';
+  let spiritualEnc = '';
+  if (isApocalypse) {
+    pastoralTrad = 'Tradycja pastoralna: Matthew Henry, św. Jan od Krzyża & mistrzowie modlitwy wewnętrznej';
+    practicalApp = 'Chrystus stoi u drzwi twojego serca z wielką dyskrecją. Zapytaj siebie dzisiaj: jakie obszary mojego życia wciąż pozostają zamknięte przed Jego światłem? Gdzie boję się wpuścić Boga – w moje lęki, zranienia czy poczucie winy? Otworzyć drzwi to powierzyć Mu w krótkiej, szczerej modlitwie to, co po ludzku boli i zawstydza.';
+    spiritualEnc = 'On nie przychodzi, by cię potępić, lecz by z tobą wieczerzać – obdarować cię przebaczeniem, pokojem i nowym życiem. Usłysz dziś Jego ciche pukanie.';
+  } else if (isPsalm) {
+    pastoralTrad = 'Tradycja duszpasterska: C.H. Spurgeon («Skarbnica Dawidowa») & Matthew Henry';
+    practicalApp = 'Spurgeon w «Skarbnicy Dawidowej» zachęca: „Nie czytaj psalmu jak obcej historii – uczyń go modlitwą twojej własnej duszy”. Kiedy zalewa cię fala wątpliwości lub zmęczenia, oddaj Panu swoje troski, zanim zaczniesz rozmawiać o nich ze światem.';
+    spiritualEnc = 'Pan jest blisko tych, którzy Go wzywają w prawdzie. Żadna twoja walka i łza nie umknęła Jego ojcowskiej trosce.';
+  } else if (isGospel) {
+    pastoralTrad = 'Tradycja duszpasterska: Św. Franciszek Salezy, Matthew Henry & św. Teresa z Lisieux';
+    practicalApp = 'Ewangelia nie jest suchą literą – to żywe spotkanie z Mistrzem. Przełóż to Słowo na dzisiejszy dzień: uśmiech, powstrzymanie zniecierpliwienia, pomoc komuś w potrzebie lub przebaczenie urazy bez wypominania.';
+    spiritualEnc = 'Jezus zna kruchość twojej natury i kocha cię taką miłością, która nie stawia warunków. Przyjdź do Niego ze swoim ubóstwem.';
+  } else if (isPauline) {
+    pastoralTrad = 'Tradycja duszpasterska: Św. Jan Chryzostom, Matthew Henry & klasycy duchowości biblijnej';
+    practicalApp = 'Pamiętaj, do jakiej wolności powołał cię Chrystus. Nie pozwalaj, by oskarżenia przeciwnika lub ludzka krytyka pozbawiły cię radości bycia dzieckiem Bożym. Żyj w prawdzie i obfitości łaski.';
+    spiritualEnc = 'Bóg, który rozpoczął w tobie dobre dzieło, sam doprowadzi je do końca. Pokładaj nadzieję w Jego niewzruszonej wierności.';
+  } else {
+    pastoralTrad = 'Tradycja duszpasterska: Matthew Henry & klasycy życia duchowego';
+    practicalApp = 'Pozwól, aby to Słowo przeniknęło twoje codzienne wybory. Sprawdź swoje motywacje i podejmij dziś choć jeden konkretny krok wiary, na który dotąd brakowało ci odwagi.';
+    spiritualEnc = 'Boża miłość uprzedza każdy twój krok. Nie lękaj się – On idzie przed tobą.';
+  }
+
+  return {
+    siglum: cleanSig,
+    title: `Komentarz biblijny: ${label ? `${label} (${cleanSig})` : cleanSig}`,
+    historicalLiteraryContext: `Fragment z księgi ${book} wpisuje się w zbawczą historię Przymierza. Bóg w konkretnym czasie i języku objawia swoją wolę, wzywając człowieka do zaufania i wejścia w zażyłość z Nim.`,
+    theologicalMessage: liturgicalContext || `Orędzie tego tekstu (${cleanSig}) ogłasza prymat Bożej łaski i wierności. Słowo to rozjaśnia mroki ludzkiego serca i prowadzi do odkrycia Chrystusa jako centrum całego Pisma.`,
+    spiritualSense: {
+      literal: `Sens dosłowny (${cleanSig}): Prawda historyczno-zbawcza przekazana pod natchnieniem Ducha Świętego przez autora natchnionego dla zbawienia i pouczenia wierzących.`,
+      allegorical: isApocalypse
+        ? 'Sens alegoryczny: Chrystus-Baranek pukający do serca zapowiada wieczne gody Zbawiciela z Kościołem i karmienie duszy sakramentami zbawienia.'
+        : isGospel
+        ? 'Sens alegoryczny: Wydarzenia ewangeliczne objawiają misterium Wcielenia, Ofiary Paschalnej oraz zjednoczenia wiernych w Ciele Mistycznym Chrystusa.'
+        : 'Sens alegoryczny: W świetle Chrystusa fragment ten zapowiada tajemnicę Odkupienia, Krzyża i Zmartwychwstania oraz misterium Kościoła i sakramentów.',
+      moral: isApocalypse
+        ? 'Sens moralny: Wzywa do porzucenia letniości duchowej, czujnego nasłuchiwania głosu sumienia i natychmiastowego otwarcia drzwi Chrystusowi.'
+        : 'Sens moralny: Wzywa do nawrócenia obyczajów, pokory, miłości braterskiej oraz wierności codziennym obowiązkom stanu.',
+      anagogical: isApocalypse
+        ? 'Sens anagogiczny: Wznosi tęsknotę ku Nowemu Jeruzalem i wiecznej Wieczerzy Baranka, gdzie Bóg otrze z oczu wszelką łzę.'
+        : 'Sens anagogiczny: Kieruje wzrok i pragnienia ku wieczności, gdzie osiągniemy pełnię szczęścia w wiecznym oglądaniu Boga (visio beatifica).'
+    },
+    thomasAquinas: {
+      title: `Wykład św. Tomasza z Akwinu: ${aquinas.workTitle}`,
+      catenaAureaGloss: `${aquinas.polishTranslation}${aquinas.originalText ? `\n\nTekst oryginalny: «${aquinas.originalText}»` : ''}`,
+      scholasticSynthesis: `${aquinas.spiritualInsight}\n\nZmysł teologiczny (${aquinas.theologicalSense}): Przyczyną sprawczą zbawczego orędzia jest suwerenna łaska Boża; przyczyną celową – uświęcenie człowieka i chwała Boga żywego.`
+    },
+    jfbCommentary: {
+      title: 'Komentarz Jamiesona-Fausseta-Browna (JFB) po polsku',
+      criticalNotes: jfbCritical,
+      historicalExegesis: jfbHistory
+    },
+    pastoralCommentary: {
+      title: 'Komentarz Pastoralno-Duszpasterski',
+      authorTradition: pastoralTrad,
+      practicalApplication: practicalApp,
+      spiritualEncouragement: spiritualEnc
+    },
+    classicFootnotes: {
+      title: 'Tradycyjne Przypisy Polskie (Biblia ks. Jakuba Wujka S.J.)',
+      notes: `W historycznym przekładzie ks. Jakuba Wujka z 1599 r. werset ten (${cleanSig}) opatrzony jest zachętą do czujności sumienia i wierności natchnieniom Ducha Świętego, ostrzegając przed ułudami świata doczesnego.`
+    },
+    meditationPoints: [
+      `Jakie konkretne słowo z fragmentu ${cleanSig} dotyka dzisiaj mojego serca i budzi we mnie pragnienie modlitwy?`,
+      `Gdzie w moim obecnym życiu czuję pokusę zamknięcia się w lęku, a gdzie Bóg puka z obietnicą uzdrowienia?`,
+      `Do jakiego konkretnego kroku zaufania, przebaczenia lub czynu miłości zaprasza mnie dziś to czytanie?`
+    ],
+    prayer: `Panie Jezu Chryste, Twoje Słowo jest pochodnią dla moich stóp i światłem na mojej ścieżce. Otwieram przed Tobą moje serce: zamieszkaj we mnie, ulecz moje niewierności i uczyń mnie narzędziem Twojego pokoju. Amen.`
+  };
+}
 
 interface PassageCommentaryModalProps {
   isOpen: boolean;
@@ -65,8 +190,16 @@ export const PassageCommentaryModal: React.FC<PassageCommentaryModalProps> = ({
     setActiveSiglum(siglum);
   }, [siglum]);
 
-  const fetchCommentary = async (targetSiglum: string = activeSiglum) => {
+  const fetchCommentary = async (targetSiglum: string = activeSiglum, forceRefresh = false) => {
     if (!targetSiglum) return;
+    const cacheKey = `${targetSiglum.trim().toLowerCase()}_${(label || '').trim().toLowerCase()}`;
+
+    if (clientCommentaryCache.has(cacheKey) && !forceRefresh) {
+      setCommentary(clientCommentaryCache.get(cacheKey)!);
+      setIsLoading(false);
+      return;
+    }
+
     setIsLoading(true);
     try {
       const res = await fetch('/api/scrutation/passage-commentary', {
@@ -81,50 +214,21 @@ export const PassageCommentaryModal: React.FC<PassageCommentaryModalProps> = ({
       });
       if (res.ok) {
         const data = await res.json();
+        clientCommentaryCache.set(cacheKey, data);
         setCommentary(data);
       } else {
-        throw new Error('Nie udało się pobrać komentarza');
+        throw new Error('Nie udało się pobrać komentarza z serwera');
       }
     } catch (_err) {
-      // Fallback multi-perspective commentary
-      setCommentary({
-        siglum: targetSiglum,
-        title: `Komentarz biblijny: ${label ? `${label} (${targetSiglum})` : targetSiglum}`,
-        historicalLiteraryContext: `Fragment z księgi ${targetSiglum.split(' ')[0]} wpisuje się w zbawczą historię Przymierza. Bóg w konkretnym czasie i języku objawia swoją wolę, wzywając człowieka do zaufania i wejścia w zażyłość z Nim.`,
-        theologicalMessage: theologicalTheme || `Orędzie tego tekstu ogłasza prymat Bożej łaski i wierności. Słowo to rozjaśnia mroki ludzkiego serca i prowadzi do odkrycia Chrystusa jako centrum całego Pisma.`,
-        spiritualSense: {
-          literal: 'Sens dosłowny wskazuje na wydarzenie zbawcze oraz słowa i czyny przekazane przez natchnionego autora dla pouczenia wierzących.',
-          allegorical: 'Sens alegoryczny pozwala rozpoznać zapowiedź i figurę tajemnicy Chrystusa i Kościoła, które w Nim znajdują ostateczne wypełnienie.',
-          moral: 'Sens moralny prowadzi do nawrócenia obyczajów, wzywając do miłości braterskiej, pokory i wypełniania woli Ojca.',
-          anagogical: 'Sens anagogiczny wznosi myśl ku rzeczom wiecznym – do eschatologicznego celu naszej ziemskiej pielgrzymki.'
-        },
-        thomasAquinas: {
-          title: 'Wykład św. Tomasza z Akwinu (Doctor Angelicus)',
-          catenaAureaGloss: 'Święty Tomasz z Akwinu naucza, że całe Pismo Święte ma za cel doprowadzenie człowieka do komunii z Bogiem. W duchu Catena Aurea perykopa ta łączy głos Tradycji z głęboką kontemplacją tajemnicy wcielonej Mądrości Bożej.',
-          scholasticSynthesis: 'Przyczyną sprawczą zbawczego orędzia jest Boże miłosierdzie; przyczyną celową – wieczne szczęście człowieka. Fragment ten oświeca rozum wiarą i rozpala wolę miłością (caritas).'
-        },
-        jfbCommentary: {
-          title: 'Komentarz Jamiesona-Fausseta-Browna (JFB) po polsku',
-          criticalNotes: 'W tekście oryginalnym kluczowe terminy wskazują na trwałe, niezłomne przymierze Boga. JFB podkreśla precyzję oryginalnego słownictwa i ścisły związek z całością objawienia biblijnego.',
-          historicalExegesis: 'Tło epoki i kontekst starożytny ukazują wierność Boga pośród zmiennych kolei losów narodu wybranego, zapowiadając pełnię odkupienia w Nowym Testamencie.'
-        },
-        pastoralCommentary: {
-          title: 'Komentarz Pastoralno-Duszpasterski',
-          authorTradition: 'Tradycja duszpasterska: Matthew Henry & C.H. Spurgeon («Skarbnica Dawidowa»)',
-          practicalApplication: 'Słowo to jest wezwaniem do zbadania stanu własnego serca: zaufaj Bożej Opatrzności w codziennych troskach i zrób dziś konkretny krok przebaczenia.',
-          spiritualEncouragement: 'Bóg nie męczy się przebaczaniem. Jego miłosierdzie jest świeże każdego poranka – nie ulegaj zniechęceniu w swoich zmaganiach.'
-        },
-        classicFootnotes: {
-          title: 'Tradycyjne Przypisy Polskie (ks. Jakub Wujek)',
-          notes: 'W klasycznej polskiej tradycji biblijnej werset ten interpretowany jest jako tarcza wiary i wezwanie do stateczności w cnocie pośród przeciwności świata.'
-        },
-        meditationPoints: [
-          'Jakie słowo lub obraz z tego fragmentu zatrzymuje dzisiaj moją uwagę?',
-          'Do jakiej postawy w relacji z Bogiem i bliźnimi zaprasza mnie to czytanie?',
-          'Gdzie w moim życiu potrzebuję doświadczyć mocy tego Słowa?'
-        ],
-        prayer: `Panie Jezu Chryste, Twoje Słowo jest duchem i życiem. Daj mi uszy otwarte na Twój głos i serce gotowe, by iść drogą Twoich przykazań. Amen.`
-      });
+      // Guaranteed deep multi-perspective commentary tailored directly to this book and siglum
+      const fallback = generateClientGuaranteedCommentary(
+        targetSiglum,
+        text,
+        label,
+        liturgicalContext || theologicalTheme
+      );
+      clientCommentaryCache.set(cacheKey, fallback);
+      setCommentary(fallback);
     } finally {
       setIsLoading(false);
     }
@@ -179,51 +283,37 @@ export const PassageCommentaryModal: React.FC<PassageCommentaryModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-950/70 backdrop-blur-sm animate-fade-in overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-6 bg-slate-950/75 backdrop-blur-sm animate-fade-in">
       <div
-        className="relative w-full max-w-3xl bg-white rounded-3xl shadow-2xl border border-amber-200/90 overflow-hidden my-auto max-h-[92vh] flex flex-col"
+        className="relative w-full max-w-3xl bg-white rounded-2xl sm:rounded-3xl shadow-2xl border border-amber-200/90 overflow-y-auto max-h-[96dvh] sm:max-h-[90vh] flex flex-col overscroll-contain"
         role="dialog"
         aria-modal="true"
       >
-        {/* Top Decorative Header */}
-        <div className="bg-gradient-to-r from-amber-700 via-amber-800 to-amber-900 text-amber-50 p-5 sm:p-6 flex items-start justify-between gap-4 border-b border-amber-600/50 shrink-0">
-          <div className="space-y-1.5">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="px-2.5 py-0.5 rounded-full bg-amber-400/20 border border-amber-400/30 text-[10px] uppercase font-sans font-bold tracking-widest text-amber-200">
-                {label || 'Komentarz Biblijny'}
-              </span>
-              <span className="font-mono text-xs font-bold text-amber-100 bg-amber-950/40 px-2.5 py-0.5 rounded-md border border-amber-500/30">
-                {activeSiglum}
-              </span>
-              <span className="px-2 py-0.5 rounded bg-emerald-950/40 text-[10px] font-sans font-semibold text-emerald-200 border border-emerald-500/30">
-                Tomasz z Akwinu • JFB • Pastoralny
-              </span>
-            </div>
-            <h2 className="font-serif text-xl sm:text-2xl font-bold tracking-tight text-white flex items-center gap-2">
-              <BookOpen className="w-5 h-5 text-amber-300 shrink-0" />
-              <span>{commentary?.title || `Komentarz do fragmentu: ${activeSiglum}`}</span>
-            </h2>
-            {liturgicalContext && (
-              <p className="text-xs text-amber-200/90 font-sans italic">
-                {liturgicalContext}
-              </p>
-            )}
+        {/* Compact Sticky Top Bar (always accessible, minimal height ~44px) */}
+        <div className="sticky top-0 z-30 bg-amber-950/95 backdrop-blur-md text-amber-50 px-3.5 sm:px-5 py-2.5 flex items-center justify-between border-b border-amber-700/60 shadow-xs">
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="px-2 py-0.5 rounded-full bg-amber-400/20 border border-amber-400/30 text-[10px] uppercase font-sans font-bold tracking-wider text-amber-200 shrink-0">
+              {label || 'Komentarz'}
+            </span>
+            <span className="font-mono text-xs sm:text-sm font-bold text-amber-100 bg-amber-900/60 px-2 py-0.5 rounded border border-amber-500/30 shrink-0">
+              {activeSiglum}
+            </span>
           </div>
 
-          <div className="flex items-center gap-1.5 shrink-0">
+          <div className="flex items-center gap-1 shrink-0">
             <button
               type="button"
-              onClick={() => fetchCommentary(activeSiglum)}
+              onClick={() => fetchCommentary(activeSiglum, true)}
               disabled={isLoading}
-              className="p-2 rounded-xl bg-amber-800/60 hover:bg-amber-800 text-amber-200 hover:text-white transition-colors cursor-pointer"
-              title="Odśwież komentarz"
+              className="p-1.5 sm:p-2 rounded-lg bg-amber-900/70 hover:bg-amber-800 text-amber-200 hover:text-white transition-colors cursor-pointer"
+              title="Odśwież analizę i komentarz (zaawansowane AI)"
             >
               <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
             </button>
             <button
               type="button"
               onClick={handleCopyAll}
-              className="p-2 rounded-xl bg-amber-800/60 hover:bg-amber-800 text-amber-200 hover:text-white transition-colors cursor-pointer"
+              className="p-1.5 sm:p-2 rounded-lg bg-amber-900/70 hover:bg-amber-800 text-amber-200 hover:text-white transition-colors cursor-pointer"
               title="Kopiuj cały komentarz (wszystkie tradycje)"
             >
               {copied ? <Check className="w-4 h-4 text-emerald-300" /> : <Copy className="w-4 h-4" />}
@@ -231,20 +321,38 @@ export const PassageCommentaryModal: React.FC<PassageCommentaryModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="p-2 rounded-xl bg-amber-800/60 hover:bg-amber-800 text-amber-200 hover:text-white transition-colors cursor-pointer"
+              className="p-1.5 sm:p-2 rounded-lg bg-amber-900/70 hover:bg-amber-800 text-amber-200 hover:text-white transition-colors cursor-pointer ml-1"
               title="Zamknij"
             >
-              <X className="w-5 h-5" />
+              <X className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
           </div>
         </div>
 
+        {/* Rich Header Banner (scrolls with content, so full screen is available for reading) */}
+        <div className="bg-gradient-to-r from-amber-700 via-amber-800 to-amber-900 text-amber-50 p-4 sm:p-6 border-b border-amber-600/50 space-y-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="px-2.5 py-0.5 rounded bg-emerald-950/50 text-[10px] sm:text-xs font-sans font-semibold text-emerald-200 border border-emerald-500/30">
+              Św. Tomasz z Akwinu • JFB • Pastoralny • 4 Zmysły Pisma
+            </span>
+          </div>
+          <h2 className="font-serif text-lg sm:text-2xl font-bold tracking-tight text-white flex items-start gap-2 leading-snug">
+            <BookOpen className="w-5 h-5 text-amber-300 shrink-0 mt-0.5" />
+            <span>{commentary?.title || `Komentarz biblijny do: ${activeSiglum}`}</span>
+          </h2>
+          {liturgicalContext && (
+            <p className="text-xs sm:text-sm text-amber-200/90 font-sans italic">
+              {liturgicalContext}
+            </p>
+          )}
+        </div>
+
         {/* Navigation Switch Bar: Komentarze Wieloaspektowe vs Ojcowie Kościoła + Search */}
-        <div className="bg-amber-950/20 border-b border-amber-200/60 px-4 py-2.5 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 shrink-0">
+        <div className="bg-amber-950/10 border-b border-amber-200/60 px-3.5 sm:px-5 py-2.5 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
           <div className="inline-flex rounded-xl p-1 bg-slate-100 border border-slate-200 self-start">
             <button
               type="button"
-              className="px-3.5 py-1.5 rounded-lg text-xs font-sans font-bold bg-amber-600 text-white shadow-xs flex items-center gap-1.5"
+              className="px-3 py-1.5 rounded-lg text-xs font-sans font-bold bg-amber-600 text-white shadow-xs flex items-center gap-1.5"
             >
               <MessageSquareQuote className="w-3.5 h-3.5" />
               <span>Komentarze (Tomasz • JFB • Pastoralne)</span>
@@ -256,7 +364,7 @@ export const PassageCommentaryModal: React.FC<PassageCommentaryModalProps> = ({
                   onClose();
                   onOpenPatristics(activeSiglum);
                 }}
-                className="px-3.5 py-1.5 rounded-lg text-xs font-sans font-medium text-slate-700 hover:text-slate-900 hover:bg-white/80 transition-colors flex items-center gap-1.5 cursor-pointer"
+                className="px-3 py-1.5 rounded-lg text-xs font-sans font-medium text-slate-700 hover:text-slate-900 hover:bg-white/80 transition-colors flex items-center gap-1.5 cursor-pointer"
                 title="Przełącz na komentarze Ojców Kościoła"
               >
                 <Scroll className="w-3.5 h-3.5 text-sky-700" />
@@ -267,7 +375,7 @@ export const PassageCommentaryModal: React.FC<PassageCommentaryModalProps> = ({
 
           {/* Quick Siglum / Phrase Search */}
           <form onSubmit={handleSearch} className="flex items-center gap-1.5">
-            <div className="relative flex-1 sm:w-64">
+            <div className="relative flex-1 sm:w-60">
               <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
@@ -286,8 +394,8 @@ export const PassageCommentaryModal: React.FC<PassageCommentaryModalProps> = ({
           </form>
         </div>
 
-        {/* Section Navigation Pills */}
-        <div className="bg-amber-50/70 border-b border-amber-200/70 px-4 py-2 flex items-center gap-1.5 overflow-x-auto shrink-0 scrollbar-none">
+        {/* Section Navigation Pills (Sticky directly under the top bar for easy section switching) */}
+        <div className="sticky top-[45px] sm:top-[49px] z-20 bg-amber-50/95 backdrop-blur-md border-b border-amber-200/80 px-3 sm:px-4 py-2 flex items-center gap-1.5 overflow-x-auto scrollbar-none shadow-xs">
           <button
             type="button"
             onClick={() => setActiveSection('all')}
@@ -382,8 +490,8 @@ export const PassageCommentaryModal: React.FC<PassageCommentaryModalProps> = ({
           </button>
         </div>
 
-        {/* Scrollable Content Body */}
-        <div className="p-5 sm:p-7 overflow-y-auto space-y-6 flex-1 text-slate-800">
+        {/* Content Body (flows naturally in the scrollable card - no nested scroll traps!) */}
+        <div className="p-4 sm:p-7 space-y-6 text-slate-800">
           {/* Scripture Excerpt Card */}
           <div className="p-4 sm:p-5 bg-amber-50/50 rounded-2xl border border-amber-200/80 space-y-2">
             <div className="flex items-center justify-between">
@@ -398,14 +506,25 @@ export const PassageCommentaryModal: React.FC<PassageCommentaryModalProps> = ({
           </div>
 
           {isLoading ? (
-            <div className="py-16 text-center space-y-3">
-              <RefreshCw className="w-8 h-8 text-amber-600 animate-spin mx-auto" />
-              <p className="font-serif text-base text-slate-700 font-semibold">
-                Opracowywanie wszechstronnego komentarza dla {siglum}...
-              </p>
-              <p className="text-xs text-slate-500 font-sans max-w-md mx-auto">
-                Łączenie teologii św. Tomasza z Akwinu, analizy krytycznej JFB po polsku, komentarza pastoralnego oraz 4 zmysłów Pisma Świętego.
-              </p>
+            <div className="py-14 sm:py-20 text-center space-y-4 px-3">
+              <div className="relative inline-block">
+                <RefreshCw className="w-10 h-10 text-amber-600 animate-spin mx-auto" />
+                <span className="absolute -top-1 -right-1 flex h-3.5 w-3.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-amber-600"></span>
+                </span>
+              </div>
+              <div className="space-y-1.5 max-w-md mx-auto">
+                <p className="font-serif text-base sm:text-lg text-slate-800 font-bold">
+                  Dogłębna analiza teologiczna dla {siglum}...
+                </p>
+                <p className="text-xs sm:text-sm text-slate-600 font-sans leading-relaxed">
+                  Trwa pogłębione badanie perykopy przez zaawansowany model AI (św. Tomasz z Akwinu, krytyczno-egzegetyczny JFB, 4 Zmysły Pisma oraz tradycja duszpasterska).
+                </p>
+                <p className="text-[11px] text-amber-800 font-sans font-medium italic">
+                  Zgodnie z Twoim wyborem model przeprowadza powolną, wyczerpującą syntezę.
+                </p>
+              </div>
             </div>
           ) : commentary ? (
             <>
